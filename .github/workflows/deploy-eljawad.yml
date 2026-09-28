@@ -33,12 +33,19 @@ jobs:
           printf '%s\n' "${{ secrets.HG_ELJAWAD_SSH_KEY }}" > ~/.ssh/hg_key
           chmod 600 ~/.ssh/hg_key
 
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: package-lock.json
+          cache: pnpm
 
+      - name: Build Next.js
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm run build
+      
       - name: Build Next.js
         run: |
           npm ci
