@@ -1,8 +1,5 @@
 name: Deploy site to eljawad.com (HostGator)
 
-# Manual trigger only — never runs on push.
-# Fire from any device:
-#   gh workflow run deploy-eljawad.yml -R aminedev24/meridian-motors -f scope=full
 on:
   workflow_dispatch:
     inputs:
@@ -33,9 +30,11 @@ jobs:
           printf '%s\n' "${{ secrets.HG_ELJAWAD_SSH_KEY }}" > ~/.ssh/hg_key
           chmod 600 ~/.ssh/hg_key
 
-      - uses: pnpm/action-setup@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
         with:
           version: 11
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -45,11 +44,6 @@ jobs:
         run: |
           pnpm install --frozen-lockfile
           pnpm run build
-      
-      - name: Build Next.js
-        run: |
-          npm ci
-          npm run build
 
       - name: Deploy to HostGator
         run: |
