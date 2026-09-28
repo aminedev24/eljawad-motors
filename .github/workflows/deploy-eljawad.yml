@@ -1,0 +1,60 @@
+name: Deploy site to eljawad.com (HostGator)
+
+# Manual trigger only — never runs on push.
+# Fire from any device:
+#   gh workflow run deploy-eljawad.yml -R aminedev24/meridian-motors -f scope=full
+on:
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: "full = build + deploy whole site"
+        required: true
+        default: full
+        type: choice
+        options: [full]
+
+concurrency:
+  group: deploy-eljawad
+  cancel-in-progress: false
+
+env:
+  SRV: yqjezvte@gator4421.hostgator.com
+  WEBROOT: /home2/yqjezvte/public_html/eljawad-motors
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.HG_ELJAWAD_SSH_KEY }}" > ~/.ssh/hg_key
+          chmod 600 ~/.ssh/hg_key
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Build Next.js
+        run: |
+          npm ci
+          npm run build
+
+      - name: Deploy to HostGator
+        run: |
+          tar -czf deploy_site.tar.gz -C out .
+          scp -i ~/.ssh/hg_key -o StrictHostKeyChecking=no deploy_site.tar.gz "$SRV:/home2/yqjezvte/"
+          ssh -i ~/.ssh/hg_key -o StrictHostKeyChecking=no "$SRV" \
+            "mkdir -p $WEBROOT && tar xzf /home2/yqjezvte/deploy_site.tar.gz -C $WEBROOT/ && \
+             rm -f /home2/yqjezvte/deploy_site.tar.gz && \
+             find $WEBROOT -type d -exec chmod 755 {} \; && \
+             find $WEBROOT -type f -exec chmod 644 {} \; && \
+             echo DEPLOY_DONE"
+
+      - name: Verify
+        run: |
+          curl -sf -o /dev/null -w "site: %{http_code}\n" https://eljawad.com
