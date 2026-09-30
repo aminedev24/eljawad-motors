@@ -52,7 +52,7 @@ const HowToBuy = () => {
       <div className="howToBuy-container terms-container">
         {/*<img style={{ maxHeight : 'unset' }} src={`/images/howtobuytransparentbackground.png`} alt={'howtobuy-banner'} className="topic-image" />*/}
 
-        <h2>How to Buy a Used Car on Meridian Motors Inc.</h2>
+        <h2>How to Buy a Used Car on Eljawad Motors Inc.</h2>
          {/* Overview Icons Section */}
 
          <div className="overview-icons">
@@ -65,7 +65,7 @@ const HowToBuy = () => {
         </div>
 
         <p className="intro-text">
-          At Meridian Motors Inc., we offer a wide selection of used cars sourced from trusted partners in Japan and overseas.
+          At Eljawad Motors Inc., we offer a wide selection of used cars sourced from trusted partners in Japan and overseas.
           Our simple, step-by-step process makes it easy for anyone to purchase their ideal car, even with no prior experience.
         </p>
         <div className="steps">

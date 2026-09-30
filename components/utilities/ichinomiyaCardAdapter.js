@@ -1,6 +1,6 @@
 // ichinomiyaCardAdapter.js
 //
-// Maps a raw Meridian Motors car record (from /server/inventory/cars/fetchStock.php)
+// Maps a raw Eljawad Motors car record (from /server/inventory/cars/fetchStock.php)
 // into the flat shape the Ichinomiya-style card + detail layouts expect.
 //
 // The raw car is kept on `.raw` because the existing handlers
@@ -79,7 +79,7 @@ export const steeringTag = (steering) => {
 };
 
 // Display stock ID: third-party (partner) cars get a sequential "TP-" id derived
-// from their already-sequential ref_no; Meridian Motors-own cars keep their ref/id.
+// from their already-sequential ref_no; Eljawad Motors-own cars keep their ref/id.
 export const displayStockId = (car) => {
   const isPartner = String(car?.company || "").toLowerCase() === "ichinomiya_import";
   const ref = String(car?.ref_no ?? car?.id ?? "").trim();
@@ -106,7 +106,7 @@ export const secureImageUrl = (url) => {
 };
 
 // Parse image_urls into a clean array of URL strings. Storage varies by source:
-// partner feed rows store a JSON array (["url","url"]), while Meridian Motors-managed
+// partner feed rows store a JSON array (["url","url"]), while Eljawad Motors-managed
 // rows added via the reservation/import flow store a comma-separated string
 // ("url,url,url"). Accept both, plus a single bare URL.
 export const parseImageUrls = (imageUrls) => {
@@ -169,7 +169,7 @@ export const adaptCarForCard = (car) => {
     url: identifier
       ? `/vehicle/${encodeURIComponent(String(identifier).trim())}`
       : "/stock-list",
-    status: "", // Meridian Motors/partner data has no sold/reserved status
+    status: "", // Eljawad Motors/partner data has no sold/reserved status
     raw: car,
   };
 };

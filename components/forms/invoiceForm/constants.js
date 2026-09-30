@@ -4,7 +4,7 @@ export const API_URL = apiBaseUrl;
 
 export const BANK_DETAILS = {
   USD: {
-    beneficiaryName: "Meridian Motors Inc",
+    beneficiaryName: "Eljawad Motors Inc",
     bankName: "SUMISHIN SBI NET BANK",
     branchName: "HOJIN DAI ICHI (BRANCH SORT CODE:106)",
     bankAddress: "3-2-1 Roppongi, Minato-ku, Tokyo-to",
@@ -13,14 +13,14 @@ export const BANK_DETAILS = {
     beneficiaryAddress: "5-10-44, Kasagami, Tagajyo, Miyagi, Japan",
   },
   JPY: {
-    beneficiaryName: "Meridian Motors Inc",
+    beneficiaryName: "Eljawad Motors Inc",
     iban: "GB80 TRWI 2308 0126 4624 61",
     "swift/bic": "TRWIGB2LXXX",
     "bank name and address":
       "Wise Payments Limited, 56 Shoreditch High Street, London, E1 6JJ, United Kingdom",
   },
   EUR: {
-    beneficiaryName: "Meridian Motors Inc",
+    beneficiaryName: "Eljawad Motors Inc",
     iban: "BE47 9052 3539 7280",
     "swift/bic": "TRWIBEB1XXX",
     "bank name and address":

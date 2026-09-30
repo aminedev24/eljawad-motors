@@ -4,7 +4,7 @@ let makesData = [];
 let modelsData = {};
 
 // window.open/next/config's basePath, not fetch() itself, know about the
-// GitHub Pages build's /meridian-motors prefix - a bare '/make_models.json'
+// GitHub Pages build's /eljawad-motors prefix - a bare '/make_models.json'
 // 404s there silently (caught below), leaving the make/model catalog empty.
 const makeModelsUrl = () => {
   const { publicRuntimeConfig } = getConfig() || {};

@@ -130,7 +130,7 @@ export default function AdminPage() {
   return (
     <>
       <Head>
-        <title>Admin — Meridian Motors Inc.</title>
+        <title>Admin — Eljawad Motors Inc.</title>
         <meta name="robots" content="noindex,nofollow" />
       </Head>
 
@@ -145,7 +145,7 @@ export default function AdminPage() {
           {/* Logo / brand */}
           <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-800 flex items-start justify-between">
             <div>
-              <p className="font-bebas text-xl text-white tracking-wider">Meridian Motors Inc.</p>
+              <p className="font-bebas text-xl text-white tracking-wider">Eljawad Motors Inc.</p>
               <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-0.5">Admin Console</p>
             </div>
             <button onClick={() => setSidebarOpen(false)} className="xl:hidden text-gray-500 hover:text-white transition mt-1">

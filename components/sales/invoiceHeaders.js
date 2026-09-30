@@ -88,7 +88,7 @@ export const InvoiceHeaders = ({invoiceData, formattedInvoiceNumber, commercial}
           </View>
         </View>
         <View style={styles.headerRight}>
-          <Text style={styles.companyName}>Meridian Motors Inc</Text>
+          <Text style={styles.companyName}>Eljawad Motors Inc</Text>
           <Text style={styles.rightText}>
             <Text style={{ fontWeight: "bold" }}>Date:</Text>{" "}
             {invoiceData.invoiceDate}

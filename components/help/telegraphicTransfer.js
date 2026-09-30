@@ -9,10 +9,10 @@ const TelegraphicTransfer = () => {
       <h4>How to Make a Payment via Telegraphic Transfer (T/T)</h4>
         <li>
           <h4>Receive the Invoice</h4>
-          <p>After placing your order, Meridian Motors will send you a detailed invoice via email. This invoice will include:</p>
+          <p>After placing your order, Eljawad Motors will send you a detailed invoice via email. This invoice will include:</p>
           <ul>
             <li>The total amount due.</li>
-            <li>Our official bank account details (beneficiary: Meridian Motors Inc.).</li>
+            <li>Our official bank account details (beneficiary: Eljawad Motors Inc.).</li>
             <li>A unique invoice reference number for the transaction.</li>
           </ul>
         </li>
@@ -32,7 +32,7 @@ const TelegraphicTransfer = () => {
             <li>Visit your bank (in person or via online banking) to initiate the Telegraphic Transfer (T/T).</li>
             <li>Provide the bank with the following details:</li>
             <ul>
-              <li>Beneficiary name: Meridian Motors Inc.</li>
+              <li>Beneficiary name: Eljawad Motors Inc.</li>
               <li>Bank account number and SWIFT code (as listed on the invoice).</li>
               <li>Invoice reference number to include in the transaction for easy identification.</li>
             </ul>
@@ -42,7 +42,7 @@ const TelegraphicTransfer = () => {
           <h4>Confirmation of Payment</h4>
           <ul>
             <li>Once the transfer is completed, request a payment receipt from your bank.</li>
-            <li>Share the receipt with Meridian Motors via email to confirm your payment. This helps us verify and process your order more quickly.</li>
+            <li>Share the receipt with Eljawad Motors via email to confirm your payment. This helps us verify and process your order more quickly.</li>
           </ul>
         </li>
         <li>

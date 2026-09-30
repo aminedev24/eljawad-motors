@@ -1,6 +1,6 @@
 // stockSidebarV2.js
 // Left "Shop by" filter sidebar — adapted from Ichinomiya's Sidebar, rebranded
-// to Meridian Motors. Counts are computed from the live stock (passed in),
+// to Eljawad Motors. Counts are computed from the live stock (passed in),
 // not from a static stock.json. Clicking an active row toggles it off.
 // Also holds the full filter set (model/price/transmission/fuel/year/
 // keyword) so this is the ONE filter surface on desktop - real reference

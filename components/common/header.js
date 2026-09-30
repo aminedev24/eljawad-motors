@@ -81,7 +81,7 @@ const Header = () => {
       return;
     }
     try {
-      setSearchKeyword(sessionStorage.getItem('meridian_last_search') || '');
+      setSearchKeyword(sessionStorage.getItem('eljawad_last_search') || '');
     } catch (e) {
       setSearchKeyword('');
     }
@@ -219,8 +219,8 @@ const Header = () => {
             <div className="menu-logo-container flex shrink-0 items-center gap-3">
               <Link className="logo flex items-center shrink-0" href="/">
                 <ImageWithLoader
-                  src="/images/logo-meridian-dark.svg"
-                  alt="Meridian Motors Inc. logo"
+                  src="/images/logo-eljawad-dark.svg"
+                  alt="Eljawad Motors Inc. logo"
                   className="logo-img"
                 />
               </Link>

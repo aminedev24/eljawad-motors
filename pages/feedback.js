@@ -10,11 +10,11 @@ const REVIEWS = [
   },
   {
     initials: 'AO', flag: '🇳🇬', name: 'Adebayo O.', country: 'Nigeria', stars: 5,
-    text: 'Very transparent process. I always knew exactly where things stood. Highly recommend Meridian Motors to anyone sourcing from Japan.'
+    text: 'Very transparent process. I always knew exactly where things stood. Highly recommend Eljawad Motors to anyone sourcing from Japan.'
   },
   {
     initials: 'MN', flag: '🇿🇦', name: 'Mpho N.', country: 'South Africa', stars: 5,
-    text: 'The team sourced exactly what we needed at a great price. Documentation was spot on and customs clearance went smoothly. Will use Meridian Motors again.'
+    text: 'The team sourced exactly what we needed at a great price. Documentation was spot on and customs clearance went smoothly. Will use Eljawad Motors again.'
   },
   {
     initials: 'RS', flag: '🇮🇳', name: 'Rajan S.', country: 'India', stars: 4,
@@ -97,8 +97,8 @@ export default function FeedbackPage() {
   return (
     <>
       <Head>
-        <title>Customer Feedback | Meridian Motors Inc.</title>
-        <meta name="description" content="Share your experience with Meridian Motors Inc. — Japan's trusted sourcing and export platform." />
+        <title>Customer Feedback | Eljawad Motors Inc.</title>
+        <meta name="description" content="Share your experience with Eljawad Motors Inc. — Japan's trusted sourcing and export platform." />
       </Head>
 
       <div className="feedback-page">
@@ -158,7 +158,7 @@ export default function FeedbackPage() {
         <div className="fb-form-panel">
           <div className="fb-form-panel__header">
             <h3>Share Your Experience</h3>
-            <p>Tell us about your experience with Meridian Motors Inc.</p>
+            <p>Tell us about your experience with Eljawad Motors Inc.</p>
           </div>
 
           <form className="fb-form" onSubmit={handleSubmit}>

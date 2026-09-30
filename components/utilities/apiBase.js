@@ -10,7 +10,7 @@ const devBase = process.env.NEXT_PUBLIC_DEV_API || 'http://localhost/artisbay-in
 const staticProdBase = process.env.NEXT_PUBLIC_API_BASE_URL || '/server';
 
 const apiBase = isNativeMobile
-  ? 'https://artisbay.com/server'
+  ? 'https://artisbay.com/eljawad-motors/server'
   : (process.env.NODE_ENV === 'development' ? devBase : staticProdBase);
 
 export const apiAuth = `${apiBase}/auth`;

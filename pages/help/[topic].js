@@ -39,14 +39,14 @@ const topicGroups = [
 
 const topicMeta = {
   help: {
-    title: 'Help Center | Meridian Motors Inc.',
+    title: 'Help Center | Eljawad Motors Inc.',
     description: 'Find out how to buy, company profile, FAQs, and more.',
-    keywords: 'Meridian Motors, help, company profile, FAQs',
+    keywords: 'Eljawad Motors, help, company profile, FAQs',
   },
   'how-to-buy-used-cars': {
-    title: 'How to Buy Used Cars | Meridian Motors Inc.',
-    description: 'Step-by-step guide on purchasing used cars from Japanese auctions via Meridian Motors.',
-    keywords: 'buy used cars, Meridian Motors, Japanese auctions, how to buy',
+    title: 'How to Buy Used Cars | Eljawad Motors Inc.',
+    description: 'Step-by-step guide on purchasing used cars from Japanese auctions via Eljawad Motors.',
+    keywords: 'buy used cars, Eljawad Motors, Japanese auctions, how to buy',
   },
 };
 
@@ -77,9 +77,9 @@ export default function HelpPage({ initialSlug }) {
 
   const meta = topicMeta[slug] || (selectedTopic
     ? {
-        title: `${selectedTopic.name} | Meridian Motors Inc.`,
-        description: `Learn more about ${selectedTopic.name} at Meridian Motors Inc.`,
-        keywords: `${selectedTopic.name.toLowerCase()}, Meridian Motors Inc.`,
+        title: `${selectedTopic.name} | Eljawad Motors Inc.`,
+        description: `Learn more about ${selectedTopic.name} at Eljawad Motors Inc.`,
+        keywords: `${selectedTopic.name.toLowerCase()}, Eljawad Motors Inc.`,
       }
     : topicMeta.help);
 

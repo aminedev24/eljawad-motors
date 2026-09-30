@@ -21,7 +21,7 @@ const Contact = ({ sell, japanExports }) => {
       <div className="signup-container contact-container">
         <form className="signup-form contact-form" onSubmit={handleSubmit}>
           {!sell &&
-            <ImageWithLoader src={`/images/logo-meridian-dark.svg`} alt="Logo" className="logo-form logo-img" />
+            <ImageWithLoader src={`/images/logo-eljawad-dark.svg`} alt="Logo" className="logo-form logo-img" />
           }
 
           {!sell && !japanExports && lang === 'en' && lang === 'jp' && <h2>We like to hear from you!</h2>}

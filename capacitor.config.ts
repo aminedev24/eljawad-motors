@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'com.artisbaylite.app',
-  appName: 'Meridian Motors',
+  appName: 'Eljawad Motors',
   webDir: 'out'
 };
 

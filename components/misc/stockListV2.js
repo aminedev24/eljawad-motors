@@ -1,8 +1,8 @@
 // stockListV2.js
 // Preview stock list that adopts the Ichinomiya marketplace LAYOUT (left filter
 // sidebar + top filter bar + dense results grid + pagination) while reusing
-// Meridian Motors's own data source and client-side filter/sort/pagination logic
-// (lifted from components/misc/stockList.js). Rebranded to Meridian Motors navy/orange.
+// Eljawad Motors's own data source and client-side filter/sort/pagination logic
+// (lifted from components/misc/stockList.js). Rebranded to Eljawad Motors navy/orange.
 // The existing /stock-list and its components are left untouched.
 "use client";
 
@@ -275,8 +275,8 @@ const StocklistV2 = () => {
   useEffect(() => {
     if (!initialized) return;
     try {
-      if (filters.search) sessionStorage.setItem("meridian_last_search", filters.search);
-      else sessionStorage.removeItem("meridian_last_search");
+      if (filters.search) sessionStorage.setItem("eljawad_last_search", filters.search);
+      else sessionStorage.removeItem("eljawad_last_search");
     } catch (e) {}
   }, [filters.search, initialized]);
 

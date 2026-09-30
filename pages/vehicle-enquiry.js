@@ -6,9 +6,9 @@ export default function VehicleInquiryPage() {
   return (
   <>
     <Head>
-      <title>Vehicle Inquiry | Meridian Motors Inc.</title>
-      <meta name="description" content="Inquire about our used vehicles at Meridian Motors Inc." />
-      <meta name="keywords" content="vehicle inquiry, used cars, Meridian Motors Inc." />
+      <title>Vehicle Inquiry | Eljawad Motors Inc.</title>
+      <meta name="description" content="Inquire about our used vehicles at Eljawad Motors Inc." />
+      <meta name="keywords" content="vehicle inquiry, used cars, Eljawad Motors Inc." />
     </Head>
     <InquiryForm />
   </>

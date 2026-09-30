@@ -78,7 +78,7 @@ const InvoiceModal = ({ isOpen, onClose, invoiceData, onEdit, setInvoiceState, r
       const emailBody = `
       <div style="font-family: Arial, sans-serif; color: #333;">
           <h2 style="color: #004080;">Dear ${invoiceData.customerFullName},</h2>
-          <p>Thank you for placing your order with <strong>Meridian Motors Inc.</strong></p>
+          <p>Thank you for placing your order with <strong>Eljawad Motors Inc.</strong></p>
           <p>This is an automated email to provide you with the deposit invoice for your orders Below are the details of the invoice:</p>
           <h3 style="color: #004080;">Invoice Details:</h3>
           <ul>
@@ -92,8 +92,8 @@ const InvoiceModal = ({ isOpen, onClose, invoiceData, onEdit, setInvoiceState, r
           </ul>
           <p>Please process the Payment by the due date to proceed with your order. Once the payment is confirmed, we will begin processing your request and keep you informed of the next steps.</p>
           <p>For any questions or concerns, feel free to contact us at: <a href="mailto:sales@artisbay.com">sales@artisbay.com</a>.</p>
-          <p>Thank you for choosing <strong>Meridian Motors Inc.</strong>.</p>
-          <p style="color: #004080;"><strong>Best regards,</strong><br>Meridian Motors Inc.</p>
+          <p>Thank you for choosing <strong>Eljawad Motors Inc.</strong>.</p>
+          <p style="color: #004080;"><strong>Best regards,</strong><br>Eljawad Motors Inc.</p>
       </div>
     `;
 
@@ -104,7 +104,7 @@ const InvoiceModal = ({ isOpen, onClose, invoiceData, onEdit, setInvoiceState, r
         body: JSON.stringify({
           to: invoiceData.customerEmail,
           bcc: "contact@artisbay.com",
-          subject: `Automated Deposit Invoice from Meridian Motors Inc.`,
+          subject: `Automated Deposit Invoice from Eljawad Motors Inc.`,
           body: emailBody,
           attachment: base64Pdf,
           invoiceNumber: formattedInvoiceNumber,
@@ -252,8 +252,8 @@ const InvoiceModal = ({ isOpen, onClose, invoiceData, onEdit, setInvoiceState, r
             <div className="headers">
               <div className="header-left">
                 <img
-                  alt="Meridian Motors Inc. Logo"
-                  src={`/images/logo-meridian-dark.svg`}
+                  alt="Eljawad Motors Inc. Logo"
+                  src={`/images/logo-eljawad-dark.svg`}
                   width="140"
                 />
                 <div className="contact-info">
@@ -273,7 +273,7 @@ const InvoiceModal = ({ isOpen, onClose, invoiceData, onEdit, setInvoiceState, r
               </div>
               <div className="header-right">
                 <p className="company-name">
-                  <strong>Meridian Motors Inc</strong>
+                  <strong>Eljawad Motors Inc</strong>
                 </p>
                 <p>
                   <strong>Date:</strong> {invoiceData.invoiceDate}
@@ -317,7 +317,7 @@ const InvoiceModal = ({ isOpen, onClose, invoiceData, onEdit, setInvoiceState, r
 
             <div className="right">
               <img
-                alt="Meridian Motors QR code"
+                alt="Eljawad Motors QR code"
                 src={`/images/qr.jpeg`}
                 width="130"
               />

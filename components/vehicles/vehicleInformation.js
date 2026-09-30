@@ -153,7 +153,7 @@ const VehicleInfo = ({onClose, selectedCar}) => {
             ) : (
               <p>No main image available.</p>
             )}
-            <p className="text-center">Meridian Motors Inc. - Ref No {ref_no}</p>
+            <p className="text-center">Eljawad Motors Inc. - Ref No {ref_no}</p>
           </div>
         
           <div className="thumbnail-grid">

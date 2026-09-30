@@ -237,7 +237,7 @@ const InquiryForm = () => {
       <form onSubmit={handleSubmit}>
 
         <div className="enquiryContainer">
-        <img src={`/images/logo-meridian-dark.svg`} alt="Logo" className="logo-form" />
+        <img src={`/images/logo-eljawad-dark.svg`} alt="Logo" className="logo-form" />
 
           {notification.message && (
             <div className={`message-status ${notification.type}`}>

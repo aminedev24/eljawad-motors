@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Meridian Motors</string>
-    <string name="title_activity_main">Meridian Motors</string>
+    <string name="app_name">Eljawad Motors</string>
+    <string name="title_activity_main">Eljawad Motors</string>
     <string name="package_name">com.artisbay.app</string>
     <string name="custom_url_scheme">com.artisbay.app</string>
 </resources>

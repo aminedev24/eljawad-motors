@@ -9,7 +9,7 @@ const useContact = ({ sell, japanExports }) => {
     email: '',
     country: sell ? 'Japan' : '',
     phone: '',
-    enquiry: sell ? 'sell on Meridian Motors' : '',
+    enquiry: sell ? 'sell on Eljawad Motors' : '',
     message: '',
     prefecture: '',
     city: '',
@@ -120,7 +120,7 @@ const useContact = ({ sell, japanExports }) => {
         setMessageInfo({
           type: 'success',
           text: sell
-            ? "Thank you for your interest in joining Meridian Motors! We will review your application and get back to you within a few days."
+            ? "Thank you for your interest in joining Eljawad Motors! We will review your application and get back to you within a few days."
             : 'Thank you for your message! We will get back to you shortly.'
         });
       } else {

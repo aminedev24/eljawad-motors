@@ -63,7 +63,7 @@ jobs:
       - name: Build with Next.js
         env:
           GITHUB_PAGES: "true"
-          NEXT_PUBLIC_API_BASE_URL: "https://artisbay.com/server"
+          NEXT_PUBLIC_API_BASE_URL: "https://artisbay.com/eljawad-motors/server"
         run: node ./node_modules/next/dist/bin/next build
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

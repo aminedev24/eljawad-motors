@@ -6,7 +6,7 @@ const PrivacyPolicy = ({ userProfile, agreementType }) => {
   // Define the content as a plain text or HTML string
   const agreementContent = `
   <div>
-    <p>At Meridian Motors Inc., we are committed to protecting your privacy and ensuring that your personal information is handled securely and responsibly. This Privacy Policy outlines how we collect, use, store, and share your information when you interact with our services.</p>
+    <p>At Eljawad Motors Inc., we are committed to protecting your privacy and ensuring that your personal information is handled securely and responsibly. This Privacy Policy outlines how we collect, use, store, and share your information when you interact with our services.</p>
       
     <h4>1. Information We Collect</h4>
     <ul>

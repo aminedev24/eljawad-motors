@@ -35,14 +35,14 @@ export default function InvoiceGeneratorPage() {
   return (
     <>
       <Head>
-        <title>Invoice Generator | Meridian Motors Inc.</title>
+        <title>Invoice Generator | Eljawad Motors Inc.</title>
         <meta
           name="description"
-          content="Generate proforma invoices for your transactions with Meridian Motors Inc."
+          content="Generate proforma invoices for your transactions with Eljawad Motors Inc."
         />
         <meta
           name="keywords"
-          content="proforma invoice, invoice generator, Meridian Motors Inc., used cars, auto parts, vehicle shipping"
+          content="proforma invoice, invoice generator, Eljawad Motors Inc., used cars, auto parts, vehicle shipping"
         />
         <meta name="robots" content="noindex,nofollow" />
       </Head>

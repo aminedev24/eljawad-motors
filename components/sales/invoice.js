@@ -32,13 +32,13 @@ const ProformaInvoice = () => {
         <div className="container">
             <div className="header">
                 <img
-                    alt="Meridian Motors Inc. Logo"
+                    alt="Eljawad Motors Inc. Logo"
                     height="50"
                     src="https://storage.googleapis.com/a1aa/image/6LfMKmuZf0gmKUBiJiWK8XAj2bOII5VCjDDzF78NLd14VIenA.jpg"
                     width="150"
                 />
                 <div className="contact-info">
-                    <p>Meridian Motors Inc</p>
+                    <p>Eljawad Motors Inc</p>
                 </div>
             </div>
             <div className="header">

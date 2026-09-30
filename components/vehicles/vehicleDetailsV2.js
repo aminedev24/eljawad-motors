@@ -646,7 +646,7 @@ const VehicleDetailsV2 = ({ initialVehicleId = "" }) => {
             <h3 className="text-base font-bold uppercase text-[var(--primary-color)]">
               Request Slip &mdash; Lot #{displayStockId(car)}
             </h3>
-            <span className="font-mono text-[10px] text-gray-400">FILE WITH MERIDIAN MOTORS</span>
+            <span className="font-mono text-[10px] text-gray-400">FILE WITH ELJAWAD MOTORS</span>
           </div>
           <VehicleInquiryForm car={car} />
         </div>

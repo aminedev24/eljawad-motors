@@ -86,7 +86,7 @@ const ResetPassword = ({ token: tokenProp }) => {
   return (
     <div className="reset-password-container">
       <form onSubmit={handleResetPassword}>
-        <img src="/images/logo-meridian-dark.svg" alt="Logo" className="logo-form" />
+        <img src="/images/logo-eljawad-dark.svg" alt="Logo" className="logo-form" />
         <h2>Reset Password</h2>
         <div className="password-input-group">
           <input

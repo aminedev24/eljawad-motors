@@ -4,7 +4,7 @@ import remarkGfm from 'remark-gfm';
 const AURORA_API = 'https://api.aurora-lumen.com';
 
 const welcomeMessage =
-  "Hi there! I'm the Meridian Motors assistant. Ask me anything about our vehicles, services, or tools and I'll guide you.";
+  "Hi there! I'm the Eljawad Motors assistant. Ask me anything about our vehicles, services, or tools and I'll guide you.";
 const initialMessages = [{ role: 'assistant', content: welcomeMessage }];
 
 const quickReplies = [
@@ -16,7 +16,7 @@ const quickReplies = [
 ];
 const stripEmoji = (s) => s.replace(/\p{Emoji_Presentation}/gu, '').trim();
 
-const SESSION_KEY = 'meridian-chat-session';
+const SESSION_KEY = 'eljawad-chat-session';
 
 const loadSession = () => {
   if (typeof window === 'undefined') return null;
@@ -267,7 +267,7 @@ const Chatbot = () => {
             <div className="chatbot-header-left">
               <div className="chatbot-header-avatar">🤖</div>
               <div className="chatbot-header-info">
-                <span className="chatbot-header-name">Meridian Motors Assistant</span>
+                <span className="chatbot-header-name">Eljawad Motors Assistant</span>
                 <span className="chatbot-header-status">Online</span>
               </div>
             </div>

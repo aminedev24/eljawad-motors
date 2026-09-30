@@ -39,7 +39,7 @@ npx cap sync android
 ### API base resolution
 
 All frontend HTTP calls go through `components/utilities/apiBase.js`, which picks the backend base URL at runtime:
-- Capacitor native shell → hardcoded `https://artisbay.com/server`
+- Capacitor native shell → hardcoded `https://artisbay.com/eljawad-motors/server`
 - Next dev mode → `NEXT_PUBLIC_DEV_API` (or its localhost default)
 - Static production export → relative `/server`
 
@@ -49,7 +49,7 @@ It exports namespaced bases (`apiAuth`, `apiUsers`, `apiInventory`, `apiFinance`
 
 Organized by domain, not by HTTP verb: `auth/`, `users/`, `customers/`, `inventory/{cars,tires}/`, `finance/{deposits,invoices}/`, `orders/`, `reservations/`, `inquiries/`, `emails/`. Shared pieces live in `server/core/`:
 - `db_connection.php` — mysqli connection (`$conn`), included by every endpoint.
-- `headers.php` — CORS + JSON headers; validates request `Origin` against an allowlist (localhost:3000, artisbay.com, aurora-lumen.com) and handles `OPTIONS` preflight.
+- `headers.php` — CORS + JSON headers; validates request `Origin` against an allowlist (localhost:3000, artisbay.com, aurora-lumen.com, eljawad.com, aminedev24.github.io) and handles `OPTIONS` preflight.
 - `csrf.php` — CSRF token issuance/validation. The frontend flow: `check_session.php` returns a `csrf` token which `userContext.js` stores via `setCsrfToken`; all non-GET requests must send it back as `X-CSRF-Token`.
 - `db_migrations.php` — `ensure_columns()` helper for additive, idempotent schema migrations that work across MySQL/MariaDB versions lacking `ADD COLUMN IF NOT EXISTS` (checks `information_schema` instead). Prefer this over raw `ALTER TABLE` when adding columns.
 - `mail_secrets.php` — gitignored real credentials; `mail_secrets.example.php` is the template. Never commit the real file.

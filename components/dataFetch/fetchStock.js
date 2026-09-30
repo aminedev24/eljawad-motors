@@ -84,7 +84,7 @@ const CarsList = () => {
     const identifier = car.ref_no || car.id || car.stock_no;
     if (!identifier) return;
     // window.open needs the basePath spelled out - unlike next/router,
-    // it has no idea the GitHub Pages build is served from /meridian-motors.
+    // it has no idea the GitHub Pages build is served from /eljawad-motors.
     const { publicRuntimeConfig } = getConfig() || {};
     const basePath = publicRuntimeConfig?.basePath || "";
     window.open(`${basePath}/vehicle?id=${encodeURIComponent(String(identifier).trim())}`, '_blank', 'noopener');

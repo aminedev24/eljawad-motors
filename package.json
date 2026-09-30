@@ -1,11 +1,12 @@
 {
-    "name": "meridian-motors",
+    "name": "eljawad-motors",
     "version": "0.1.0",
     "private": true,
     "scripts": {
         "dev": "next dev -p 3000",
-        "dev:xampp": "set NEXT_PUBLIC_DEV_API=http://localhost/artisbay-inc/server && next dev -p 3000",
+        "dev:xampp": "set NEXT_PUBLIC_DEV_API=http://localhost/eljawad-motors/server && next dev -p 3000",
         "dev:php": "cross-env NEXT_PUBLIC_DEV_API=http://localhost:8080/server next dev -p 3000",
+        "php":"php -S localhost:8080",
         "dev:full": "php -S localhost:8080 -t . & sleep 1 && cross-env NEXT_PUBLIC_DEV_API=http://localhost:8080/server next dev -p 3000",
         "build": "next build",
         "lint": "next lint",

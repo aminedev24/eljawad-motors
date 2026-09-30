@@ -68,10 +68,10 @@ export default function MyApp({ Component, pageProps }) {
     <ThemeProvider>
       <div className={`${inter.variable} ${spaceGrotesk.variable} contents`}>
       <Head>
-        <title>Meridian Motors Inc. | Japanese Used Cars, Tires & Auto Parts Exporter</title>
+        <title>Eljawad Motors Inc. | Japanese Used Cars, Tires & Auto Parts Exporter</title>
         <meta
           name="description"
-          content="Meridian Motors Inc. exports genuine Japanese used vehicles, tires, and auto parts. Trusted by buyers worldwide for quality and reliability."
+          content="Eljawad Motors Inc. exports genuine Japanese used vehicles, tires, and auto parts. Trusted by buyers worldwide for quality and reliability."
         />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </Head>

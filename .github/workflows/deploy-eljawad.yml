@@ -17,6 +17,12 @@ concurrency:
 env:
   SRV: yqjezvte@gator4421.hostgator.com
   WEBROOT: /home2/yqjezvte/public_html/eljawad-motors
+  # Eljawad's own PHP backend, uploaded into $WEBROOT/server by this workflow.
+  # The build leaves NEXT_PUBLIC_API_BASE_URL unset so the site calls the
+  # relative /server on its own domain (eljawad.com/server) - same-origin, so
+  # the SameSite=Strict session cookie works. This URL is the same folder via
+  # artisbay.com and is only used by the Verify step.
+  API_BASE: https://artisbay.com/eljawad-motors/server
 
 jobs:
   deploy:
@@ -56,6 +62,31 @@ jobs:
              find $WEBROOT -type f -exec chmod 644 {} \; && \
              echo DEPLOY_DONE"
 
+      # db_connection.php and mail_secrets.php hold this site's own DB/mail
+      # credentials and live only on the host - never overwrite them with the
+      # repo copies (the repo's db_connection.php is a local root/localhost one).
+      # Refuses to deploy until the host-side db_connection.php exists.
+      - name: Deploy PHP backend (server/)
+        run: |
+          ssh -i ~/.ssh/hg_key -o StrictHostKeyChecking=no "$SRV" \
+            "test -f $WEBROOT/server/core/db_connection.php" \
+            || { echo "Missing $WEBROOT/server/core/db_connection.php on host - create it first"; exit 1; }
+          tar -czf deploy_server.tar.gz \
+            --exclude='core/db_connection.php' --exclude='core/mail_secrets.php' \
+            --exclude='error_log.txt' --exclude='Invoice.pdf' \
+            -C server .
+          scp -i ~/.ssh/hg_key -o StrictHostKeyChecking=no deploy_server.tar.gz "$SRV:/home2/yqjezvte/"
+          ssh -i ~/.ssh/hg_key -o StrictHostKeyChecking=no "$SRV" \
+            "tar xzf /home2/yqjezvte/deploy_server.tar.gz -C $WEBROOT/server/ && \
+             rm -f /home2/yqjezvte/deploy_server.tar.gz && \
+             find $WEBROOT/server -type d -exec chmod 755 {} \; && \
+             find $WEBROOT/server -type f -exec chmod 644 {} \; && \
+             echo SERVER_DONE"
+
       - name: Verify
         run: |
-          curl -sf -o /dev/null -w "site: %{http_code}\n" https://eljawad.com
+          curl -sf -o /dev/null -w "site: %{http_code}\n" https://eljawad.com || echo "eljawad.com not reachable yet (DNS?)"
+          # Must be real JSON - an HTML 200 means the host's SPA fallback
+          # answered because the PHP isn't there.
+          curl -s "$API_BASE/inventory/cars/fetchStock.php" | head -c 1 | grep -q '\[' \
+            && echo "backend: real JSON OK" || { echo "backend: NOT returning JSON"; exit 1; }

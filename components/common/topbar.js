@@ -70,7 +70,7 @@ const TopBar = () => {
     <div className="top-bar-wrapper">
       <div className="top-bar">
         <div className="app-info">
-          <span className="app-name">Meridian Motors Inc.</span>
+          <span className="app-name">Eljawad Motors Inc.</span>
           <span className="total-cars stock font-mono tabular-nums">Total Cars in Stock: 120</span>
           <span aria-hidden="true" className="opacity-40">|</span>
           <span className="cars-added-today stock font-mono tabular-nums">Cars Added Today: 5</span>

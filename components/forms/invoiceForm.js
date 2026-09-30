@@ -45,7 +45,7 @@ const ProformaInvoiceForm = () => {
   return (
     <>
       <Head>
-        <title>Meridian Motors Inc. | Invoice Generator</title>
+        <title>Eljawad Motors Inc. | Invoice Generator</title>
         <meta name="description" content="Easily generate invoices." />
       </Head>
       <div className="enquiry-wrapper invoice-wrapper">
@@ -59,7 +59,7 @@ const ProformaInvoiceForm = () => {
 
         <form onSubmit={handleSubmit}>
           <div className="enquiryContainer contact-container">
-            <img src="/images/logo-meridian-dark.svg" alt="Logo" className="logo-form" />
+            <img src="/images/logo-eljawad-dark.svg" alt="Logo" className="logo-form" />
 
             <h2 className="header">Proforma Invoice Generation</h2>
 

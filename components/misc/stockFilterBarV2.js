@@ -1,6 +1,6 @@
 // stockFilterBarV2.js
 // Top horizontal filter bar  adapted from Ichinomiya's FilterForm, rebranded to
-// Meridian Motors and wired to Meridian Motors's filter keys (make, bodyType, price tier,
+// Eljawad Motors and wired to Eljawad Motors's filter keys (make, bodyType, price tier,
 // transmission, fuel, yearFrom, yearTo, search). Controlled component: option
 // lists are derived from live stock and passed in by stockListV2.
 // Compact layout mirrors the Ichinomiya marketplace: 6-column grid, tiny

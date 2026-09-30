@@ -8,7 +8,7 @@ import { getCarPriceUsd, normalizeCurrency } from "../utilities/ichinomiyaCardAd
 export const MAX_COMPARE = 5;
 // v2: snapshots now include price/currency/drive/bodyType — bumping the key
 // instead of migrating keeps pre-v2 sessions from rendering blank rows.
-const STORAGE_KEY = "meridian_compare_v2";
+const STORAGE_KEY = "eljawad_compare_v2";
 
 const readInitial = () => {
   if (typeof window === "undefined") return [];

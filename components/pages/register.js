@@ -16,7 +16,7 @@ const RegisterForm = () => {
     <div className='register-wrapper'>
       <div className="register-container">
         <div className="account-container">
-          <img src={`/images/logo-meridian-dark.svg`} alt="Logo" className="logo-form" />
+          <img src={`/images/logo-eljawad-dark.svg`} alt="Logo" className="logo-form" />
 
           <div className="header">
             <span className="person-icon">

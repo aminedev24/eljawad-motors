@@ -2,6 +2,6 @@
   <circle cx="66" cy="70" r="52" fill="#ffffff" fill-opacity="0.12" />
   <path d="M66 26 L84 66 L66 114 L48 66 Z" fill="#e8622c" />
   <circle cx="66" cy="70" r="10" fill="#ffffff" />
-  <text x="140" y="66" font-family="'DM Sans', Arial, sans-serif" font-size="42" font-weight="800" letter-spacing="1" fill="#ffffff">MERIDIAN</text>
+  <text x="140" y="66" font-family="'DM Sans', Arial, sans-serif" font-size="42" font-weight="800" letter-spacing="1" fill="#ffffff">ELJAWAD</text>
   <text x="140" y="108" font-family="'DM Sans', Arial, sans-serif" font-size="30" font-weight="600" letter-spacing="4" fill="#e8622c">MOTORS</text>
 </svg>

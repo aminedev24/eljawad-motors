@@ -16,8 +16,8 @@ const Footer = () => {
         <Link href="/" aria-label="Go to homepage" className="footer-brand">
           <ImageWithLoader
             className="footer-logo"
-            alt="Meridian Motors Inc. logo"
-            src="/images/logo-meridian.svg"
+            alt="Eljawad Motors Inc. logo"
+            src="/images/logo-eljawad.svg"
           />
         </Link>
         <nav className="footer-links" aria-label="Footer navigation">
@@ -29,7 +29,7 @@ const Footer = () => {
         </nav>
       </div>
       <p className="footer-copy">
-        &copy; {new Date().getFullYear()} Meridian Motors Inc. All Rights Reserved.
+        &copy; {new Date().getFullYear()} Eljawad Motors Inc. All Rights Reserved.
       </p>
     </footer>
   );
