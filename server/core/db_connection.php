@@ -2,7 +2,7 @@
 // db_connection.php
 
 $host = 'localhost'; // Database host
-$db = 'artisbay'; // Database name
+$db = 'eljawad'; // Database name
 $user = 'root'; // Database username
 $pass = ''; // Database password
 
