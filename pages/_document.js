@@ -1,6 +1,10 @@
 import { Html, Head, Main, NextScript } from "next/document";
 import getConfig from 'next/config';
 
+// Aurora chat widget (public/widget.js) is switched off for now; set to true
+// to load it again. Both scripts below are skipped while this is false.
+const CHAT_WIDGET_ENABLED = false;
+
 export default function Document() {
     const { publicRuntimeConfig } = getConfig() || {};
     const basePath = publicRuntimeConfig?.basePath || '';
@@ -30,6 +34,7 @@ export default function Document() {
       <body>
         <Main />
         <NextScript />
+        {CHAT_WIDGET_ENABLED && (<>
         <script
           dangerouslySetInnerHTML={{
             __html: `(() => {
@@ -79,6 +84,7 @@ export default function Document() {
             })();`,
           }}
         />
+        </>)}
       </body>
     </Html>
   );

@@ -8,6 +8,10 @@
 // Workspace SMTP instead makes the send match the domain's SPF policy.
 
 use PHPMailer\PHPMailer\PHPMailer;
+// Every caller does `use PHPMailer\PHPMailer\Exception` and catches that, so
+// throw PHPMailer's Exception - a plain \Exception slips past their catch and
+// becomes an uncaught fatal (HTTP 500) instead of a JSON error.
+use PHPMailer\PHPMailer\Exception;
 
 function isLocalDev(): bool
 {
