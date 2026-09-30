@@ -17,7 +17,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $data = json_decode(file_get_contents('php://input'), true);
-$userId = intval($data['user_id'] ?? 0);
+// CustomerList.jsx sends the id as `id`, getUsers.js as `user_id`.
+$userId = intval($data['user_id'] ?? $data['id'] ?? 0);
 $fields = ['full_name','email','country','phone','address','company'];
 $updates = [];
 $params  = [];

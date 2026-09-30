@@ -260,18 +260,46 @@ const Header = () => {
                   renderGuestAuth()
                 ) : (
                   <>
-                    <div className="header-item flex items-center gap-2">
-                      <i className="fas fa-user icon"></i> <Link href="/profile">Profile</Link>
+                    {/* One account button instead of Profile / Admin / Sign Out side by
+                        side, so the row is the same width logged in or out and the
+                        search box stays centred. */}
+                    <div
+                      className="account-menu"
+                      ref={(el) => (dropdownRefs.current.account = el)}
+                      onKeyDown={(e) => { if (e.key === 'Escape') setActiveDropdown(null); }}
+                    >
+                      <button
+                        type="button"
+                        className="header-item account-toggle flex items-center gap-2"
+                        aria-haspopup="menu"
+                        aria-expanded={activeDropdown === 'account'}
+                        onClick={() => toggleDropdown('account')}
+                      >
+                        <i className="fas fa-user-circle icon" aria-hidden="true"></i>
+                        <span className="account-name">{(user.name || user.email || 'Account').split(' ')[0]}</span>
+                        <i className="fas fa-chevron-down account-caret" aria-hidden="true"></i>
+                      </button>
+                      {activeDropdown === 'account' && (
+                        <div className="account-dropdown" role="menu">
+                          <div className="account-dropdown-head">
+                            <strong>{user.name || 'My account'}</strong>
+                            {user.email && <small>{user.email}</small>}
+                          </div>
+                          <Link href="/profile" role="menuitem" onClick={() => setActiveDropdown(null)}>
+                            <i className="fas fa-user" aria-hidden="true"></i> Profile
+                          </Link>
+                          {user.role === 'admin' && (
+                            <Link href="/admin" role="menuitem" onClick={() => setActiveDropdown(null)}>
+                              <i className="fas fa-user-shield" aria-hidden="true"></i> Admin panel
+                            </Link>
+                          )}
+                          <button type="button" role="menuitem" className="account-signout" onClick={logoutHandler}>
+                            <i className="fas fa-sign-out-alt" aria-hidden="true"></i> Sign Out
+                          </button>
+                        </div>
+                      )}
                     </div>
-                    {user?.role === 'admin' && (
-                      <div className="header-item flex items-center gap-2">
-                        <i className="fas fa-user-shield icon"></i> <Link href="/admin">Admin</Link>
-                      </div>
-                    )}
-                    <button onClick={logoutHandler} className="header-item logout-btn flex items-center gap-2">
-                      <i className="fas fa-sign-out-alt icon"></i> Sign Out
-                    </button>
-                    {user && user.isImpersonating && <RevertImpersonationButton />}
+                    {user.isImpersonating && <RevertImpersonationButton />}
                   </>
                 )}
               </div>

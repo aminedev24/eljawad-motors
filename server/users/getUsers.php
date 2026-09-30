@@ -1,10 +1,20 @@
 <?php
 require_once __DIR__ . '/../core/db_connection.php';
 require_once __DIR__ . '/../core/headers.php';
+session_start();
+
+// Full user/customer list incl. emails, phones and addresses - staff only.
+// Used by the admin panel and the staff invoice/stock/accountancy forms.
+if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'] ?? '', ['admin', 'sales'], true)) {
+    http_response_code(403);
+    echo json_encode(['status' => 'error', 'message' => 'Not authorized']);
+    exit;
+}
+
 $response = ['status' => 'success', 'data' => []];
 
 // Fetch users
-$userQuery = "SELECT id, full_name, email, phone, country,joined_date, company , address, 'user' as type FROM users";
+$userQuery = "SELECT id, full_name, email, phone, country,joined_date, company , address, role, 'user' as type FROM users";
 $userResult = $conn->query($userQuery);
 if ($userResult) {
     while ($row = $userResult->fetch_assoc()) {
@@ -20,6 +30,7 @@ if ($userResult) {
             'address' => $row['address'],
             'joined_date' => $row['joined_date'],
             "company" => $row['company'],
+            'role' => $row['role'],
              // Add any additional fields you need here
         ];
     }
@@ -48,6 +59,7 @@ if ($customerResult) {
             'notify_email' => $row['email2'] ?? '',
             'registration_date' => $row['registration_date'],
             'customer_category' => $row['customer_category'],
+            'role' => $row['role'] ?? 'customer',
             'country' => $row['country'],
             'consignee_address' => $row['consignee_address'],
             // Add any additional fields you need here
