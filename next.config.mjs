@@ -23,6 +23,12 @@ var nextConfig = {
   reactStrictMode: true,
   eslint: { ignoreDuringBuilds: true },
 
+  // Strip console.log/info/debug from production bundles (dev keeps them);
+  // console.error and console.warn stay so real problems still show.
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error', 'warn'] } : false,
+  },
+
   publicRuntimeConfig: {
     basePath: basePath,
   },

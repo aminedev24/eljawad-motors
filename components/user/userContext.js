@@ -119,7 +119,9 @@ export const UserProvider = ({ children }) => {
  const checkSession = async () => {
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(new DOMException('Session check timeout', 'AbortError')), 1200);
+    // Generous timeout: a slow shared host would otherwise look like "logged
+    // out" and bounce admins off /admin (the gate redirects when user is null).
+    const timeout = setTimeout(() => controller.abort(new DOMException('Session check timeout', 'AbortError')), 8000);
     const response = await fetch(`${apiUrl}/check_session.php`, {
       method: 'GET',
       credentials: 'include',

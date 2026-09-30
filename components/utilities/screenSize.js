@@ -6,7 +6,7 @@ const useCheckScreenSize = () => {
   const [isPortrait, setIsPortrait] = useState(false);
 
   // Debug flag (set to false in production)
-  const DEBUG = true;
+  const DEBUG = false;
 
   useEffect(() => {
     // Only run on client
