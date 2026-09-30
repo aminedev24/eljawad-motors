@@ -155,25 +155,19 @@ if ($notifyUser && filter_var($notifyEmail, FILTER_VALIDATE_EMAIL)) {
 function sendNotifyEmail($toEmail, $customerName, $tempPassword) {
     $mail = new PHPMailer(true);
     try {
-        configureArtisbayMailer($mail, 'noreply@artisbay.com', 'Artisbay Lite Inc.');
+        configureMailer($mail);
         $mail->addAddress($toEmail, $customerName);
         $mail->isHTML(true);
-        $mail->Subject = 'Your Artisbay Lite Inc. Account Has Been Created!';
+        $mail->Subject = 'Your Eljawad Motors Account Has Been Created!';
 
-        $host = $_SERVER['HTTP_HOST'];
-
-        if ($host === 'localhost' || $host === '127.0.0.1') {
-            $loginUrl = 'http://localhost:3000/login'; // or your dev frontend URL
-        } else {
-            $loginUrl = 'https://artisbay.com/login'; // production URL
-        }
+        $loginUrl = SITE_URL . '/login';
 
 
         $mail->Body = "
         <div style='font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px;'>
             <div style='text-align: center; padding-bottom: 20px;'>
-                        <img src='https://artisbay.com/images/logo3.png' alt='Artisbay Lite Logo' style='max-width: 150px; margin-bottom: 10px;' />
-                <h2 style='color: #333;'>Welcome to Artisbay Lite Inc.</h2>
+                        <img src='" . SITE_EMAIL_LOGO . "' alt='" . SITE_NAME . "' style='max-width: 220px; margin-bottom: 10px;' />
+                <h2 style='color: #333;'>Welcome to Eljawad Motors</h2>
             </div>
             <p>Dear <strong>{$customerName}</strong>,</p>
             <p>We’re pleased to inform you that an account has been created for you on our website. You can now log in to manage your transactions, track orders, and access our services.</p>
@@ -189,17 +183,17 @@ function sendNotifyEmail($toEmail, $customerName, $tempPassword) {
 
             <p style='margin-top: 20px;'>For security reasons, we recommend changing your password upon first login. If you have any questions or need assistance, feel free to contact us.</p>
 
-            <p style='margin-top: 40px;'>Best regards,<br><strong>Artisbay Lite Inc.</strong></p>
+            <p style='margin-top: 40px;'>Best regards,<br><strong>Eljawad Motors</strong></p>
         </div>
         ";
 
         $mail->AltBody = "Dear {$customerName},\n\n"
-            . "An account has been created for you on Artisbay Lite Inc.\n\n"
+            . "An account has been created for you on Eljawad Motors.\n\n"
             . "Username: {$customerName}\n"
             . "Temporary Password: {$tempPassword}\n"
             . "Login Link: {$loginUrl}\n\n"
             . "Please change your password after logging in.\n\n"
-            . "Best regards,\nArtisbay Inc.";
+            . "Best regards,\nEljawad Motors";
 
         $mail->send();
     } catch (Exception $e) {

@@ -47,9 +47,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $mail = new PHPMailer(true);
 
         try {
-            configureArtisbayMailer($mail, 'noreply@artisbay.com', 'Artisbay Lite Inc.');
+            configureMailer($mail);
             $mail->addAddress($email, $fullName);
-            $mail->addBCC('contact@artisbay.com');
+            $mail->addBCC(siteContactEmail());
 
             $mail->isHTML(true);
             $mail->Subject = "$agreementType agreement";

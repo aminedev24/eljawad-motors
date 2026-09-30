@@ -1,20 +1,22 @@
 <?php
 // Copy this file to mail_secrets.php (gitignored) and fill in real values.
-// mail_secrets.php must exist on any server that sends @artisbay.com mail
-// (production HostGator, and locally if you want to test real sends).
+// mail_secrets.php must exist on the production server (public_html/
+// eljawad-motors/server/core/); the deploy workflow never uploads or
+// overwrites it. Locally, mail goes to MailHog and this file isn't needed.
 //
-// 'username' is the Google Workspace mailbox that authenticates the SMTP
-// connection - contact@artisbay.com.
+// username/password: the eljawad.com mailbox created in cPanel > Email Accounts
+// (full address as username, the mailbox password).
 //
-// 'password' is a Gmail App Password (myaccount.google.com/apppasswords,
-// requires 2-Step Verification on the account), NOT the account login password.
-//
-// noreply@artisbay.com (verification/password-reset/agreement emails) and
-// order@artisbay.com (invoice/deposit emails, sendInvoice.php) must both be
-// added as aliases of the contact@artisbay.com user in Google Workspace Admin
-// (Directory > Users > contact@artisbay.com > add alias) so Gmail accepts
-// PHPMailer's setFrom() for those addresses when authenticating as contact@.
+// host: the server's own hostname rather than mail.eljawad.com - SMTP on this
+// host presents a *.hostgator.com certificate, so TLS only verifies for that name.
 return [
-    'username' => 'contact@artisbay.com',
-    'password' => 'REPLACE_WITH_APP_PASSWORD',
+    'host'          => 'gator4421.hostgator.com',
+    'port'          => 465,              // SSL. (587 = STARTTLS: set 'secure' => 'tls')
+    'secure'        => 'ssl',
+    'username'      => 'noreply@eljawad.com',
+    'password'      => 'REPLACE_WITH_MAILBOX_PASSWORD',
+    'from_email'    => 'noreply@eljawad.com',
+    'from_name'     => 'Eljawad Motors',
+    // Receives vehicle inquiries and agreement copies; shown as "contact us".
+    'contact_email' => 'contact@eljawad.com',
 ];

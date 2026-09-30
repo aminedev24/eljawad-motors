@@ -19,7 +19,7 @@ require_once __DIR__ . '/../core/mailer.php';
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-define('BASE_URL', ($_SERVER['HTTP_HOST'] === 'localhost') ? 'http://localhost:3000' : 'https://artisbay.com');
+define('BASE_URL', SITE_URL); // from core/site.php (via mailer.php)
 
 header("Content-Type: application/json");
 
@@ -163,7 +163,7 @@ $conn->close();
 function sendVerificationEmail($email, $fullName, $token, $verificationCode) {
     $mail = new PHPMailer(true);
     try {
-        configureArtisbayMailer($mail, 'noreply@artisbay.com', 'Artisbay Lite Inc.');
+        configureMailer($mail);
         $mail->addAddress($email, $fullName);
         $mail->isHTML(true);
         $mail->Subject = 'Verify Your Email Address';

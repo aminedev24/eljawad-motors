@@ -17,9 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
     exit;
 }
 
-define('BASE_URL', (str_contains($_SERVER['HTTP_HOST'] ?? '', 'localhost'))
-    ? 'http://localhost:3000' // Local development URL
-    : 'https://artisbay.com'); // Production URL
+define('BASE_URL', SITE_URL); // from core/site.php (via mailer.php)
 
 // If it's a POST request, process the forgot password request
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -90,20 +88,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                       <!-- Footer -->
                       <tr>
                         <td style='background-color: #f9f9f9; padding: 20px; text-align: center; font-size: 14px; color: #777;'>
-                          <img src='https://artisbay.com/images/Signatureforemail.png' alt='Artisbay Lite Inc. Logo' style='width: 120px; height: auto; margin-bottom: 10px;'>
+                          <img src='" . SITE_EMAIL_LOGO . "' alt='" . SITE_NAME . "' style='width: 200px; height: auto; margin-bottom: 10px;'>
                           <p style='margin: 5px 0; font-weight: bold;'>Your trusted platform for the sale and export of used vehicles and auto parts</p>
-                          <p style='margin: 5px 0;'>Registered in Japan | Registered with the Miyagi Ken Legal Affairs Bureau</p>
                           <!-- Contact Info using a table for layout -->
                           <table align='center' border='0' cellspacing='0' cellpadding='0' style='margin-top: 10px;'>
                             <tr>
                               <td style='padding: 0 10px;'>
-                                <a href='mailto:contact@artisbay.com' style='text-decoration: none; color: #1e398a; font-size: 14px;'>
-                                  <i class='fas fa-envelope' style='vertical-align: middle;'></i> contact@artisbay.com
+                                <a href='mailto:" . siteContactEmail() . "' style='text-decoration: none; color: #1e398a; font-size: 14px;'>
+                                  <i class='fas fa-envelope' style='vertical-align: middle;'></i> " . siteContactEmail() . "
                                 </a>
                               </td>
                               <td style='padding: 0 10px;'>
-                                <a href='https://www.artisbay.com' style='text-decoration: none; color: #1e398a; font-size: 14px;'>
-                                  <i class='fas fa-globe' style='vertical-align: middle;'></i> www.artisbay.com
+                                <a href='" . SITE_URL . "' style='text-decoration: none; color: #1e398a; font-size: 14px;'>
+                                  <i class='fas fa-globe' style='vertical-align: middle;'></i> eljawad.com
                                 </a>
                               </td>
                             </tr>
@@ -127,7 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             try {
                 // Recipients
-                configureArtisbayMailer($mail, 'noreply@artisbay.com', 'Artisbay Lite Inc.');
+                configureMailer($mail);
                 $mail->addAddress($email); // Add the recipient's email address
 
                 // Content

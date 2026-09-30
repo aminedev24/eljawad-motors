@@ -112,7 +112,7 @@ if ($stmt) {
 $mail = new PHPMailer(true);
 try {
     // Recipients
-    configureArtisbayMailer($mail, 'order@artisbay.com', 'Artisbay Lite Inc');
+    configureMailer($mail);
     $mail->addAddress($to); // Primary user email
     $mail->addBCC($bcc); // BCC for the additional recipient
 

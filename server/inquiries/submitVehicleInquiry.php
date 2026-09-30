@@ -47,7 +47,7 @@ if ($vehicle_details !== '' && $vehicle_details[0] !== '{') {
 
 $page_url = trim((string)($input['page_url'] ?? ''));
 if ($page_url === '' || !filter_var($page_url, FILTER_VALIDATE_URL)) {
-    $page_url = 'https://artisbay.com';
+    $page_url = SITE_URL;
 }
 
 if ($name === '' || $email === '' || $phone === '' || $country === '') {
@@ -157,8 +157,8 @@ try {
     $now = date('Y-m-d H:i:s T');
 
     $mail = new PHPMailer(true);
-    configureArtisbayMailer($mail, 'noreply@artisbay.com', 'Artisbay Lite Inc.');
-    $mail->addAddress('contact@artisbay.com');
+    configureMailer($mail);
+    $mail->addAddress(siteContactEmail());
     $mail->isHTML(false);
     $mail->Subject = 'Vehicle Inquiry #' . $inquiryId . ' — ' . ($vehicle_name ?: 'Vehicle');
 

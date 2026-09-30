@@ -10,7 +10,7 @@ function generateToken() {
     return bin2hex(random_bytes(32));
 }
 
-define('BASE_URL', ($_SERVER['HTTP_HOST'] === 'localhost') ? 'http://localhost:3000' : 'https://artisbay.com');
+define('BASE_URL', SITE_URL); // from core/site.php (via mailer.php)
 
 function sendVerificationEmail($userId, $email) {
     global $conn;
@@ -32,7 +32,7 @@ function sendVerificationEmail($userId, $email) {
     // Send email using PHPMailer
     $mail = new PHPMailer(true);
     try {
-        configureArtisbayMailer($mail, 'noreply@artisbay.com', 'Artisbay Lite Inc.');
+        configureMailer($mail);
         $mail->addAddress($email);
         $mail->isHTML(true);
         $mail->Subject = 'Verify Your Email Address';
@@ -96,8 +96,8 @@ function sendVerificationEmail($userId, $email) {
                 <p><a href='$verification_link'>$verification_link</a></p>
                 <p>If you did not request this, please ignore this email.</p>
                 <div class='footer'>
-                <p>Need help? Contact us at <a href='mailto:contact@artisbay.com'>contact@artisbay.com</a>.</p>
-                <p>Best regards,<br>Artisbay Lite Inc.</p>
+                <p>Need help? Contact us at <a href='mailto:" . siteContactEmail() . "'>" . siteContactEmail() . "</a>.</p>
+                <p>Best regards,<br>Eljawad Motors</p>
                 </div>
             </div>
             </body>
