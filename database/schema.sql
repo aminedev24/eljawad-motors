@@ -413,7 +413,11 @@ CREATE TABLE IF NOT EXISTS reserved_vehicles (
   deposit_currency VARCHAR(10) DEFAULT NULL,
   deposit_purpose VARCHAR(255) DEFAULT NULL,
   status VARCHAR(50) DEFAULT 'reserved',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  -- Added lazily by fetchMyReservations.php; expiry checks in fetchStock.php,
+  -- fetchVehicle.php and reservation_helpers.php read expires_at.
+  agreed_price DECIMAL(15,2) DEFAULT 0,
+  expires_at DATETIME DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Created lazily by server/auth/addFavorite.php.

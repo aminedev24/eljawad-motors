@@ -15,6 +15,12 @@ function releaseExpiredReservations($conn) {
           WHERE status IN ('reserved','pending_payment')
             AND expires_at IS NOT NULL AND expires_at <= NOW()"
     );
+    if ($expired === false) {
+        // e.g. expires_at missing on an older table - skip the cleanup rather
+        // than fataling every page that calls this.
+        error_log('releaseExpiredReservations: ' . $conn->error);
+        return;
+    }
     $expired->execute();
     $expired->close();
 }
