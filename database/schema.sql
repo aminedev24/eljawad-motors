@@ -183,6 +183,28 @@ CREATE TABLE IF NOT EXISTS `customers` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+CREATE TABLE IF NOT EXISTS `users` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `uid` char(36) COLLATE utf8mb4_general_ci NOT NULL,
+  `full_name` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
+  `email` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
+  `password` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `country` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
+  `phone` varchar(20) COLLATE utf8mb4_general_ci NOT NULL,
+  `company` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'N/A',
+  `address` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
+  `joined_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `verification_token` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `is_verified` tinyint(1) NOT NULL DEFAULT '0',
+  `role` varchar(50) COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'user',
+  `verification_code` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `verification_attempts` int DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `email` (`email`),
+  UNIQUE KEY `full_name` (`full_name`),
+  UNIQUE KEY `id` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 CREATE TABLE IF NOT EXISTS `deposits` (
   `id` bigint unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
@@ -373,28 +395,6 @@ CREATE TABLE IF NOT EXISTS `user_sessions` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-CREATE TABLE IF NOT EXISTS `users` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `uid` char(36) COLLATE utf8mb4_general_ci NOT NULL,
-  `full_name` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
-  `email` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
-  `password` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `country` varchar(100) COLLATE utf8mb4_general_ci NOT NULL,
-  `phone` varchar(20) COLLATE utf8mb4_general_ci NOT NULL,
-  `company` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'N/A',
-  `address` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `joined_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `verification_token` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `is_verified` tinyint(1) NOT NULL DEFAULT '0',
-  `role` varchar(50) COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'user',
-  `verification_code` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `verification_attempts` int DEFAULT '0',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `email` (`email`),
-  UNIQUE KEY `full_name` (`full_name`),
-  UNIQUE KEY `id` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
 -- Created lazily by server/reservations/create_reservation.php (fetchStock.php joins it).
 CREATE TABLE IF NOT EXISTS reserved_vehicles (
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -448,6 +448,7 @@ CREATE TABLE IF NOT EXISTS vehicle_inquiries (
   message TEXT DEFAULT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- Columns from server/scripts/migrate_schema.php (not yet in the source schema).
 ALTER TABLE `cars_stock`
   ADD COLUMN `model_code` varchar(50) DEFAULT NULL,
