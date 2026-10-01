@@ -108,8 +108,14 @@ if (!$passwordCorrect || !$user) {
     exit;
 }
 
+// Local development only: skip the emailed admin code under PHP's built-in
+// server (`php -S`, as used by `npm run dev:php` / `dev:full`). PHP_SAPI is
+// 'cli-server' only there - never under Apache/LiteSpeed on HostGator - and,
+// unlike the Host header, a client can't spoof it.
+$skipAdminEmailCode = PHP_SAPI === 'cli-server';
+
 // 🔐 Handle Admin Verification (only for users)
-if ($user['role'] === 'admin' && $user['source'] === 'users' && (!isset($_SESSION['admin_verified']) || $_SESSION['admin_verified'] !== true)) {
+if (!$skipAdminEmailCode && $user['role'] === 'admin' && $user['source'] === 'users' && (!isset($_SESSION['admin_verified']) || $_SESSION['admin_verified'] !== true)) {
     $token = bin2hex(random_bytes(16));
     $verificationCode = random_int(100000, 999999); // 6-digit code
 
