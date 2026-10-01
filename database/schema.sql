@@ -274,8 +274,8 @@ CREATE TABLE IF NOT EXISTS `invoices` (
   `model` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
   `deposit_currency` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
-  KEY `fk_user_email2` (`email`),
-  CONSTRAINT `fk_user_email2` FOREIGN KEY (`email`) REFERENCES `users` (`email`)
+  -- No foreign key to users.email: admins invoice any customer, registered or not.
+  KEY `idx_invoices_email` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 CREATE TABLE IF NOT EXISTS `password_resets` (

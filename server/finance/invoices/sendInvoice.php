@@ -113,7 +113,9 @@ if ($stmt) {
 } else {
     throw new Exception("Failed to prepare statement: " . $conn->error);
 }
-} catch (Exception $e) {
+// \Throwable, not Exception: `Exception` here is PHPMailer's (see `use` above),
+// so database errors (mysqli_sql_exception) slipped past and fataled with a bare 500.
+} catch (\Throwable $e) {
     http_response_code(500);
     echo json_encode(['error' => 'Failed to save invoice data: ' . $e->getMessage()]);
     exit;
