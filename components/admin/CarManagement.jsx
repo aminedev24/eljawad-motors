@@ -10,6 +10,10 @@ import Pagination from './Pagination';
 import Reservations from './Reservations';
 import SoldCars from './SoldCars';
 
+// Prefix for own-stock reference numbers (ELJ-0001, ...). Must match
+// STOCK_REF_PREFIX in server/inventory/cars/vehicle-action.php.
+const STOCK_REF_PREFIX = 'ELJ-';
+
 const statusBadgeClass = (s) => {
   if (s === 'in_stock') return 'bg-green-50 text-green-700';
   if (s === 'reserved') return 'bg-amber-50 text-amber-700';
@@ -332,7 +336,7 @@ export default function CarManagement({ showMessage, users: propUsers = [], user
     const stock = await adminApiFetch('inventory/cars/fetchAdminStock.php');
     const nextNum = (Array.isArray(stock) ? Math.max(0, ...stock.map(v => parseInt(v.ref_no?.replace(/\D/g, ''))||0)) : 0) + 1;
     setRefLoading(false);
-    setForm(p => ({ ...p, ref_no: `ART-${String(nextNum).padStart(4, '0')}` }));
+    setForm(p => ({ ...p, ref_no: `${STOCK_REF_PREFIX}${String(nextNum).padStart(4, '0')}` }));
   };
 
   const importFromSupplier = async (refOverride = supplierRefInput) => {
@@ -411,7 +415,7 @@ export default function CarManagement({ showMessage, users: propUsers = [], user
       }
       const stock = await adminApiFetch('inventory/cars/fetchAdminStock.php');
       const nextNum = (Array.isArray(stock) ? Math.max(0, ...stock.map(s => parseInt(s.ref_no?.replace(/\D/g, '')) || 0)) : 0) + 1;
-      const newRef = `ART-${String(nextNum).padStart(4, '0')}`;
+      const newRef = `${STOCK_REF_PREFIX}${String(nextNum).padStart(4, '0')}`;
 
       const rawImages = data.image_urls;
       let images = [];

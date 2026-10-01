@@ -34,7 +34,12 @@ if (!in_array($action, $validActions, true)) {
 require_once __DIR__ . '/reservation_helpers.php';
 releaseExpiredReservations($conn);
 
-// Next sequential ART-XXXX reference for own-stock vehicles.
+// Prefix for own-stock reference numbers (ELJ-0001, ...). Must match
+// STOCK_REF_PREFIX in components/admin/CarManagement.jsx. Numbering reads only
+// the digits, so older ART-xxxx refs still count toward the sequence.
+const STOCK_REF_PREFIX = 'ELJ-';
+
+// Next sequential reference for own-stock vehicles.
 function nextStockRef($conn) {
     $max = 0;
     $res = $conn->query("SELECT ref_no FROM cars_stock");
@@ -44,7 +49,7 @@ function nextStockRef($conn) {
             if ($num > $max) $max = $num;
         }
     }
-    return 'ART-' . str_pad((string)($max + 1), 4, '0', STR_PAD_LEFT);
+    return STOCK_REF_PREFIX . str_pad((string)($max + 1), 4, '0', STR_PAD_LEFT);
 }
 
 // Copy a partner/3rd-party feed row into cars_stock (fresh ref, status in_stock).
@@ -123,7 +128,7 @@ try {
     $car = $stmt->get_result()->fetch_assoc();
 
     // Partner/3rd-party vehicle (not in own stock yet) — import it into
-    // cars_stock with a fresh ART-XXXX ref before applying the action.
+    // cars_stock with a fresh STOCK_REF_PREFIX ref (ELJ-XXXX) before applying the action.
     if (!$car && !empty($data['vehicle']) && is_array($data['vehicle'])) {
         $newRef = nextStockRef($conn);
         insertPartnerVehicle($conn, $data['vehicle'], $newRef, $_SESSION['user_id'] ?? 0);
