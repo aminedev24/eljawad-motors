@@ -14,6 +14,8 @@ import {
   NUMERIC_FIELDS,
   PURPOSE_DESCRIPTIONS,
   REQUIRED_FIELDS,
+  VEHICLE_PURPOSES,
+  amountDueForTerms,
 } from "./constants";
 import {
   calculateExpiryDate,
@@ -34,6 +36,16 @@ const parseNumericValue = (value) => {
   if (!match) return "";
   const num = Number(match[0].replace(/,/g, ""));
   return Number.isFinite(num) ? num : "";
+};
+
+// Split a stored phone like "+255712345678" into the country's dial code
+// (shown as a prefix in the form) and the local part.
+const splitPhoneForCountry = (phone, country) => {
+  const entry = CountryList().find((c) => c.label === country);
+  const code = entry?.countryCode || "";
+  const value = String(phone || "");
+  if (code && value.startsWith(code)) return { phoneCode: code, phone: value.slice(code.length) };
+  return { phoneCode: code, phone: value };
 };
 
 const getStoredInvoiceData = () => {
@@ -75,6 +87,10 @@ export const useInvoiceFormState = () => {
   const [modalMessage, setModalMessage] = useState("");
   const [modalType, setModalType] = useState("");
   const [isTyping] = useState(false);
+  const [customers, setCustomers] = useState([]);
+  const [vehicleQuery, setVehicleQuery] = useState("");
+  const [vehicleResults, setVehicleResults] = useState([]);
+  const [vehicleSearching, setVehicleSearching] = useState(false);
 
   const regenerateParam = router.query.regenerate === "true";
   const storedInvoiceData = useMemo(getStoredInvoiceData, []);
@@ -125,14 +141,23 @@ export const useInvoiceFormState = () => {
   const getFormDefaults = useCallback(
     (source = null, isRegenerate = false) => ({
       fullName: source?.customer_name || source?.fullName || "",
-      company: source?.company || "",
-      country: source?.country || "",
-      phone: source?.phone || "",
+      company: source?.customer_company || source?.company || "",
+      country: source?.customer_country || source?.country || "",
+      phone: source?.customer_phone || source?.phone || "",
       email: source?.email || "",
-      address: source?.address || "",
-      depositAmount: parseNumericValue(
-        source?.deposit_amount ?? source?.depositAmount,
-      ),
+      address: source?.customer_address || source?.address || "",
+      invoiceType: source?.invoice_type || source?.invoiceType || "deposit",
+      totalPrice: parseNumericValue(source?.total_price ?? source?.totalPrice ?? source?.price),
+      paymentTerms: source?.payment_terms || source?.paymentTerms || "",
+      destinationCountry: source?.destination_country || source?.destinationCountry || "",
+      destinationPort: source?.destination_port || source?.destinationPort || "",
+      preExportInspection: source?.pre_export_inspection || source?.preExportInspection || "",
+      depositAmount:
+        parseNumericValue(source?.deposit_amount ?? source?.depositAmount) ||
+        amountDueForTerms(
+          source?.total_price ?? source?.totalPrice ?? source?.price,
+          source?.payment_terms || source?.paymentTerms,
+        ),
       depositCurrency:
         source?.deposit_currency || source?.depositCurrency || "JPY",
       depositDescription:
@@ -145,7 +170,8 @@ export const useInvoiceFormState = () => {
       bankNote:
         (source?.deposit_purpose || source?.depositPurpose) === "order vehicle"
           ? ""
-          : source?.bankNote ||
+          : source?.bank_note ||
+            source?.bankNote ||
             "Car details, including chassis numbers, will be provided by the remitter upon completion of the car purchase.",
       chasisNumber:
         source?.chasis_number || source?.chasisNumber || source?.chassis_no || "",
@@ -176,7 +202,10 @@ export const useInvoiceFormState = () => {
   }, [formData.depositCurrency]);
 
   useEffect(() => {
-    setFormData(getFormDefaults(invoiceData, regenerate));
+    const defaults = getFormDefaults(invoiceData, regenerate);
+    const { phoneCode: code, phone } = splitPhoneForCountry(defaults.phone, defaults.country);
+    setPhoneCode(code);
+    setFormData({ ...defaults, phone });
   }, [getFormDefaults, invoiceData, regenerate]);
 
   const fetchInvoiceNumber = useCallback(async () => {
@@ -222,75 +251,107 @@ export const useInvoiceFormState = () => {
     fetchInvoiceNumber();
   }, [fetchInvoiceNumber]);
 
+  // Registered customers for the Full Name autocomplete (staff-only endpoint).
+  // This page used to prefill the logged-in user's own profile - a leftover
+  // from when customers generated their own invoices; it's staff-only now.
   useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        // If an admin issued this invoice for a buyer, keep the buyer's
-        // details that were prefilled instead of overwriting them with the
-        // logged-in admin's own profile.
-        if (storedInvoiceData?.customer_name) return;
-        const response = await fetch(`${API_URL}/users/getUserInfo.php`, {
-          method: "GET",
-          credentials: "include",
-        });
-
-        if (!response.ok) {
-          console.error("Failed to fetch user data:", response.statusText);
-          return;
-        }
-
-        const data = await response.json();
-
-        if (!data || data.error || !data.data) {
-          console.error("Invalid or missing data returned from API:", data);
-          return;
-        }
-
-        const {
-          full_name = "",
-          company = "",
-          country = "",
-          phone = "",
-          email = "",
-          address = "",
-        } = data.data;
-
-        setFormData((prevState) => ({
-          ...prevState,
-          fullName: full_name,
-          company,
-          country,
-          phone,
-          email,
-          address,
-        }));
-
-        if (country) {
-          const selectedCountry = CountryList().find(
-            (countryItem) => countryItem.label === country,
-          );
-          if (selectedCountry?.countryCode) {
-            if (phone.startsWith(selectedCountry.countryCode)) {
-              setPhoneCode(selectedCountry.countryCode);
-              setFormData((prevState) => ({
-                ...prevState,
-                phone: phone.replace(selectedCountry.countryCode, ""),
-              }));
-            } else {
-              setPhoneCode(selectedCountry.countryCode);
-            }
-          } else {
-            setPhoneCode("");
-          }
-        }
+    let cancelled = false;
+    fetch(`${API_URL}/users/getUsers.php`, { credentials: "include" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (cancelled || !Array.isArray(data?.data)) return;
+        setCustomers(
+          data.data
+            .filter((u) => u.type === "user" && (u.full_name || u.email))
+            .map((u) => ({
+              id: u.id,
+              fullName: u.full_name || "",
+              email: u.email || "",
+              phone: u.phone || "",
+              country: u.country || "",
+              address: u.address || "",
+              company: u.company && u.company !== "N/A" ? u.company : "",
+            })),
+        );
         setIsDataLoaded(true);
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-      }
+      })
+      .catch((err) => console.error("Could not load customers:", err));
+    return () => {
+      cancelled = true;
     };
-
-    fetchUserData();
   }, []);
+
+  const customerMatches = useMemo(() => {
+    const q = String(formData.fullName || "").trim().toLowerCase();
+    if (q.length < 2) return [];
+    return customers
+      .filter(
+        (c) =>
+          (c.fullName.toLowerCase().includes(q) || c.email.toLowerCase().includes(q)) &&
+          !(c.fullName === formData.fullName && c.email === formData.email),
+      )
+      .slice(0, 8);
+  }, [customers, formData.fullName, formData.email]);
+
+  const selectCustomer = (c) => {
+    const { phoneCode: code, phone } = splitPhoneForCountry(c.phone, c.country);
+    setPhoneCode(code);
+    setFormData((prev) => ({
+      ...prev,
+      fullName: c.fullName,
+      email: c.email,
+      phone,
+      country: c.country,
+      address: c.address,
+      company: c.company,
+    }));
+  };
+
+  // Vehicle picker: debounced search over own + partner stock.
+  useEffect(() => {
+    const q = vehicleQuery.trim();
+    if (q.length < 2) {
+      setVehicleResults([]);
+      return undefined;
+    }
+    let cancelled = false;
+    setVehicleSearching(true);
+    const timer = setTimeout(() => {
+      fetch(`${API_URL}/inventory/cars/searchVehicles.php?q=${encodeURIComponent(q)}`, { credentials: "include" })
+        .then((res) => (res.ok ? res.json() : []))
+        .then((rows) => { if (!cancelled) setVehicleResults(Array.isArray(rows) ? rows : []); })
+        .catch(() => { if (!cancelled) setVehicleResults([]); })
+        .finally(() => { if (!cancelled) setVehicleSearching(false); });
+    }, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [vehicleQuery]);
+
+  const selectVehicle = (v) => {
+    const name = [v.make, v.model, v.year].filter(Boolean).join(" ");
+    const total = parseNumericValue(v.price);
+    setFormData((prev) => ({
+      ...prev,
+      make: v.make || "any",
+      model: v.model || "any",
+      chasisNumber: v.chassis_no || "",
+      engineCapacity: parseNumericValue(v.engine_capacity),
+      mileage: parseNumericValue(v.mileage),
+      vehicleRef: v.ref_no || "",
+      vehicleDescription: name,
+      depositCurrency: ["USD", "JPY", "EUR"].includes(v.currency) ? v.currency : prev.depositCurrency,
+      totalPrice: total,
+      depositAmount: total
+        ? amountDueForTerms(total, prev.paymentTerms || "100%")
+        : prev.depositAmount,
+      paymentTerms: total ? prev.paymentTerms || "100%" : prev.paymentTerms,
+      depositDescription: `Payment for ${name}${v.ref_no ? ` (Ref: ${v.ref_no})` : ""}`,
+    }));
+    setVehicleQuery("");
+    setVehicleResults([]);
+  };
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -319,9 +380,20 @@ export const useInvoiceFormState = () => {
         valueToSet = 6000;
       }
 
+      setFormData((prevState) => {
+        const next = { ...prevState, [name]: valueToSet };
+        if (name === "totalPrice" && prevState.paymentTerms) {
+          next.depositAmount = amountDueForTerms(valueToSet, prevState.paymentTerms);
+        }
+        return next;
+      });
+    } else if (name === "paymentTerms") {
       setFormData((prevState) => ({
         ...prevState,
-        [name]: valueToSet,
+        paymentTerms: value,
+        depositAmount: value && prevState.totalPrice
+          ? amountDueForTerms(prevState.totalPrice, value)
+          : prevState.depositAmount,
       }));
     } else if (name === "country") {
       const selectedCountry = CountryList().find(
@@ -397,6 +469,12 @@ export const useInvoiceFormState = () => {
           mileage: formData.mileage,
           make: formData.make,
           model: formData.model,
+          invoiceType: formData.invoiceType,
+          totalPrice: formData.totalPrice,
+          paymentTerms: formData.paymentTerms,
+          destinationCountry: formData.destinationCountry,
+          destinationPort: formData.destinationPort,
+          preExportInspection: formData.preExportInspection,
           serialNumber: generateSerialNumber({ regenerate, invoiceData }),
           expiryDate,
           ...selectedBankDetails,
@@ -447,6 +525,14 @@ export const useInvoiceFormState = () => {
       mileage: incomingInvoiceData.mileage,
       make: incomingInvoiceData.make,
       model: incomingInvoiceData.model,
+      invoiceType: incomingInvoiceData.invoiceType,
+      totalPrice: incomingInvoiceData.totalPrice,
+      paymentTerms: incomingInvoiceData.paymentTerms,
+      destinationCountry: incomingInvoiceData.destinationCountry,
+      destinationPort: incomingInvoiceData.destinationPort,
+      preExportInspection: incomingInvoiceData.preExportInspection,
+      vehicleRef: incomingInvoiceData.vehicleRef,
+      bankNote: incomingInvoiceData.bankNote,
     }));
 
     setPhoneCode(phoneCodeFromInvoice);
@@ -501,5 +587,13 @@ export const useInvoiceFormState = () => {
     isDataLoaded,
     handleLoginRedirect,
     handleRegisterRedirect,
+    customerMatches,
+    selectCustomer,
+    vehicleQuery,
+    setVehicleQuery,
+    vehicleResults,
+    vehicleSearching,
+    selectVehicle,
+    isVehiclePurpose: VEHICLE_PURPOSES.includes(formData.depositPurpose),
   };
 };

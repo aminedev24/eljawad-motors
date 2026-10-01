@@ -5,6 +5,16 @@ import GeneratePdfButton from "./invoicePdf";
 import { generatePdfBlob } from "./invoicePdf"; // Import the generatePdfBlob function
 import { apiBaseUrl } from '../utilities/apiBase';
 import { getCsrfToken } from '../utilities/csrfToken';
+import { INVOICE_TYPE_TITLES } from "../forms/invoiceForm/constants";
+import { exportInvoiceXlsx } from "./invoiceExcel";
+
+// Customer-entered text goes into an HTML email; escape it.
+const esc = (v) =>
+  String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const money = (v, currency) => {
+  const n = Number(String(v ?? "").replace(/,/g, ""));
+  return Number.isFinite(n) && String(v ?? "") !== "" ? `${n.toLocaleString("en-US")} ${currency || ""}`.trim() : "";
+};
 
 // Modal Component
 const InvoiceModal = ({ isOpen, onClose, invoiceData, onEdit, setInvoiceState, regenerateParam , resetInvoiceState}) => {
@@ -89,25 +99,29 @@ const InvoiceModal = ({ isOpen, onClose, invoiceData, onEdit, setInvoiceState, r
       console.log("PDF converted to Base64 successfully.");
 
       // Step 3: Construct email body (HTML format)
+      const typeTitle = INVOICE_TYPE_TITLES[invoiceData.invoiceType] || "DEPOSIT INVOICE";
+      const typeLabel = typeTitle.charAt(0) + typeTitle.slice(1).toLowerCase();
+      const cur = invoiceData.depositCurrency;
+      const totalNum = Number(String(invoiceData.totalPrice ?? "").replace(/,/g, "")) || 0;
+      const dueNum = Number(String(invoiceData.depositAmount ?? "").replace(/,/g, "")) || 0;
+      const li = (label, value) => (value ? `<li><strong>${label}:</strong> ${esc(value)}</li>` : "");
       const emailBody = `
       <div style="font-family: Arial, sans-serif; color: #333;">
-          <h2 style="color: #004080;">Dear ${invoiceData.customerFullName},</h2>
-          <p>Thank you for placing your order with <strong>Eljawad Motors Inc.</strong></p>
-          <p>This is an automated email to provide you with the deposit invoice for your orders Below are the details of the invoice:</p>
-          <h3 style="color: #004080;">Invoice Details:</h3>
+          <h2 style="color: #0f4c5c;">Dear ${esc(invoiceData.customerFullName)},</h2>
+          <p>Thank you for your order with <strong>Eljawad Motors</strong>. Your ${esc(typeLabel.toLowerCase())} is attached as a PDF. Here are the details:</p>
           <ul>
-              <li><strong>Invoice Number:</strong> ${invoiceData.invoiceNumber}</li>
-              <li><strong>Invoice Date:</strong> ${invoiceData.invoiceDate}</li>
-              <li><strong>Payment Description:</strong> ${invoiceData.depositDescription}</li>
-              <li><strong>Payment Amount:</strong> ${invoiceData.depositAmount} ${invoiceData.depositCurrency}</li>
-              <li><strong>Due Date:</strong> Due immediately</li>
-              <li><strong>Expiry Date:</strong> ${invoiceData.expiryDate}</li>
-              <li><strong>Serial Number:</strong> ${invoiceData.serialNumber}</li>
+              ${li("Invoice Number", formattedInvoiceNumber)}
+              ${li("Invoice Date", invoiceData.invoiceDate)}
+              ${li("Valid Until", invoiceData.expiryDate)}
+              ${li("Payment Description", invoiceData.depositDescription)}
+              ${totalNum > dueNum ? li("Total Price", money(totalNum, cur)) : ""}
+              ${li(`Amount Due Now${invoiceData.paymentTerms && totalNum > dueNum ? ` (${invoiceData.paymentTerms})` : ""}`, money(invoiceData.depositAmount, cur))}
+              ${totalNum > dueNum ? li("Balance Due", money(totalNum - dueNum, cur)) : ""}
+              ${li("Destination", [invoiceData.destinationCountry, invoiceData.destinationPort].filter(Boolean).join(", "))}
           </ul>
-          <p>Please process the Payment by the due date to proceed with your order. Once the payment is confirmed, we will begin processing your request and keep you informed of the next steps.</p>
-          <p>For any questions or concerns, feel free to contact us at: <a href="mailto:contact@eljawad.com">contact@eljawad.com</a>.</p>
-          <p>Thank you for choosing <strong>Eljawad Motors Inc.</strong>.</p>
-          <p style="color: #004080;"><strong>Best regards,</strong><br>Eljawad Motors Inc.</p>
+          <p>Please put the invoice number in your payment reference. Only pay into an account confirmed by an email from @eljawad.com.</p>
+          <p>Questions? Contact us at <a href="mailto:contact@eljawad.com">contact@eljawad.com</a>.</p>
+          <p style="color: #0f4c5c;"><strong>Best regards,</strong><br>Eljawad Motors</p>
       </div>
     `;
 
@@ -119,7 +133,7 @@ const InvoiceModal = ({ isOpen, onClose, invoiceData, onEdit, setInvoiceState, r
         body: JSON.stringify({
           to: invoiceData.customerEmail,
           bcc: "contact@eljawad.com",
-          subject: `Automated Deposit Invoice from Eljawad Motors Inc.`,
+          subject: `${typeLabel} ${formattedInvoiceNumber} from Eljawad Motors`,
           body: emailBody,
           attachment: base64Pdf,
           invoiceNumber: formattedInvoiceNumber,
@@ -136,11 +150,27 @@ const InvoiceModal = ({ isOpen, onClose, invoiceData, onEdit, setInvoiceState, r
           engineCapacity: invoiceData.engineCapacity,
           make: invoiceData.make,
           model: invoiceData.model,
+          vehicleRef: invoiceData.vehicleRef,
+          invoiceType: invoiceData.invoiceType,
+          totalPrice: invoiceData.totalPrice,
+          paymentTerms: invoiceData.paymentTerms,
+          expiryDate: invoiceData.expiryDate,
+          customerPhone: invoiceData.customerPhone,
+          country: invoiceData.country,
+          customerCompany: invoiceData.customerCompany,
+          customerAddress: invoiceData.customerAddress,
+          bankNote: invoiceData.bankNote,
+          destinationCountry: invoiceData.destinationCountry,
+          destinationPort: invoiceData.destinationPort,
+          preExportInspection: invoiceData.preExportInspection,
         }),
-        credentials: "include",
       });
 
-      if (!response.ok) throw new Error("Failed to send invoice");
+      if (!response.ok) {
+        // Show the server's own reason (e.g. "saved as draft, but the email failed: ...").
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error || err.message || `Failed to send invoice (HTTP ${response.status})`);
+      }
 
       const data = await response.json();
       showAlert("Invoice sent successfully!");
@@ -156,7 +186,7 @@ const InvoiceModal = ({ isOpen, onClose, invoiceData, onEdit, setInvoiceState, r
       }, 3000);
     } catch (error) {
       console.error("Error sending invoice:", error);
-      showAlert("An error occurred while submitting the invoice.");
+      showAlert(error.message || "An error occurred while submitting the invoice.");
     } finally {
       setIsGeneratingPdf(false);
     }
@@ -235,6 +265,9 @@ const InvoiceModal = ({ isOpen, onClose, invoiceData, onEdit, setInvoiceState, r
           {(user?.role === "admin" || process.env.NODE_ENV === "development") && (
             <GeneratePdfButton invoiceData={invoiceData} />
           )}
+          <button onClick={() => exportInvoiceXlsx(invoiceData, formattedInvoiceNumber).catch((e) => showAlert(`Excel export failed: ${e.message}`))}>
+            Excel
+          </button>
           <button onClick={handleEditInvoice}>Edit Invoice</button>
           <button
             className="invoice-pdf-send"

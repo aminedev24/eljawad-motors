@@ -36,7 +36,36 @@ export const PURPOSE_DESCRIPTIONS = {
   "Paying My Vehicle": "I am paying for an existing order",
 };
 
-export const NUMERIC_FIELDS = ["depositAmount", "engineCapacity", "mileage"];
+export const NUMERIC_FIELDS = ["depositAmount", "totalPrice", "engineCapacity", "mileage"];
+
+// Changes the PDF title and the email subject; stored on the invoice record.
+export const INVOICE_TYPES = [
+  { value: "proforma", label: "Proforma" },
+  { value: "deposit", label: "Deposit" },
+  { value: "commercial", label: "Commercial" },
+];
+
+export const INVOICE_TYPE_TITLES = {
+  proforma: "PROFORMA INVOICE",
+  deposit: "DEPOSIT INVOICE",
+  commercial: "COMMERCIAL INVOICE",
+};
+
+// Share of the total price that is due on this invoice.
+export const PAYMENT_TERMS = ["100%", "50%", "30%"];
+
+// Purposes that involve a specific vehicle (show the vehicle picker/fields).
+export const VEHICLE_PURPOSES = ["Paying My Vehicle", "Vehicle Purchase"];
+
+export const PRE_EXPORT_INSPECTION_OPTIONS = ["Included", "Not Included"];
+
+// Amount due now = total price x payment term, rounded to whole units.
+export const amountDueForTerms = (totalPrice, terms) => {
+  const total = Number(String(totalPrice ?? "").replace(/,/g, ""));
+  const pct = parseFloat(terms);
+  if (!Number.isFinite(total) || total <= 0 || !Number.isFinite(pct)) return "";
+  return Math.round((total * pct) / 100);
+};
 
 export const REQUIRED_FIELDS = [
   "fullName",

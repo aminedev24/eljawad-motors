@@ -605,3 +605,115 @@
         flex: 1 1 100%;
     }
 }
+
+/* ------------------------------------- invoice form: search + type + totals */
+
+.invoice-autocomplete {
+    position: relative;
+}
+
+.invoice-suggestions {
+    position: absolute;
+    z-index: 40;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin: 4px 0 0;
+    padding: 4px;
+    list-style: none;
+    max-height: 280px;
+    overflow-y: auto;
+    background: var(--white, #fff);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    box-shadow: 0 12px 28px rgba(15, 76, 92, 0.16);
+}
+
+.invoice-suggestions li button {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    width: 100%;
+    padding: 8px 10px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--primary-color);
+    text-align: left;
+    cursor: pointer;
+}
+
+.invoice-suggestions li button span {
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+
+.invoice-suggestions li button:hover,
+.invoice-suggestions li button:focus-visible {
+    background: rgba(15, 76, 92, 0.08);
+}
+
+.invoice-suggestions-note {
+    padding: 8px 10px;
+    font-size: 0.85rem;
+    color: #6b7280;
+}
+
+.invoice-field-label {
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.invoice-segmented {
+    display: inline-flex;
+    flex-wrap: wrap;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    overflow: hidden;
+    width: fit-content;
+    max-width: 100%;
+}
+
+.invoice-segmented label {
+    padding: 8px 16px;
+    cursor: pointer;
+    color: var(--primary-color);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.invoice-segmented label + label {
+    border-left: 1px solid var(--border-color);
+}
+
+/* .enquiryContainer .form-group label sets a dark colour; win over it. */
+.enquiryContainer .form-group .invoice-segmented label.active {
+    background: var(--primary-color);
+    color: #fff;
+}
+
+.invoice-segmented input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.invoice-segmented label:focus-within {
+    outline: 2px solid var(--accent-color);
+    outline-offset: -2px;
+}
+
+.invoice-amount-summary {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 2px;
+    padding-bottom: 6px;
+    font-size: 0.9rem;
+    color: #6b7280;
+}
+
+.invoice-amount-summary strong {
+    color: var(--primary-color);
+}

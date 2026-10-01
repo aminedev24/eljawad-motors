@@ -9,6 +9,8 @@ import {
   AuthPrompt,
   UserInfoSection,
   PaymentDetailsSection,
+  ShippingSection,
+  VehiclePicker,
   BankNoteSection,
   SubmitSection,
 } from "./invoiceForm/sections";
@@ -40,6 +42,14 @@ const ProformaInvoiceForm = () => {
     isDataLoaded,
     handleLoginRedirect,
     handleRegisterRedirect,
+    customerMatches,
+    selectCustomer,
+    vehicleQuery,
+    setVehicleQuery,
+    vehicleResults,
+    vehicleSearching,
+    selectVehicle,
+    isVehiclePurpose,
   } = useInvoiceFormState();
 
   return (
@@ -61,7 +71,7 @@ const ProformaInvoiceForm = () => {
           <div className="enquiryContainer contact-container">
             <img src="/images/logo-eljawad-dark.svg" alt="Logo" className="logo-form" />
 
-            <h2 className="header">Proforma Invoice Generation</h2>
+            <h2 className="header">Invoice Generator</h2>
 
             <AuthPrompt
               user={user}
@@ -70,15 +80,15 @@ const ProformaInvoiceForm = () => {
             />
 
             <p className="invoice-prompt">
-              Please fill out the details below to generate a proforma invoice.
+              Find the customer and vehicle to fill most of the form, then check the amounts and generate the invoice.
             </p>
 
             <UserInfoSection
               formData={formData}
               onChange={handleChange}
               phoneCode={phoneCode}
-              isDataLoaded={isDataLoaded}
-              user={user}
+              customerMatches={customerMatches}
+              onSelectCustomer={selectCustomer}
             />
 
             <PaymentDetailsSection
@@ -88,7 +98,19 @@ const ProformaInvoiceForm = () => {
               models={models}
               onMakeChange={handleMakeChange}
               handleTypingStart={handleTypingStart}
+              isVehiclePurpose={isVehiclePurpose}
+              vehiclePicker={
+                <VehiclePicker
+                  query={vehicleQuery}
+                  onQuery={setVehicleQuery}
+                  results={vehicleResults}
+                  searching={vehicleSearching}
+                  onSelect={selectVehicle}
+                />
+              }
             />
+
+            <ShippingSection formData={formData} onChange={handleChange} />
 
             <BankNoteSection
               isEditable={isBankNoteEditable}

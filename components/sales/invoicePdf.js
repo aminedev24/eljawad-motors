@@ -2,7 +2,7 @@ import React from "react";
 import { pdf } from "@react-pdf/renderer";
 import { saveAs } from "file-saver";
 import getConfig from "next/config";
-import { BANK_DETAILS_PENDING_NOTICE, hasBankDetails } from "../forms/invoiceForm/constants";
+import { BANK_DETAILS_PENDING_NOTICE, INVOICE_TYPE_TITLES, hasBankDetails } from "../forms/invoiceForm/constants";
 
 import {
   StyleSheet,
@@ -117,9 +117,9 @@ const styles = StyleSheet.create({
     paddingBottom: 28,
     paddingHorizontal: 36,
     fontFamily: "Roboto",
-    fontSize: 9.5,
+    fontSize: 9,
     color: INK,
-    lineHeight: 1.4,
+    lineHeight: 1.35,
   },
   bold: { fontWeight: 700 },
 
@@ -129,24 +129,27 @@ const styles = StyleSheet.create({
   titleBlock: { alignItems: "flex-end" },
   title: { fontSize: 20, fontWeight: 700, color: TEAL, letterSpacing: 1.5, lineHeight: 1 },
   serial: { fontSize: 8, color: MUTED, marginTop: 6 },
-  rule: { flexDirection: "row", marginTop: 10, marginBottom: 12 },
+  rule: { flexDirection: "row", marginTop: 8, marginBottom: 10 },
   ruleTeal: { flex: 5, height: 3, backgroundColor: TEAL },
   ruleOrange: { flex: 1, height: 3, backgroundColor: ORANGE },
 
   // meta strip
-  meta: { flexDirection: "row", backgroundColor: TEAL_TINT, borderRadius: 4, marginBottom: 12 },
-  metaCell: { flex: 1, paddingVertical: 7, paddingHorizontal: 10 },
+  meta: { flexDirection: "row", backgroundColor: TEAL_TINT, borderRadius: 4, marginBottom: 10 },
+  metaCell: { flex: 1, paddingVertical: 5, paddingHorizontal: 10 },
   metaCellDivider: { borderLeftWidth: 1, borderLeftColor: LINE },
   label: { fontSize: 7, color: MUTED, letterSpacing: 0.8, textTransform: "uppercase", marginBottom: 2 },
   metaValue: { fontSize: 10, fontWeight: 700, color: TEAL_DARK },
 
+  // shipping strip (same look as the meta strip, lighter)
+  shipping: { flexDirection: "row", borderWidth: 1, borderColor: LINE, borderRadius: 4, marginBottom: 10 },
+
   // parties
-  parties: { flexDirection: "row", marginBottom: 12 },
-  card: { flex: 1, borderWidth: 1, borderColor: LINE, borderRadius: 4, padding: 9, marginRight: 10 },
+  parties: { flexDirection: "row", marginBottom: 10 },
+  card: { flex: 1, borderWidth: 1, borderColor: LINE, borderRadius: 4, padding: 8, marginRight: 10 },
   cardName: { fontSize: 11, fontWeight: 700, color: TEAL_DARK, marginBottom: 3 },
   muted: { color: MUTED },
   qrBlock: { width: 84, alignItems: "center", justifyContent: "center" },
-  qr: { width: 72, height: 72 },
+  qr: { width: 64, height: 64 },
   qrCaption: { fontSize: 7, color: MUTED, marginTop: 3, textAlign: "center" },
 
   // section titles
@@ -156,47 +159,47 @@ const styles = StyleSheet.create({
   },
 
   // payment details
-  payment: { marginBottom: 12 },
+  payment: { marginBottom: 10 },
   payGrid: { flexDirection: "row", flexWrap: "wrap", borderWidth: 1, borderColor: LINE, borderRadius: 4, paddingVertical: 4 },
   payItem: { width: "50%", paddingVertical: 3, paddingHorizontal: 9 },
   payItemWide: { width: "100%", paddingVertical: 3, paddingHorizontal: 9 },
-  pending: { backgroundColor: ORANGE_TINT, borderLeftWidth: 3, borderLeftColor: ORANGE, padding: 9, borderRadius: 2 },
+  pending: { backgroundColor: ORANGE_TINT, borderLeftWidth: 3, borderLeftColor: ORANGE, padding: 7, borderRadius: 2 },
 
   // important banner
-  banner: { flexDirection: "row", backgroundColor: TEAL, borderRadius: 4, marginBottom: 12 },
+  banner: { flexDirection: "row", backgroundColor: TEAL, borderRadius: 4, marginBottom: 10 },
   bannerTag: {
     backgroundColor: ORANGE, color: "#ffffff", fontWeight: 700, fontSize: 9,
-    paddingVertical: 8, paddingHorizontal: 10, borderTopLeftRadius: 4, borderBottomLeftRadius: 4,
+    paddingVertical: 6, paddingHorizontal: 10, borderTopLeftRadius: 4, borderBottomLeftRadius: 4,
   },
-  bannerText: { flex: 1, color: "#ffffff", fontSize: 9, paddingVertical: 8, paddingHorizontal: 10 },
+  bannerText: { flex: 1, color: "#ffffff", fontSize: 9, paddingVertical: 6, paddingHorizontal: 10 },
   bannerStrong: { fontWeight: 700, color: "#ffd9c7" },
 
   // tables
-  table: { borderWidth: 1, borderColor: LINE, borderRadius: 4, marginBottom: 12 },
+  table: { borderWidth: 1, borderColor: LINE, borderRadius: 4, marginBottom: 10 },
   thRow: { flexDirection: "row", backgroundColor: TEAL },
-  th: { color: "#ffffff", fontWeight: 700, fontSize: 8.5, paddingVertical: 6, paddingHorizontal: 8 },
+  th: { color: "#ffffff", fontWeight: 700, fontSize: 8.5, paddingVertical: 5, paddingHorizontal: 8 },
   tdRow: { flexDirection: "row", borderTopWidth: 1, borderTopColor: LINE },
-  td: { paddingVertical: 7, paddingHorizontal: 8 },
+  td: { paddingVertical: 5, paddingHorizontal: 8 },
   colDesc: { flex: 3 },
   colAmount: { flex: 1, textAlign: "right" },
   colEq: { flex: 1 },
   chassis: { flex: 1.4 },
 
   // instructions + totals
-  bottom: { flexDirection: "row", marginBottom: 14 },
+  bottom: { flexDirection: "row", marginBottom: 10 },
   instructions: { flex: 1, marginRight: 14 },
-  bullet: { flexDirection: "row", marginBottom: 3 },
+  bullet: { flexDirection: "row", marginBottom: 2 },
   bulletDot: { width: 10, color: ORANGE, fontWeight: 700 },
   bulletText: { flex: 1 },
-  note: { borderWidth: 1, borderColor: LINE, borderRadius: 4, padding: 8, marginBottom: 8 },
+  note: { borderWidth: 1, borderColor: LINE, borderRadius: 4, padding: 7, marginBottom: 6 },
   totals: { width: 200 },
   totalRow: {
-    flexDirection: "row", justifyContent: "space-between", paddingVertical: 6, paddingHorizontal: 9,
+    flexDirection: "row", justifyContent: "space-between", paddingVertical: 4, paddingHorizontal: 9,
     borderBottomWidth: 1, borderBottomColor: LINE,
   },
   grandRow: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
-    backgroundColor: TEAL, paddingVertical: 8, paddingHorizontal: 9, borderRadius: 4, marginTop: 4,
+    backgroundColor: TEAL, paddingVertical: 7, paddingHorizontal: 9, borderRadius: 4, marginTop: 4,
   },
   grandLabel: { color: "#ffffff", fontWeight: 700, fontSize: 9 },
   grandValue: { color: "#ffffff", fontWeight: 700, fontSize: 13 },
@@ -205,7 +208,7 @@ const styles = StyleSheet.create({
   signoff: { flexDirection: "row", alignItems: "flex-end", justifyContent: "space-between", marginTop: 4 },
   legal: { flex: 1, marginRight: 24, fontSize: 7.5, color: MUTED, lineHeight: 1.5 },
   signature: { width: 180, alignItems: "center" },
-  signatureLine: { width: "100%", borderTopWidth: 1, borderTopColor: INK, marginBottom: 3, marginTop: 28 },
+  signatureLine: { width: "100%", borderTopWidth: 1, borderTopColor: INK, marginBottom: 3, marginTop: 20 },
   signatureLabel: { fontSize: 8, color: MUTED },
   thanks: { fontSize: 9, fontWeight: 700, color: TEAL, marginTop: 6 },
 
@@ -213,7 +216,7 @@ const styles = StyleSheet.create({
   // footer in the page margin made react-pdf re-paginate forever (the
   // preview froze the browser tab).
   footer: {
-    flexDirection: "row", justifyContent: "space-between", marginTop: 14,
+    flexDirection: "row", justifyContent: "space-between", marginTop: 10,
     borderTopWidth: 1, borderTopColor: LINE, paddingTop: 6, fontSize: 7.5, color: MUTED,
   },
 });
@@ -261,17 +264,29 @@ const PayItem = ({ label, value, wide }) => (
 const MyPdfDocument = ({ invoiceData, assets = {} }) => {
   const invoiceNumber = invoiceData.invoiceNumber || "";
   const formattedInvoiceNumber = invoiceNumber.replace(/(\b\w+\b)-\1-/, "$1-");
-  const amount = `${formatAmount(invoiceData.depositAmount)} ${invoiceData.depositCurrency || ""}`.trim();
+  const currency = invoiceData.depositCurrency || "";
+  const money = (v) => `${formatAmount(v)} ${currency}`.trim();
+  const amount = money(invoiceData.depositAmount);
+  const totalNum = Number(String(invoiceData.totalPrice ?? "").replace(/,/g, "")) || 0;
+  const dueNum = Number(String(invoiceData.depositAmount ?? "").replace(/,/g, "")) || 0;
+  const hasBalance = totalNum > 0 && totalNum > dueNum;
+  const title = INVOICE_TYPE_TITLES[invoiceData.invoiceType] || "DEPOSIT INVOICE";
+  const shipping = [
+    ["Destination", invoiceData.destinationCountry],
+    ["Port of discharge", invoiceData.destinationPort],
+    ["Pre-export inspection", invoiceData.preExportInspection],
+  ];
+  const hasShipping = shipping.some(([, v]) => v);
   const isUsd = invoiceData.depositCurrency === "USD";
 
   return (
-    <Document title={`Invoice ${formattedInvoiceNumber}`} author="Eljawad Motors">
+    <Document title={`${title} ${formattedInvoiceNumber}`} author="Eljawad Motors">
       <Page size="A4" style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
           {assets.logo ? <Image style={styles.logo} src={assets.logo} /> : <Text style={styles.title}>Eljawad Motors</Text>}
           <View style={styles.titleBlock}>
-            <Text style={styles.title}>DEPOSIT INVOICE</Text>
+            <Text style={styles.title}>{title}</Text>
             {invoiceData.serialNumber ? <Text style={styles.serial}>{invoiceData.serialNumber}</Text> : null}
           </View>
         </View>
@@ -319,6 +334,17 @@ const MyPdfDocument = ({ invoiceData, assets = {} }) => {
             </View>
           ) : null}
         </View>
+
+        {hasShipping && (
+          <View style={styles.shipping}>
+            {shipping.map(([label, value], i) => (
+              <View key={label} style={[styles.metaCell, i > 0 && styles.metaCellDivider]}>
+                <Text style={styles.label}>{label}</Text>
+                <Text style={styles.bold}>{value || "-"}</Text>
+              </View>
+            ))}
+          </View>
+        )}
 
         {/* Payment details */}
         <View style={styles.payment}>
@@ -405,12 +431,31 @@ const MyPdfDocument = ({ invoiceData, assets = {} }) => {
             <Bullets items={INSTRUCTIONS} />
           </View>
           <View style={styles.totals}>
-            <View style={styles.totalRow}>
-              <Text style={styles.muted}>Deposit amount</Text>
-              <Text>{amount}</Text>
-            </View>
+            {hasBalance ? (
+              <>
+                <View style={styles.totalRow}>
+                  <Text style={styles.muted}>Total price</Text>
+                  <Text>{money(totalNum)}</Text>
+                </View>
+                <View style={styles.totalRow}>
+                  <Text style={styles.muted}>
+                    Due now{invoiceData.paymentTerms ? ` (${invoiceData.paymentTerms})` : ""}
+                  </Text>
+                  <Text>{amount}</Text>
+                </View>
+                <View style={styles.totalRow}>
+                  <Text style={styles.muted}>Balance due</Text>
+                  <Text>{money(totalNum - dueNum)}</Text>
+                </View>
+              </>
+            ) : (
+              <View style={styles.totalRow}>
+                <Text style={styles.muted}>Amount</Text>
+                <Text>{amount}</Text>
+              </View>
+            )}
             <View style={styles.grandRow}>
-              <Text style={styles.grandLabel}>GRAND TOTAL</Text>
+              <Text style={styles.grandLabel}>{hasBalance ? "DUE NOW" : "GRAND TOTAL"}</Text>
               <Text style={styles.grandValue}>{amount}</Text>
             </View>
           </View>
