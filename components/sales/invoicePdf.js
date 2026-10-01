@@ -2,6 +2,7 @@ import React from "react";
 import { pdf } from "@react-pdf/renderer";
 import { saveAs } from "file-saver";
 import AdminInvoicePdf from './adminInvoicePdf';
+import { BANK_DETAILS_PENDING_NOTICE, hasBankDetails } from "../forms/invoiceForm/constants";
 
 import {
   StyleSheet,
@@ -492,7 +493,12 @@ const MyPdfDocument = ({ invoiceData, assets = {} }) => {
         </View>
 
         <View style={styles.invoiceBankInfo}>
-          {invoiceData.depositCurrency === "USD" ? (
+          {!hasBankDetails(invoiceData) ? (
+            <Text style={styles.contactInfoText}>
+              <Text style={{ fontWeight: "bold" }}>Payment details:</Text>{" "}
+              {BANK_DETAILS_PENDING_NOTICE}
+            </Text>
+          ) : invoiceData.depositCurrency === "USD" ? (
             <>
               <Text style={styles.contactInfoText}>
                 <Text style={{ fontWeight: "bold" }}>Beneficiary Name:</Text>{" "}

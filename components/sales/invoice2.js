@@ -10,6 +10,7 @@ import AdminInvoicePdf from "./invoicePdf"; // Ensure the correct path to your c
 import { generatePdfBlob } from "./invoicePdf"; // Import the generatePdfBlob function
 import { apiBaseUrl } from '../utilities/apiBase';
 import { calculateExpiryDate } from "../forms/invoiceForm/helpers";
+import { BANK_DETAILS_PENDING_NOTICE, hasBankDetails } from "../forms/invoiceForm/constants";
 
 // Modal Component
 const InvoiceModal = ({ isOpen, onClose, invoiceData, onEdit, setInvoiceState, regenerateParam , resetInvoiceState}) => {
@@ -325,7 +326,9 @@ const InvoiceModal = ({ isOpen, onClose, invoiceData, onEdit, setInvoiceState, r
           </div>
 
           <div className="invoice-bank-info">
-            {invoiceData.depositCurrency === "USD" ? (
+            {!hasBankDetails(invoiceData) ? (
+              <p><strong>Payment details:</strong> {BANK_DETAILS_PENDING_NOTICE}</p>
+            ) : invoiceData.depositCurrency === "USD" ? (
               <>
                 <p>
                   <strong>Beneficiary Name: </strong>
