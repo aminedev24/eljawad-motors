@@ -41,7 +41,7 @@ const PrivacyPolicy = ({ userProfile, agreementType }) => {
       <li>Opt-out of marketing communications.</li>
       <li>Request a copy of the information we hold about you.</li>
     </ul>
-    <p>To exercise your rights, contact us at contact@artisbay.com.</p>
+    <p>To exercise your rights, contact us at contact@eljawad.com.</p>
     
     <h4>5. Security of Your Information</h4>
     <p>We implement industry-standard security measures to protect your data. However, no online service can guarantee 100% security.</p>

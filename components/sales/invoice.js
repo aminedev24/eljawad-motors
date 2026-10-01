@@ -44,7 +44,7 @@ const ProformaInvoice = () => {
             <div className="header">
                 <div className="contact-info">
                     <p>An online platform for the sale and export of used vehicles and auto parts</p>
-                    <p>Email: contact@artisbay.com</p>
+                    <p>Email: contact@eljawad.com</p>
                 </div>
             </div>
             <div className="invoice-title">Proforma Invoice</div>

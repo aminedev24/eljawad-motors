@@ -80,10 +80,10 @@ export const InvoiceHeaders = ({invoiceData, formattedInvoiceNumber, commercial}
             </Text>
             <Text style={styles.iconParagraph}>
              
-              <Text>Email: contact@artisbay.com</Text>
+              <Text>Email: contact@eljawad.com</Text>
             </Text>
             <Text style={styles.iconParagraph}>
-              <Text>Website: www.artisbay.com</Text>
+              <Text>Website: www.eljawad.com</Text>
             </Text>
           </View>
         </View>

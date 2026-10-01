@@ -91,7 +91,7 @@ const InvoiceModal = ({ isOpen, onClose, invoiceData, onEdit, setInvoiceState, r
               <li><strong>Serial Number:</strong> ${invoiceData.serialNumber}</li>
           </ul>
           <p>Please process the Payment by the due date to proceed with your order. Once the payment is confirmed, we will begin processing your request and keep you informed of the next steps.</p>
-          <p>For any questions or concerns, feel free to contact us at: <a href="mailto:sales@artisbay.com">sales@artisbay.com</a>.</p>
+          <p>For any questions or concerns, feel free to contact us at: <a href="mailto:contact@eljawad.com">contact@eljawad.com</a>.</p>
           <p>Thank you for choosing <strong>Eljawad Motors Inc.</strong>.</p>
           <p style="color: #004080;"><strong>Best regards,</strong><br>Eljawad Motors Inc.</p>
       </div>
@@ -103,7 +103,7 @@ const InvoiceModal = ({ isOpen, onClose, invoiceData, onEdit, setInvoiceState, r
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           to: invoiceData.customerEmail,
-          bcc: "contact@artisbay.com",
+          bcc: "contact@eljawad.com",
           subject: `Automated Deposit Invoice from Eljawad Motors Inc.`,
           body: emailBody,
           attachment: base64Pdf,
@@ -263,11 +263,11 @@ const InvoiceModal = ({ isOpen, onClose, invoiceData, onEdit, setInvoiceState, r
                   </p>
                   <p className="icon-paragraph">
                     <FaEnvelope className="icon" />
-                    Email: contact@artisbay.com
+                    Email: contact@eljawad.com
                   </p>
                   <p className="icon-paragraph ">
                     <FaGlobe className="icon" />
-                    Website: www.artisbay.com
+                    Website: www.eljawad.com
                   </p>
                 </div>
               </div>

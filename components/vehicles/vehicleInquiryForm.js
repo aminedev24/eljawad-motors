@@ -200,7 +200,7 @@ const VehicleInquiryForm = ({ car }) => {
             vehicle_name: vehicleName,
             vehicle_status: rawStatus,
             vehicle_details: vehicleDetails,
-            page_url: typeof window !== "undefined" ? window.location.href : "https://artisbay.com",
+            page_url: typeof window !== "undefined" ? window.location.href : "https://eljawad.com",
             name: form.name,
             email: form.email,
             phone: form.phone,

@@ -20,10 +20,9 @@ const TelegraphicTransfer = () => {
           <h4>Verify the Payment Details</h4>
           <ul>
             <li>Double-check the bank account information on the invoice to ensure it matches our official details.</li>
-            {/* Intentionally still @artisbay.com: outbound mail still actually sends from that domain
-                (see server/core/mailer.php) until the mail domain is migrated. Pointing this at the new
-                brand name before that migration happens would defeat the anti-fraud check. */}
-            <li>Ensure the email containing the invoice is from @artisbay.com to avoid fraudulent activity.</li>
+            {/* Must match the domain invoices are actually sent from (server/core/mail_secrets.php
+                on the host: noreply@eljawad.com), or genuine invoices fail this anti-fraud check. */}
+            <li>Ensure the email containing the invoice is from @eljawad.com to avoid fraudulent activity.</li>
           </ul>
         </li>
         <li>
