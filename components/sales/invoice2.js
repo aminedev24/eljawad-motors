@@ -9,6 +9,7 @@ import { invoiceHeaders } from "./invoicePdf";
 import AdminInvoicePdf from "./invoicePdf"; // Ensure the correct path to your component
 import { generatePdfBlob } from "./invoicePdf"; // Import the generatePdfBlob function
 import { apiBaseUrl } from '../utilities/apiBase';
+import { getCsrfToken } from '../utilities/csrfToken';
 import { calculateExpiryDate } from "../forms/invoiceForm/helpers";
 import { BANK_DETAILS_PENDING_NOTICE, hasBankDetails } from "../forms/invoiceForm/constants";
 
@@ -101,7 +102,8 @@ const InvoiceModal = ({ isOpen, onClose, invoiceData, onEdit, setInvoiceState, r
       // Step 4: Send the email with the PDF attachment
       const response = await fetch(`${apiUrl}/finance/invoices/sendInvoice.php`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        headers: { "Content-Type": "application/json", "X-CSRF-Token": getCsrfToken() || "" },
         body: JSON.stringify({
           to: invoiceData.customerEmail,
           bcc: "contact@eljawad.com",

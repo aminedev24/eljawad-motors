@@ -7,6 +7,17 @@ use PHPMailer\PHPMailer\Exception;
 require_once __DIR__ . '/../../core/db_connection.php';
 require_once __DIR__ . '/../../core/headers.php';
 require_once __DIR__ . '/../../core/mailer.php';
+require_once __DIR__ . '/../../core/csrf.php';
+
+// Sends arbitrary HTML + attachment from our noreply address, so it must never
+// be callable anonymously (it was an open relay for fake 'Eljawad' invoices).
+session_start();
+if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'] ?? '', ['admin', 'sales'], true)) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Not authorized']);
+    exit;
+}
+csrf_validate();
 
 $data = json_decode(file_get_contents('php://input'), true);
 
