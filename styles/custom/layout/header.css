@@ -839,31 +839,6 @@ body.mobile-nav-open {
   .desktop-only {
     display: flex !important;
   }
-
-  /* Logo | search | actions as three columns with equal-flex sides, so the
-     search box sits on the page centre (lined up with the nav row below)
-     instead of drifting left as the action buttons get wider. Side columns
-     never shrink below their content. */
-  .header-top {
-    display: grid;
-    grid-template-columns: minmax(max-content, 1fr) minmax(0, 2.4fr) minmax(max-content, 1fr);
-  }
-
-  .header-main-row.desktop-only {
-    display: contents !important;
-  }
-
-  .header-main-row .header-search {
-    grid-column: 2;
-    justify-self: center;
-    width: 100%;
-    margin: 0;
-  }
-
-  .header-actions {
-    grid-column: 3;
-    justify-self: end;
-  }
 }
 
 /* ------------------------------------------------------- account menu */
