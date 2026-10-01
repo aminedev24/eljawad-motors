@@ -231,7 +231,7 @@ const Header = () => {
             <div role="search" aria-label="Search stock by keyword" className="header-search mobile-only relative flex min-w-0 flex-1 items-center gap-2 px-4 py-2 text-sm">
               <input
                 type="text"
-                placeholder="Search by keyword..."
+                placeholder="Search stock..."
                 value={searchKeyword}
                 onChange={(e) => setSearchKeyword(e.target.value)}
                 onKeyPress={handleKeyPress}

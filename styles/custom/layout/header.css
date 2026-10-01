@@ -575,8 +575,11 @@ body.mobile-nav-open {
     padding: 8px 12px;
   }
 
-  /* Symmetric mobile top row: the search pill is absolutely centred in the
-     header so the logo/hamburger flanks can't pull it off-centre */
+  /* Mobile top row: logo | search | menu button. The search sits between
+     them with equal gaps (auto margins inside the flex row) instead of being
+     centred on the screen - the logo is much wider than the menu button, so
+     screen-centring left ~2px on the logo side and 48px+ on the other, and
+     overlapped the logo at tablet widths. */
   .header-top {
     position: relative;
     gap: 10px;
@@ -591,16 +594,13 @@ body.mobile-nav-open {
   }
 
   .header-search.mobile-only {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: min(480px, calc(100% - 200px));
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+    max-width: 480px;
+    margin: 0 auto;
     z-index: 5;
-  }
-
-  .header-search.mobile-only:focus-within {
-    transform: translate(-50%, -50%);
   }
 
   /* Hamburger toggle */
@@ -948,7 +948,7 @@ body.mobile-nav-open {
   }
 
   .header-search.mobile-only {
-    width: min(420px, calc(100% - 180px));
+    max-width: 420px;
     padding: 6px 36px 6px 12px;
   }
 
