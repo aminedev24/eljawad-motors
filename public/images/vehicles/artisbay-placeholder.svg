@@ -1,18 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" role="img" aria-labelledby="title desc">
-  <title id="title">Artisbay Inc. vehicle placeholder</title>
-  <desc id="desc">Fallback image with Artisbay Inc. watermark used when vehicle photos are unavailable.</desc>
+  <!-- File name kept for existing references (saved favourites store this path). -->
+  <title id="title">Eljawad Motors vehicle placeholder</title>
+  <desc id="desc">Fallback image with an Eljawad Motors watermark, used when vehicle photos are unavailable.</desc>
   <defs>
     <linearGradient id="bg" x1="0%" x2="100%" y1="0%" y2="100%">
-      <stop offset="0%" stop-color="#0f172a"/>
-      <stop offset="100%" stop-color="#0ea5e9"/>
+      <stop offset="0%" stop-color="#0a3641"/>
+      <stop offset="100%" stop-color="#2a9d8f"/>
     </linearGradient>
-    <pattern id="watermark" width="220" height="120" patternUnits="userSpaceOnUse" patternTransform="rotate(-18 110 60)">
-      <text x="0" y="70" font-family="Arial, sans-serif" font-size="32" fill="#f8fafc" fill-opacity="0.12" letter-spacing="1">
-        Artisbay Inc.
+    <pattern id="watermark" width="380" height="110" patternUnits="userSpaceOnUse" patternTransform="rotate(-18 190 55)">
+      <text x="0" y="70" font-family="Arial, sans-serif" font-size="26" font-weight="700" fill="#ffffff" fill-opacity="0.10" letter-spacing="2">
+        ELJAWAD MOTORS
       </text>
     </pattern>
     <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="0" dy="8" stdDeviation="14" flood-color="#0f172a" flood-opacity="0.35"/>
+      <feDropShadow dx="0" dy="8" stdDeviation="14" flood-color="#0a3641" flood-opacity="0.35"/>
     </filter>
   </defs>
 
@@ -20,20 +21,20 @@
   <rect width="800" height="450" fill="url(#watermark)" rx="28"/>
 
   <g transform="translate(100 170)" fill="none" stroke="#e2e8f0" stroke-width="6" filter="url(#shadow)">
-    <path d="M80 80h360c22 0 45 18 52 40l14 46H56l12-56c4-20 16-30 32-30z" fill="rgba(15,23,42,0.6)" stroke="none"/>
-    <path d="M70 112h376c12 0 26 10 30 22l10 32H60l10-40c2-8 10-14 20-14z" stroke="#e2e8f0" fill="rgba(14,165,233,0.35)"/>
-    <rect x="130" y="98" width="60" height="24" rx="6" fill="#0ea5e9" stroke="none"/>
-    <rect x="320" y="98" width="60" height="24" rx="6" fill="#0ea5e9" stroke="none"/>
-    <circle cx="152" cy="182" r="32" fill="#0b1224" stroke="#e2e8f0"/>
-    <circle cx="360" cy="182" r="32" fill="#0b1224" stroke="#e2e8f0"/>
+    <path d="M80 80h360c22 0 45 18 52 40l14 46H56l12-56c4-20 16-30 32-30z" fill="rgba(10,54,65,0.6)" stroke="none"/>
+    <path d="M70 112h376c12 0 26 10 30 22l10 32H60l10-40c2-8 10-14 20-14z" stroke="#e2e8f0" fill="rgba(42,157,143,0.35)"/>
+    <rect x="130" y="98" width="60" height="24" rx="6" fill="#e8622c" stroke="none"/>
+    <rect x="320" y="98" width="60" height="24" rx="6" fill="#e8622c" stroke="none"/>
+    <circle cx="152" cy="182" r="32" fill="#0a3641" stroke="#e2e8f0"/>
+    <circle cx="360" cy="182" r="32" fill="#0a3641" stroke="#e2e8f0"/>
     <circle cx="152" cy="182" r="16" fill="#e2e8f0" stroke="none"/>
     <circle cx="360" cy="182" r="16" fill="#e2e8f0" stroke="none"/>
   </g>
 
-  <text x="50%" y="58%" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" fill="#f8fafc" font-weight="700" letter-spacing="1.4">
+  <text x="50%" y="58%" text-anchor="middle" font-family="Arial, sans-serif" font-size="32" fill="#ffffff" font-weight="700" letter-spacing="1.4">
     Photo coming soon
   </text>
-  <text x="50%" y="66%" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#e2e8f0" letter-spacing="0.8">
-    Artisbay Inc. watermarked placeholder
+  <text x="50%" y="66%" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" fill="#e2e8f0" letter-spacing="2">
+    ELJAWAD MOTORS
   </text>
 </svg>
