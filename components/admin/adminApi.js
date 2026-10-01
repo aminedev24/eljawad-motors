@@ -4,6 +4,7 @@ import { getCsrfToken } from '../utilities/csrfToken';
 const ENDPOINT_MAP = {
   'users/getUsers.php': () => `${apiBaseUrl}/users/getUsers.php`,
   'users/updateUser.php': () => `${apiBaseUrl}/users/updateUser.php`,
+  'users/updateOwnAccount.php': () => `${apiBaseUrl}/users/updateOwnAccount.php`,
   'users/deleteUser.php': () => `${apiBaseUrl}/users/deleteUser.php`,
   'users/impersonate.php': () => `${apiBaseUrl}/users/impersonate.php`,
   'users/stop_impersonation.php': () => `${apiBaseUrl}/users/stop_impersonation.php`,

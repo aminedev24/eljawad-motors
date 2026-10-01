@@ -18,6 +18,12 @@ function AdminSettings({ showMessage }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!form.email && !form.password) {
+      showMessage('Enter a new email or a new password', 'error'); return;
+    }
+    if (form.password && form.password.length < 8) {
+      showMessage('The new password must be at least 8 characters', 'error'); return;
+    }
     if (form.password && form.password !== form.confirm) {
       showMessage('New passwords do not match', 'error'); return;
     }
@@ -25,9 +31,11 @@ function AdminSettings({ showMessage }) {
       showMessage('Enter your current password to save changes', 'error'); return;
     }
     setSaving(true);
-    const res = await adminApiFetch('users/updateUser.php', {
+    // Own-account endpoint: checks current_pass and hashes the new password.
+    // (updateUser.php is for editing other people and ignores passwords.)
+    const res = await adminApiFetch('users/updateOwnAccount.php', {
       method: 'POST',
-      body: JSON.stringify({ email: form.email, password: form.password, current_pass: form.current_pass }),
+      body: { email: form.email, password: form.password, current_pass: form.current_pass },
     });
     setSaving(false);
     if (res?.status === 'success') {
