@@ -30,11 +30,43 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # HostGator sometimes drops new SSH connections ("Connection closed by
+      # ... port 22", exit 255). So: one shared connection for every ssh/scp
+      # below (ControlMaster), and a retry helper for dropped connections.
       - name: Set up SSH key
         run: |
           mkdir -p ~/.ssh
           printf '%s\n' "${{ secrets.HG_ELJAWAD_SSH_KEY }}" > ~/.ssh/hg_key
           chmod 600 ~/.ssh/hg_key
+          cat > ~/.ssh/config <<EOF
+          Host hg
+            HostName ${SRV#*@}
+            User ${SRV%@*}
+            IdentityFile ~/.ssh/hg_key
+            StrictHostKeyChecking accept-new
+            ConnectTimeout 20
+            ServerAliveInterval 15
+            ControlMaster auto
+            ControlPath ~/.ssh/cm-%C
+            ControlPersist 10m
+          EOF
+          chmod 600 ~/.ssh/config
+          cat > "$RUNNER_TEMP/ssh-retry.sh" <<'EOF'
+          # retry <cmd...>: re-run on exit 255 (ssh/scp connection failure),
+          # up to 4 tries; any other exit code is returned as-is.
+          retry() {
+            local n=1 rc
+            while true; do
+              "$@" && return 0
+              rc=$?
+              [ "$rc" -ne 255 ] && return "$rc"
+              [ "$n" -ge 4 ] && return 255
+              echo "::warning::SSH connection failed (attempt $n/4), retrying in $((n * 15))s"
+              sleep $((n * 15))
+              n=$((n + 1))
+            done
+          }
+          EOF
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -71,9 +103,10 @@ jobs:
 
       - name: Deploy to HostGator
         run: |
+          source "$RUNNER_TEMP/ssh-retry.sh"
           tar -czf deploy_site.tar.gz -C out .
-          scp -i ~/.ssh/hg_key -o StrictHostKeyChecking=no deploy_site.tar.gz "$SRV:/home2/yqjezvte/"
-          ssh -i ~/.ssh/hg_key -o StrictHostKeyChecking=no "$SRV" \
+          retry scp deploy_site.tar.gz "hg:/home2/yqjezvte/"
+          retry ssh hg \
             "mkdir -p $WEBROOT && tar xzf /home2/yqjezvte/deploy_site.tar.gz -C $WEBROOT/ && \
              rm -f /home2/yqjezvte/deploy_site.tar.gz && \
              find $WEBROOT -type d -exec chmod 755 {} \; && \
@@ -86,15 +119,22 @@ jobs:
       # Refuses to deploy until the host-side db_connection.php exists.
       - name: Deploy PHP backend (server/)
         run: |
-          ssh -i ~/.ssh/hg_key -o StrictHostKeyChecking=no "$SRV" \
-            "test -f $WEBROOT/server/core/db_connection.php" \
-            || { echo "Missing $WEBROOT/server/core/db_connection.php on host - create it first"; exit 1; }
+          source "$RUNNER_TEMP/ssh-retry.sh"
+          # `test -f` exits 1 only when the file is really missing; 255 means
+          # we couldn't reach the host (don't report that as "missing").
+          rc=0
+          retry ssh hg "test -f $WEBROOT/server/core/db_connection.php" || rc=$?
+          if [ "$rc" -eq 1 ]; then
+            echo "Missing $WEBROOT/server/core/db_connection.php on host - create it first"; exit 1
+          elif [ "$rc" -ne 0 ]; then
+            echo "Could not connect to HostGator over SSH (exit $rc) - try again later"; exit 1
+          fi
           tar -czf deploy_server.tar.gz \
             --exclude='core/db_connection.php' --exclude='core/mail_secrets.php' \
             --exclude='error_log.txt' --exclude='Invoice.pdf' \
             -C server .
-          scp -i ~/.ssh/hg_key -o StrictHostKeyChecking=no deploy_server.tar.gz "$SRV:/home2/yqjezvte/"
-          ssh -i ~/.ssh/hg_key -o StrictHostKeyChecking=no "$SRV" \
+          retry scp deploy_server.tar.gz "hg:/home2/yqjezvte/"
+          retry ssh hg \
             "tar xzf /home2/yqjezvte/deploy_server.tar.gz -C $WEBROOT/server/ && \
              rm -f /home2/yqjezvte/deploy_server.tar.gz && \
              find $WEBROOT/server -type d -exec chmod 755 {} \; && \
