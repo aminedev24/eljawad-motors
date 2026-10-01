@@ -44,6 +44,49 @@ const NAVY = '#1e3a8a';
 const SKY = '#1da1f2';
 const ORANGE = '#f1892b';
 
+// Prefill the invoice generator from a reservation: buyer, car, shipping, and
+// the amount still to pay. The generator reads this once from storage.
+function issueInvoiceFromReservation(item) {
+  const toNum = (v) => {
+    const n = Number(String(v ?? '').replace(/[^\d.-]/g, ''));
+    return Number.isFinite(n) ? n : 0;
+  };
+  const price = toNum(item.price || item.agreed_price);
+  const paid = toNum(item.amount_paid);
+  const remaining = Math.max(0, price - paid);
+  const name = [item.make, item.model, item.year].filter(Boolean).join(' ');
+  const inspection = item.inspection_required === null || item.inspection_required === undefined
+    ? '' : (Number(item.inspection_required) ? 'Included' : 'Not Included');
+  const invoiceData = {
+    customer_name:         item.buyer_name || '',
+    email:                 item.buyer_email || '',
+    customer_phone:        item.buyer_phone || '',
+    customer_country:      item.buyer_home_country || '',
+    customer_company:      item.buyer_company || '',
+    customer_address:      item.buyer_address || '',
+    make:                  item.make || '',
+    model:                 item.model || '',
+    vehicle_ref:           item.ref_no || item.vehicle_ref || '',
+    chasis_number:         item.chassis_no || '',
+    engine_capacity:       item.engine_capacity || '',
+    mileage:               item.mileage || '',
+    vehicle_description:   name,
+    total_price:           price || '',
+    deposit_amount:        remaining || price || '',
+    deposit_currency:      item.currency || 'USD',
+    deposit_purpose:       'Paying My Vehicle',
+    invoice_type:          paid > 0 ? 'commercial' : 'proforma',
+    description:           `${paid > 0 ? 'Balance payment' : 'Payment'} for ${name}${item.ref_no ? ` (Ref: ${item.ref_no})` : ''}`,
+    destination_country:   item.buyer_country || '',
+    destination_port:      item.destination_port || '',
+    pre_export_inspection: inspection,
+  };
+  const payload = JSON.stringify(invoiceData);
+  try { sessionStorage.setItem('invoiceData', payload); } catch {}
+  try { localStorage.setItem('invoiceData', payload); } catch {}
+  window.open('/invoice-generator', '_blank', 'noopener,noreferrer');
+}
+
 function ReservationModal({ item, onClose, onUpdate, updatingId, onExtend }) {
   const v = item.vehicle_snapshot || {};
   const vName = v.name || [v.year, v.make, v.model].filter(Boolean).join(' ') || item.ref_no || item.vehicle_ref;
@@ -129,6 +172,9 @@ function ReservationModal({ item, onClose, onUpdate, updatingId, onExtend }) {
           </div>
           <div className="flex gap-2 sm:gap-3 pt-2 border-t border-gray-100">
             <button onClick={onClose} className="flex-1 border border-gray-300 text-gray-600 py-2.5 rounded-lg text-sm font-bold hover:bg-gray-50 transition">Close</button>
+            <button onClick={() => issueInvoiceFromReservation(item)} className="flex-1 border border-blue-200 text-blue-700 py-2.5 rounded-lg text-sm font-bold hover:bg-blue-50 transition flex items-center justify-center gap-2" title="Open the invoice generator with this reservation filled in">
+              <i className="fas fa-file-invoice" /> Issue invoice
+            </button>
 <button onClick={() => onUpdate(item.id, newStatus, parseFloat(amountPaid))} disabled={updatingId === item.id} className="flex-1 text-white py-2.5 rounded-lg text-sm font-bold hover:opacity-90 transition flex items-center justify-center gap-2 disabled:opacity-70" style={{ backgroundColor: NAVY }}>
               {updatingId === item.id ? <i className="fas fa-spinner animate-spin" /> : <i className="fas fa-check" />}
               Save Changes

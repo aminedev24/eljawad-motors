@@ -483,6 +483,8 @@ export default function CarManagement({ showMessage, users: propUsers = [], user
       mileage:             v.mileage         || '',
       vehicle_description: [v.year, v.make, v.model].filter(Boolean).join(' '),
       deposit_amount:      normalizeAmount(v.price),
+      total_price:         normalizeAmount(v.price),
+      payment_terms:       normalizeAmount(v.price) ? '100%' : '',
       deposit_currency:    v.currency || 'USD',
       deposit_purpose:     'Paying My Vehicle',
       description:         `Payment for ${[v.make, v.model].filter(Boolean).join(' ')}${v.ref_no ? ` (Ref: ${v.ref_no})` : ''}`,
