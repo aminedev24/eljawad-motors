@@ -3,9 +3,11 @@ session_start();
 require_once __DIR__ . '/../../core/db_connection.php';
 require_once __DIR__ . '/../../core/headers.php';
 
-if (!isset($_SESSION['user_id'])) {
-    http_response_code(401);
-    echo json_encode(["error" => "Unauthorized access. Please login."]);
+// Every buyer's name, email and contact details: staff only (it used to
+// accept any logged-in account, customers included).
+if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'] ?? '', ['admin', 'sales'], true)) {
+    http_response_code(403);
+    echo json_encode(["error" => "Not authorized."]);
     exit;
 }
 
@@ -29,9 +31,22 @@ try {
                 rv.expires_at,
                 rv.status,
                 rv.created_at,
-                c.status AS vehicle_status
+                c.status AS vehicle_status,
+                rv.user_id,
+                rv.port AS destination_port,
+                rv.inspection_required,
+                rv.payment_plan,
+                u.phone AS buyer_phone,
+                u.address AS buyer_address,
+                u.company AS buyer_company,
+                u.country AS buyer_home_country,
+                c.chassis_no,
+                c.engine_capacity,
+                c.mileage,
+                c.year
             FROM reserved_vehicles rv
             LEFT JOIN cars_stock c ON c.ref_no COLLATE utf8mb4_general_ci = rv.vehicle_ref
+            LEFT JOIN users u ON u.id = rv.user_id
             WHERE rv.status = 'reserved'
             ORDER BY rv.id DESC";
 

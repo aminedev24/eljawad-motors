@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../../vendor/autoload.php';   // <-- fixes missing file
+require_once __DIR__ . '/../../vendor/autoload.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -8,20 +8,16 @@ require_once __DIR__ . '/../../core/db_connection.php';
 require_once __DIR__ . '/../../core/headers.php';
 require_once __DIR__ . '/../../core/mailer.php';
 require_once __DIR__ . '/../../core/csrf.php';
+require_once __DIR__ . '/invoice_schema.php';
 
 // Sends arbitrary HTML + attachment from our noreply address, so it must never
 // be callable anonymously (it was an open relay for fake 'Eljawad' invoices).
 session_start();
-if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'] ?? '', ['admin', 'sales'], true)) {
-    http_response_code(403);
-    echo json_encode(['error' => 'Not authorized']);
-    exit;
-}
+invoice_require_staff();
 csrf_validate();
 
-$data = json_decode(file_get_contents('php://input'), true);
+$data = json_decode(file_get_contents('php://input'), true) ?: [];
 
-// Validate input data
 $requiredFields = ['to', 'subject', 'body', 'attachment', 'invoiceNumber', 'customerFullName', 'depositAmount', 'depositDescription', 'depositPurpose'];
 foreach ($requiredFields as $field) {
     if (empty($data[$field])) {
@@ -31,123 +27,120 @@ foreach ($requiredFields as $field) {
     }
 }
 
-// Extract data
-$to = $data['to'];
-$subject = $data['subject'];
-$bcc = $data['bcc'];
-$body = $data['body'];
-$attachment = $data['attachment'];
-
-// Decode the base64-encoded PDF file
-$pdfData = base64_decode($attachment);
+$pdfData = base64_decode($data['attachment'], true);
 if (!$pdfData) {
     http_response_code(400);
     echo json_encode(['error' => 'Invalid PDF attachment']);
     exit;
 }
 
-// Extract additional invoice data
-$invoiceNumber = $data['invoiceNumber'] ?? null;
-$customerName = $data['customerFullName'] ?? null;
-$depositAmount = $data['depositAmount']  ?? null; // This will contain the formatted value like "3,000 USD"
-$depositDescription = $data['depositDescription'] ?? null;
-$depositPurpose = $data['depositPurpose'] ?? null; // New deposit purpose field
-$serialNumber = $data['serialNumber'] ?? null; 
-$depositCurrency = $data['depositCurrency'] ?? null;
-$invoiceDate = $data['invoiceDate'] ?? null;
-$formattedDepositAmount = $depositAmount . ' ' . $depositCurrency;
+$str = fn($key) => isset($data[$key]) && trim((string)$data[$key]) !== '' ? trim((string)$data[$key]) : null;
+// The form's empty make/model placeholder is "any" - don't store it as data.
+$vehicleStr = fn($key) => strcasecmp((string)$str($key), 'any') === 0 ? null : $str($key);
+$num = function ($key) use ($data) {
+    if (!isset($data[$key]) || $data[$key] === '') return null;
+    $n = (float)str_replace(',', '', (string)$data[$key]);
+    return is_finite($n) ? $n : null;
+};
+$date = function ($key) use ($str) {
+    $v = $str($key);
+    return $v && preg_match('/^\d{4}-\d{2}-\d{2}$/', $v) ? $v : null;
+};
+$oneOf = fn($key, array $allowed, $default) => in_array($str($key), $allowed, true) ? $str($key) : $default;
 
+$invoiceNumber = $str('invoiceNumber');
+$to = $str('to');
+$currency = $str('depositCurrency') ?? '';
 
-// Conditionally extract vehicle-related fields
-$vehicleDescription = $data['vehicleDescription'] ?? null;
-$mileage            = $data['mileage'] ?? null;
-$chasisNumber       = $data['chasisNumber'] ?? null;
-$engineCapacity     = $data['engineCapacity'] ?? null;
-$make               = $data['make'] ?? null;
-$model              = $data['model'] ?? null;
+// Column => value. deposit_amount keeps its historical "3000 USD" display format.
+$fields = [
+    'customer_name'         => $str('customerFullName'),
+    'email'                 => $to,
+    'deposit_amount'        => trim(($str('depositAmount') ?? '') . ' ' . $currency),
+    'deposit_currency'      => $currency ?: null,
+    'description'           => $str('depositDescription'),
+    'deposit_purpose'       => $str('depositPurpose'),
+    'vehicle_description'   => $str('vehicleDescription'),
+    'vehicle_ref'           => $str('vehicleRef'),
+    'mileage'               => $str('mileage'),
+    'chasis_number'         => $str('chasisNumber'),
+    'engine_capacity'       => $str('engineCapacity'),
+    'make'                  => $vehicleStr('make'),
+    'model'                 => $vehicleStr('model'),
+    'invoice_type'          => $oneOf('invoiceType', ['proforma', 'deposit', 'commercial'], 'deposit'),
+    'invoice_date'          => $date('invoiceDate'),
+    'expiry_date'           => $date('expiryDate'),
+    'customer_phone'        => $str('customerPhone'),
+    'customer_country'      => $str('country'),
+    'customer_company'      => $str('customerCompany'),
+    'customer_address'      => $str('customerAddress'),
+    'total_price'           => $num('totalPrice'),
+    'payment_terms'         => $oneOf('paymentTerms', ['100%', '50%', '30%'], null),
+    'bank_note'             => $str('bankNote'),
+    'destination_country'   => $str('destinationCountry'),
+    'destination_port'      => $str('destinationPort'),
+    'pre_export_inspection' => $oneOf('preExportInspection', ['Included', 'Not Included'], null),
+];
 
-// Get the user's IP address
-$userIp = $_SERVER['REMOTE_ADDR'];
-
-// Fetch the region from a geolocation API (ipinfo.io does not require an API key for basic requests)
-$region = '';
+// Save first (as draft); it only becomes 'sent' once the email actually goes out.
 try {
-    // Using IPInfo API to get region information (no API key required for basic use)
-    $ipInfoResponse = file_get_contents("http://ipinfo.io/{$userIp}/json");
-    if ($ipInfoResponse) {
-        $ipInfo = json_decode($ipInfoResponse, true);
-        $region = $ipInfo['region'] ?? 'Unknown region';
-    }
-} catch (Exception $e) {
-    $region = 'Unable to retrieve region';
-}
+    ensure_invoice_columns($conn);
 
-// Insert invoice data into the database using mysqli
-try {
-// Prepare your INSERT query including the new vehicle fields
-$stmt = $conn->prepare("INSERT INTO invoices 
-    (invoice_number, customer_name, email, deposit_amount, description, deposit_purpose, vehicle_description, mileage, chasis_number, engine_capacity, make,model, deposit_currency, created_at) 
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?, ?, ?, ?)");
-if ($stmt) {
-    $stmt->bind_param(
-        'ssssssssssssss', // Adjust the types if needed (all strings in this case)
-        $invoiceNumber, 
-        $customerName, 
-        $to, 
-        $formattedDepositAmount, 
-        $depositDescription, 
-        $depositPurpose,
-        $vehicleDescription, 
-        $mileage, 
-        $chasisNumber, 
-        $engineCapacity,
-        $make,
-        $model,
-        $depositCurrency,
-        $invoiceDate
-    );
-    if (!$stmt->execute()) {
-        throw new Exception("Failed to execute statement: " . $stmt->error);
+    $find = $conn->prepare('SELECT id FROM invoices WHERE invoice_number = ? LIMIT 1');
+    $find->bind_param('s', $invoiceNumber);
+    $find->execute();
+    $existing = $find->get_result()->fetch_assoc();
+    $find->close();
+
+    $cols = array_keys($fields);
+    $vals = array_values($fields);
+    if ($existing) {
+        // Regenerated invoice: update the same record instead of duplicating it.
+        $sql = 'UPDATE invoices SET ' . implode(', ', array_map(fn($c) => "`$c` = ?", $cols))
+             . ", status = 'draft', updated_at = NOW() WHERE id = ?";
+        $vals[] = (int)$existing['id'];
+        $types = str_repeat('s', count($cols)) . 'i';
+        $invoiceId = (int)$existing['id'];
+    } else {
+        $cols[] = 'invoice_number';
+        $vals[] = $invoiceNumber;
+        $cols[] = 'created_by';
+        $vals[] = (int)$_SESSION['user_id'];
+        $sql = 'INSERT INTO invoices (`' . implode('`, `', $cols) . "`, status, created_at)"
+             . ' VALUES (' . implode(', ', array_fill(0, count($cols), '?')) . ", 'draft', NOW())";
+        $types = str_repeat('s', count($cols) - 1) . 'i';
     }
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param($types, ...$vals);
+    $stmt->execute();
+    if (!$existing) $invoiceId = (int)$stmt->insert_id;
     $stmt->close();
-} else {
-    throw new Exception("Failed to prepare statement: " . $conn->error);
-}
 // \Throwable, not Exception: `Exception` here is PHPMailer's (see `use` above),
-// so database errors (mysqli_sql_exception) slipped past and fataled with a bare 500.
+// so database errors (mysqli_sql_exception) would slip past and fatal as a bare 500.
 } catch (\Throwable $e) {
     http_response_code(500);
     echo json_encode(['error' => 'Failed to save invoice data: ' . $e->getMessage()]);
     exit;
 }
 
-// Create a new PHPMailer instance to send email to both the primary user and BCC
 $mail = new PHPMailer(true);
 try {
-    // Recipients
     configureMailer($mail);
-    $mail->addAddress($to); // Primary user email
-    $mail->addBCC($bcc); // BCC for the additional recipient
-
-    // Add the user's IP and region as part of the email body
-    $bodyWithIpInfo = $body . "<br><br><strong>User IP:</strong> " . $userIp . "<br><strong>Region:</strong> " . $region;
-
-    // Attachments
-    $mail->addStringAttachment($pdfData, 'Invoice-' .$invoiceNumber . ".pdf" );
-
-    // Content
-    $mail->isHTML(true); // Set email format to HTML
-    $mail->Subject = $subject;
-    $mail->Body = $bodyWithIpInfo; // Add IP and region information to the email body
-
-    // Send the email
+    $mail->addAddress($to);
+    if ($str('bcc')) $mail->addBCC($str('bcc'));
+    $mail->addStringAttachment($pdfData, 'Invoice-' . $invoiceNumber . '.pdf');
+    $mail->isHTML(true);
+    $mail->Subject = $str('subject');
+    $mail->Body = $data['body'];
     $mail->send();
-    echo json_encode(['success' => 'Email sent successfully']);
-} catch (Exception $e) {
+
+    $sent = $conn->prepare("UPDATE invoices SET status = 'sent', sent_at = NOW() WHERE id = ?");
+    $sent->bind_param('i', $invoiceId);
+    $sent->execute();
+    echo json_encode(['success' => 'Email sent successfully', 'invoice_id' => $invoiceId]);
+} catch (\Throwable $e) {
     http_response_code(500);
-    echo json_encode(['error' => 'Failed to send email: ' . $mail->ErrorInfo]);
+    echo json_encode(['error' => 'Invoice saved as draft, but the email failed: ' . ($mail->ErrorInfo ?: $e->getMessage())]);
 }
 
-// Close the database connection
 $conn->close();
-?>
