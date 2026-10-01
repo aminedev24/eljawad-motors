@@ -2,6 +2,10 @@ import { apiBaseUrl } from "../../utilities/apiBase";
 
 export const API_URL = apiBaseUrl;
 
+// Invoice numbers look like ELJ-1001 (the number part comes from
+// getInvoiceNumber.php, which only reads the digits of the last one).
+export const INVOICE_NUMBER_PREFIX = "ELJ-";
+
 // Eljawad Motors' own bank accounts aren't set up yet. These presets used to
 // hold Artisbay's accounts under Eljawad's name, which would have sent
 // customers' payments to another company - so they are empty for now and

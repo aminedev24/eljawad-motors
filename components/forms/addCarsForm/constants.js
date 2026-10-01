@@ -67,7 +67,7 @@ export const DEFAULT_COSTS = {
 };
 
 export const SAMPLE_FORM_DATA = {
-  refNo: 'AB-1003',
+  refNo: 'ELJ-1003',
   make: 'Volkswagen',
   model: 'Golf',
   price: '',

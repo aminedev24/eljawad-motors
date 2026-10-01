@@ -10,6 +10,7 @@ import {
 import {
   API_URL,
   BANK_DETAILS,
+  INVOICE_NUMBER_PREFIX,
   NUMERIC_FIELDS,
   PURPOSE_DESCRIPTIONS,
   REQUIRED_FIELDS,
@@ -382,7 +383,7 @@ export const useInvoiceFormState = () => {
           customerPhone: fullPhoneNumber,
           customerEmail: formData.email,
           country: formData.country,
-          invoiceNumber: `AB-${invoiceCounter}`,
+          invoiceNumber: `${INVOICE_NUMBER_PREFIX}${invoiceCounter}`,
           invoiceDate,
           depositAmount: formData.depositAmount,
           depositCurrency: formData.depositCurrency,

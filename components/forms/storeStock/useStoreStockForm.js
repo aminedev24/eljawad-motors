@@ -150,7 +150,7 @@ const useStoreStockForm = () => {
 
   const populateForm = () => {
     setFormData({
-      refNo: 'AB-1003',
+      refNo: 'ELJ-1003',
       make: 'Volkswagen',
       model: 'Golf',
       price: 'FOB 1,656,600',
