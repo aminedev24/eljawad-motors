@@ -26,7 +26,6 @@ import '../styles/custom/components/invoicePreview.css'; // Custom styles for pr
 import '../styles/custom/user/userHomepage.css';
 import "../styles/custom/components/invoice.css";
 import '../styles/custom/user/profilePage.css';
-import '../styles/custom/pages/shipping.css';
 import '../styles/custom/pages/register.css';
 import '../styles/custom/vehicle/cuttingCost.css';
 import '../styles/custom/forms/vehicleEnquiry.css';

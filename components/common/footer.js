@@ -4,7 +4,6 @@ import ImageWithLoader from '../misc/imageWithLoader';
 
 const footerLinks = [
   { href: '/stock-list', text: 'Browse Stock' },
-  { href: '/shipping', text: 'Shipping' },
   { href: '/contact', text: 'Contact' },
   { href: '/help/help', text: 'Help' },
 ];
