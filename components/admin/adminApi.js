@@ -9,6 +9,7 @@ const ENDPOINT_MAP = {
   'users/impersonate.php': () => `${apiBaseUrl}/users/impersonate.php`,
   'users/stop_impersonation.php': () => `${apiBaseUrl}/users/stop_impersonation.php`,
   'users/addUser.php': () => `${apiBaseUrl}/users/addUser.php`,
+  'users/setStockAccess.php': () => `${apiBaseUrl}/users/setStockAccess.php`,
 
   'inventory/cars/fetchStock.php': () => `${apiInventory}/cars/fetchStock.php`,
   'inventory/cars/fetchAdminStock.php': () => `${apiInventory}/cars/fetchAdminStock.php`,

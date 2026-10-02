@@ -1,6 +1,15 @@
 <?php
 require_once __DIR__ . '/../../core/db_connection.php';
 require_once __DIR__ . '/../../core/headers.php';
+require_once __DIR__ . '/stock_loader.php';
+
+// Visitors must log in before opening any vehicle (see core/stock_access.php).
+$accessLevel = stock_access_level($conn);
+if ($accessLevel === 'guest') {
+    http_response_code(401);
+    echo json_encode(['error' => 'Login required', 'login_required' => true]);
+    exit;
+}
 
 $identifier = isset($_GET['id']) ? trim($_GET['id']) : '';
 
@@ -118,6 +127,16 @@ if ($rawStatus === '') {
     if (!$hasActiveHold) {
         $car['status'] = 'in_stock';
     }
+}
+
+$isStaff = in_array(strtolower((string)($_SESSION['role'] ?? '')), ['admin', 'sales'], true);
+if (!$isStaff) {
+    unset($car['buying_price'], $car['buyer_name'], $car['buyer_email'], $car['buyer_phone'], $car['buyer_country']);
+}
+if ($accessLevel === 'free') {
+    $key = stock_car_key($car);
+    $previewKeys = stock_preview_keys_cached($conn);
+    if ($key === null || !isset($previewKeys[$key])) $car = stock_lock_row($car);
 }
 
 http_response_code(200);

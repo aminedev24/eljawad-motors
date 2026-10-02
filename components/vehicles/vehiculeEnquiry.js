@@ -46,7 +46,7 @@ const InquiryForm = () => {
     const ref = searchParams.get("ref");
     if (ref) {
       setVehicleRef(ref);
-      fetch(`${apiUrl}/inventory/cars/fetchVehicle.php?id=${encodeURIComponent(ref)}`)
+      fetch(`${apiUrl}/inventory/cars/fetchVehicle.php?id=${encodeURIComponent(ref)}`, { credentials: "include" })
         .then(res => res.ok ? res.json() : null)
         .then(data => {
           if (data) {
@@ -523,4 +523,4 @@ const InquiryForm = () => {
   );
 };
 
-export default InquiryForm;
+export default InquiryForm;

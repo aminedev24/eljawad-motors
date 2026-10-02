@@ -10,11 +10,15 @@ session_start();
 
 require_once __DIR__ . '/../core/headers.php';
 require_once __DIR__ . '/../core/csrf.php';
+require_once __DIR__ . '/../core/stock_access.php';
 
 // Issue/refresh CSRF token so the frontend always has a valid one
 $csrfToken = csrf_set_token();
 
 if (isset($_SESSION['user_id'])) {
+    // Only logged-in users need the database (for their stock access tier);
+    // a logged-out page load must not depend on it.
+    require_once __DIR__ . '/../core/db_connection.php';
     $isImpersonating = isset($_SESSION['impersonator']);
 
     echo json_encode([
@@ -27,6 +31,7 @@ if (isset($_SESSION['user_id'])) {
             "email"           => $_SESSION['email'],
             "uid"             => $_SESSION['uid'],
             "role"            => $_SESSION['role'],
+            "stock_access"    => stock_access_level($conn),
             "isImpersonating" => $isImpersonating,
             "impersonator"    => $isImpersonating ? $_SESSION['impersonator'] : null,
         ],
@@ -39,6 +44,7 @@ if (isset($_SESSION['user_id'])) {
         $_SESSION['uid'],
         $_SESSION['email'],
         $_SESSION['role'],
+        $_SESSION['auth_source'],
         $_SESSION['admin_verified'],
         $_SESSION['impersonator']
     );

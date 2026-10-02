@@ -29,6 +29,7 @@ import { useCompare } from "./useCompare";
 import { apiBaseUrl } from "../utilities/apiBase";
 import { formatNumberWithUnit } from "../utilities/numberFormat";
 import VehicleInquiryForm from "./vehicleInquiryForm";
+import { useStockAccess, LoginWall, UnlockButton, Censored } from "./stockAccess";
 import {
   normalizeCurrency,
   displayStockId,
@@ -120,6 +121,8 @@ const VehicleDetailsV2 = ({ initialVehicleId = "" }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const { tier, loading: accessLoading } = useStockAccess();
+  const [loginRequired, setLoginRequired] = useState(false);
 
   const apiUrl = apiBaseUrl;
   const imgBasePath =
@@ -157,14 +160,21 @@ const VehicleDetailsV2 = ({ initialVehicleId = "" }) => {
 
   useEffect(() => {
     if (!router.isReady && !initialVehicleId) return;
+    if (accessLoading || tier === "guest") return;
 
     let isMounted = true;
     setLoading(true);
     setError(null);
 
-    fetch(`${apiUrl}/inventory/cars/fetchVehicle.php?id=${encodeURIComponent(effectiveVehicleId)}`)
+    fetch(`${apiUrl}/inventory/cars/fetchVehicle.php?id=${encodeURIComponent(effectiveVehicleId)}&tier=${tier}`, {
+      credentials: "include",
+    })
       .then((res) => {
         if (!res.ok) {
+          if (res.status === 401) {
+            setLoginRequired(true);
+            throw new Error("Login required");
+          }
           if (res.status === 404) throw new Error("Vehicle not found");
           throw new Error("Failed to fetch vehicle details");
         }
@@ -200,7 +210,7 @@ const VehicleDetailsV2 = ({ initialVehicleId = "" }) => {
       });
 
     return () => { isMounted = false; };
-  }, [effectiveVehicleId, apiUrl, router.isReady, initialVehicleId]);
+  }, [effectiveVehicleId, apiUrl, router.isReady, initialVehicleId, tier, accessLoading]);
 
   const galleryImages = useMemo(() => {
     if (!car) return [];
@@ -315,6 +325,10 @@ const VehicleDetailsV2 = ({ initialVehicleId = "" }) => {
     [ledgerRows]
   );
 
+  if (!accessLoading && (tier === "guest" || loginRequired)) {
+    return <LoginWall title="Log in to view this vehicle" />;
+  }
+
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center bg-[var(--background-color)]">
@@ -343,6 +357,54 @@ const VehicleDetailsV2 = ({ initialVehicleId = "" }) => {
           >
             <FontAwesomeIcon icon={faArrowLeft} /> Back to Stocklist
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (car.locked) {
+    return (
+      <div className="min-h-screen bg-[var(--background-color)] py-6">
+        <div className="mx-auto w-full max-w-3xl px-4">
+          <button
+            type="button"
+            onClick={backToStock}
+            className="mb-3 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[var(--primary-color)] hover:underline"
+          >
+            <FontAwesomeIcon icon={faArrowLeft} /> Back to Stocklist
+          </button>
+          <div className="overflow-hidden border border-[var(--border-color)] bg-[var(--white)]">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={galleryImages[0] || PLACEHOLDER_IMAGE}
+              alt={`${car.make} ${car.model}`}
+              onError={handleImageError}
+              className="aspect-[4/3] w-full object-cover sm:aspect-[16/9]"
+            />
+            <div className="p-5">
+              <h1 className="font-display text-2xl font-bold uppercase text-[var(--primary-color)]">
+                {car.make} {car.model}
+              </h1>
+              <div className="mt-4 grid grid-cols-2 gap-3 border-t border-[var(--border-color)] pt-4 sm:grid-cols-3">
+                {["Price (FOB)", "Year", "Mileage", "Engine", "Transmission", "Fuel"].map((label) => (
+                  <div key={label}>
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--grey-text)]">{label}</div>
+                    <Censored className="mt-1.5 h-3 w-20" />
+                  </div>
+                ))}
+              </div>
+              <div className="mt-6 rounded border border-[var(--accent-color)]/40 bg-[var(--accent-color)]/10 p-4">
+                <p className="text-sm text-[var(--text-color)]">
+                  This vehicle is outside your free preview. Contact our sales department to unlock the
+                  full stock, including photos, specifications and prices.
+                </p>
+                <UnlockButton
+                  car={car}
+                  className="mt-3 inline-block rounded bg-[var(--accent-color)] px-5 py-2.5 text-xs font-extrabold uppercase tracking-wider text-white hover:opacity-90"
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -644,7 +706,7 @@ const VehicleDetailsV2 = ({ initialVehicleId = "" }) => {
         >
           <div className="mb-3 flex items-baseline justify-between">
             <h3 className="text-base font-bold uppercase text-[var(--primary-color)]">
-              Request Slip &mdash; Lot #{displayStockId(car)}
+              Request quotation &mdash; Lot #{displayStockId(car)}
             </h3>
             <span className="font-mono text-[10px] text-gray-400">FILE WITH ELJAWAD MOTORS</span>
           </div>

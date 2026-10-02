@@ -51,6 +51,7 @@ $_SESSION['user_id'] = $admin['id'];
 $_SESSION['full_name'] = $admin['full_name'];
 $_SESSION['uid'] = $admin['uid'];
 $_SESSION['email'] = $admin['email'];
+$_SESSION['auth_source'] = 'users';
 
 // Remove the impersonation flag
 unset($_SESSION['impersonator']);

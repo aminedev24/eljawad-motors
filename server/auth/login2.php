@@ -12,6 +12,7 @@ session_start();
 require_once __DIR__ . '/../core/db_connection.php';
 require_once __DIR__ . '/../core/headers.php';
 require_once __DIR__ . '/../core/csrf.php';
+require_once __DIR__ . '/../core/stock_access.php';
 
 require_once __DIR__ . '/../vendor/autoload.php';   // <-- fixes missing file
 require_once __DIR__ . '/../core/mailer.php';
@@ -138,6 +139,7 @@ $_SESSION['full_name'] = $user['name'];
 $_SESSION['uid'] = $user['uid'];
 $_SESSION['email'] = $user['email'];
 $_SESSION['role'] = $user['role'];
+$_SESSION['auth_source'] = $user['source'];
 
 $updateSession = $conn->prepare("
     INSERT INTO user_sessions (uid, user_name, user_id, is_logged_in, last_login)
@@ -159,7 +161,8 @@ echo json_encode([
         "name" => $user['name'],
         "email" => $user['email'],
         "role" => $user['role'],
-        "source" => $user['source']
+        "source" => $user['source'],
+        "stock_access" => stock_access_level($conn)
     ]
 ]);
 

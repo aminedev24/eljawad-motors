@@ -7,6 +7,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
 import { apiInventory } from "../utilities/apiBase";
+import { useStockAccess, stockUrl } from "../vehicles/stockAccess";
 import { getCarBodyType, getCarMake } from "../utilities/ichinomiyaCardAdapter";
 import { fetchAllMakesModels, getMakesData, getModelsData } from "../vehicles/vehicleData";
 
@@ -33,14 +34,24 @@ const InventoryConsole = () => {
   const [selectedBodyType, setSelectedBodyType] = useState("");
   const [selectedBudget, setSelectedBudget] = useState("");
   const [catalogLoaded, setCatalogLoaded] = useState(false);
+  const { tier, loading: accessLoading } = useStockAccess();
+  // Locked rows carry no price or body type, so those counts are only
+  // meaningful for activated accounts.
+  const showSpecCounts = tier === "full";
 
   useEffect(() => {
-    fetch(`${apiInventory}/cars/fetchStock.php`)
+    fetchAllMakesModels().finally(() => setCatalogLoaded(true));
+  }, []);
+
+  // Same URL (tier included) as the stock rows below, so the browser serves
+  // both from one request.
+  useEffect(() => {
+    if (accessLoading) return;
+    fetch(stockUrl(`${apiInventory}/cars/fetchStock.php`, tier), { credentials: "include" })
       .then((res) => res.json())
       .then((data) => setCars(Array.isArray(data) ? data : []))
       .catch(() => setCars([]));
-    fetchAllMakesModels().finally(() => setCatalogLoaded(true));
-  }, []);
+  }, [tier, accessLoading]);
 
   const makesWithCounts = useMemo(() => {
     const map = new Map();
@@ -184,7 +195,7 @@ const InventoryConsole = () => {
             <option value="">Any Body Type</option>
             {bodyTypesWithCounts.map((b) => (
               <option key={b.name} value={b.name}>
-                {b.name} ({b.count})
+                {showSpecCounts ? `${b.name} (${b.count})` : b.name}
               </option>
             ))}
           </select>
@@ -196,7 +207,7 @@ const InventoryConsole = () => {
             <option value="">Any Budget</option>
             {budgetsWithCounts.map((b) => (
               <option key={b.label} value={b.label}>
-                {b.label} ({b.count})
+                {showSpecCounts ? `${b.label} (${b.count})` : b.label}
               </option>
             ))}
           </select>
@@ -237,7 +248,7 @@ const InventoryConsole = () => {
           <div className="border-b border-gray-200 p-4 md:border-b-0 md:border-r">
             <p className="mb-2.5 text-[11px] font-bold uppercase tracking-wider text-gray-400">Shop by Body Type</p>
             <div className="flex flex-col gap-1.5">
-              {(bodyTypesWithCounts.length ? bodyTypesWithCounts : Array.from({ length: 5 }, () => null)).map((b, i) =>
+              {(bodyTypesWithCounts.length || cars.length ? bodyTypesWithCounts : Array.from({ length: 5 }, () => null)).map((b, i) =>
                 b ? (
                   <button
                     key={b.name}
@@ -246,7 +257,7 @@ const InventoryConsole = () => {
                     className="flex items-center justify-between border border-gray-200 px-2.5 py-1.5 text-[11px] font-semibold transition hover:border-brand-navy"
                   >
                     <span>{b.name}</span>
-                    <span className="font-mono text-gray-400">{b.count}</span>
+                    {showSpecCounts && <span className="font-mono text-gray-400">{b.count}</span>}
                   </button>
                 ) : (
                   <div key={`skel-${i}`} className="h-[30px] animate-pulse border border-gray-100 bg-gray-100" />
@@ -267,7 +278,7 @@ const InventoryConsole = () => {
                   className="flex items-center justify-between border border-gray-200 px-2.5 py-1.5 text-[11px] font-semibold transition hover:border-brand-navy"
                 >
                   <span>{b.label}</span>
-                  <span className="font-mono text-gray-400">{b.count}</span>
+                  {showSpecCounts && <span className="font-mono text-gray-400">{b.count}</span>}
                 </button>
               ))}
             </div>

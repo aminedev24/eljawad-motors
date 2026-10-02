@@ -28,11 +28,40 @@ import {
 } from "../utilities/ichinomiyaCardAdapter";
 import { formatNumberWithUnit } from "../utilities/numberFormat";
 import { useCompare } from "../vehicles/useCompare";
+import { useStockAccess, stockUrl, compareLockedLast, LoginWall, FreeTierBanner, Censored, UnlockButton } from "../vehicles/stockAccess";
 
 // Denser row for the "list" view toggle - same fields as the grid card, laid
 // out horizontally instead of stacked, closer to an inventory-tool listing
 // than a marketplace card.
+const LockedListRow = ({ car }) => {
+  const thumb = Array.isArray(car.images) ? car.images[0] : "";
+  return (
+    <div className="flex items-center gap-3 border border-gray-200 bg-white p-2">
+      <div className="h-16 w-24 shrink-0 overflow-hidden bg-gray-100">
+        {thumb && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={thumb} alt={`${car.make} ${car.model}`} className="h-full w-full object-cover" loading="lazy" />
+        )}
+      </div>
+      <div className="min-w-0 flex-1">
+        <h3 className="truncate font-display text-xs font-bold uppercase text-brand-charcoal">
+          {car.make} {car.model}
+        </h3>
+        <div className="mt-2 flex flex-wrap gap-3">
+          <Censored className="w-8" /><Censored className="w-12" /><Censored className="w-10" /><Censored className="w-14" />
+        </div>
+      </div>
+      <UnlockButton car={car} className="shrink-0 text-right text-[10px] font-bold uppercase tracking-wider text-[var(--accent-color)] hover:underline" />
+    </div>
+  );
+};
+
 const StockListRow = ({ car, onViewDetails }) => {
+  if (car.locked) return <LockedListRow car={car} />;
+  return <UnlockedListRow car={car} onViewDetails={onViewDetails} />;
+};
+
+const UnlockedListRow = ({ car, onViewDetails }) => {
   const { isComparing, toggleCompare, isFull } = useCompare();
   const comparing = isComparing(car);
   const priceAmount = getCarPriceUsd(car);
@@ -96,6 +125,31 @@ const StockListRow = ({ car, onViewDetails }) => {
 // pattern (stock #, spec columns, price) more literally than the card/row
 // views.
 const StockTableRow = ({ car, onViewDetails }) => {
+  if (car.locked) {
+    const lockedThumb = Array.isArray(car.images) ? car.images[0] : "";
+    return (
+      <tr className="border-b border-gray-100">
+        <td className="p-2">
+          <div className="h-12 w-16 shrink-0 overflow-hidden bg-gray-100">
+            {lockedThumb && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={lockedThumb} alt={`${car.make} ${car.model}`} className="h-full w-full object-cover" loading="lazy" />
+            )}
+          </div>
+        </td>
+        <td className="p-3"><Censored className="w-12" /></td>
+        <td className="p-3 font-semibold text-brand-charcoal">{car.make} {car.model}</td>
+        {["w-8", "w-16", "w-10", "w-10", "w-12", "w-12"].map((w, i) => (
+          <td key={i} className="p-3"><Censored className={w} /></td>
+        ))}
+        <td className="p-3 text-right">
+          <UnlockButton car={car} className="text-[10px] font-bold uppercase tracking-wider text-[var(--accent-color)] hover:underline">
+            Unlock &rarr;
+          </UnlockButton>
+        </td>
+      </tr>
+    );
+  }
   const priceAmount = getCarPriceUsd(car);
   const currency = normalizeCurrency(car);
   const stockRef = car.ref_no || car.stock_no || "";
@@ -194,6 +248,7 @@ const normalizeText = (value) =>
 
 const StocklistV2 = () => {
   const router = useRouter();
+  const { tier, loading: accessLoading } = useStockAccess();
 
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -328,6 +383,9 @@ const StocklistV2 = () => {
   );
 
   useEffect(() => {
+    // Logged-out visitors get the login wall; wait for the session check so
+    // the first fetch already carries the right tier.
+    if (accessLoading || tier === "guest") return;
     setLoading(true);
     setViewLoading(true);
 
@@ -349,7 +407,7 @@ const StocklistV2 = () => {
       setTimeout(() => setViewLoading(false), 80);
     };
 
-    fetch(`${apiUrl}/cars/fetchStock.php`)
+    fetch(stockUrl(`${apiUrl}/cars/fetchStock.php`, tier), { credentials: "include" })
       .then((res) => {
         if (!res.ok) throw new Error("Network response was not ok");
         return res.json();
@@ -368,7 +426,7 @@ const StocklistV2 = () => {
           finishEmpty();
         }
       });
-  }, [apiUrl]);
+  }, [apiUrl, tier, accessLoading]);
 
   // Load the unified makes/models catalog once (same source the customer
   // forms use), so the filter bar offers every make/model — not just the
@@ -504,8 +562,12 @@ const StocklistV2 = () => {
     searchKeyword,
   ]);
 
+  const lockedCount = useMemo(() => cars.filter((car) => car.locked).length, [cars]);
+
   const sortedCars = useMemo(() => {
     return [...filteredCars].sort((a, b) => {
+      const lockedOrder = compareLockedLast(a, b);
+      if (lockedOrder) return lockedOrder;
       switch (sortOption) {
         case "price":
           return getCarPrice(a) - getCarPrice(b);
@@ -798,6 +860,8 @@ const StocklistV2 = () => {
     </button>
   ));
 
+  if (!accessLoading && tier === "guest") return <LoginWall />;
+
   return (
     <div className="min-h-screen bg-gray-50 py-6">
       <div className="mx-auto w-full max-w-[1440px] px-4">
@@ -884,6 +948,10 @@ const StocklistV2 = () => {
                 {sortOptionButtons}
               </div>
             </div>
+
+            {tier === "free" && !loading && (
+              <FreeTierBanner lockedCount={lockedCount} />
+            )}
 
             {/* Active filter chips */}
             {activeChips.length > 0 && (

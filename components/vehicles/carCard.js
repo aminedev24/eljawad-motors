@@ -5,13 +5,14 @@
 // thumbnail, tiny uppercase text, single-row spec line and one action button.
 import React, { useEffect, useMemo, useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHeart, faImages, faGaugeHigh, faRoad, faGasPump, faCogs, faScaleBalanced } from '@fortawesome/free-solid-svg-icons';
+import { faHeart, faLock, faImages, faGaugeHigh, faRoad, faGasPump, faCogs, faScaleBalanced } from '@fortawesome/free-solid-svg-icons';
 import { useRouter } from 'next/router';
 import { useUser } from '../user/userContext';
 import { useFavorites, toggleFavorite } from './useFavorites';
 import { useCompare } from './useCompare';
 import { getCarPriceUsd, normalizeCurrency, secureImageUrl } from '../utilities/ichinomiyaCardAdapter';
 import { formatNumberWithUnit } from '../utilities/numberFormat';
+import { Censored, UnlockButton } from './stockAccess';
 
 const PLACEHOLDER_IMAGE = '/images/vehicles/artisbay-placeholder.svg';
 
@@ -54,7 +55,7 @@ const parseImageCandidates = (value) => {
   return [trimmed];
 };
 
-const CarCard = ({ car, imgBasePath, onViewDetails }) => {
+const UnlockedCarCard = ({ car, imgBasePath, onViewDetails }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const router = useRouter();
   const { user } = useUser();
@@ -238,5 +239,63 @@ const CarCard = ({ car, imgBasePath, onViewDetails }) => {
     </div>
   );
 };
+
+// Locked units (see components/vehicles/stockAccess.js) arrive with only a
+// photo, make and model; everything else is censored behind an unlock prompt.
+const LockedCarCard = ({ car, imgBasePath }) => {
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const make = car.make || "N/A";
+  const model = car.model || "";
+  const imageUrl = useMemo(() => {
+    const candidate = [...parseImageCandidates(car.images), ...parseImageCandidates(car.image_urls)][0];
+    if (!candidate) return PLACEHOLDER_IMAGE;
+    const absolute = [...String(candidate).matchAll(absoluteUrlPattern)].pop();
+    if (absolute) return secureImageUrl(absolute[0]);
+    const base = (imgBasePath || "").replace(/\/+$/, "");
+    const normalized = String(candidate).trim().replace(/^\//, "");
+    return base ? `${base}/${normalized}` : `/${normalized}`;
+  }, [car.images, car.image_urls, imgBasePath]);
+
+  return (
+    <div className="flex h-full flex-col bg-[var(--white)] border border-[var(--border-color)] overflow-hidden">
+      <div className="relative h-32 overflow-hidden">
+        {!imageLoaded && <div className="absolute inset-0 animate-pulse bg-gray-200" aria-hidden="true" />}
+        <img
+          src={imageUrl}
+          alt={`${make} ${model}`}
+          className={`w-full h-full object-cover ${imageLoaded ? "opacity-100" : "opacity-0"}`}
+          loading="lazy"
+          onLoad={() => setImageLoaded(true)}
+          onError={(e) => {
+            setImageLoaded(true);
+            if (e.target.src.indexOf(PLACEHOLDER_IMAGE) === -1) e.target.src = PLACEHOLDER_IMAGE;
+          }}
+        />
+        <span className="absolute top-0 left-0 flex items-center gap-1 bg-[var(--primary-color)] text-white text-[9px] font-extrabold px-2 py-0.5 tracking-wider uppercase">
+          <FontAwesomeIcon icon={faLock} className="h-2.5 w-2.5" /> Locked
+        </span>
+      </div>
+      <div className="p-3 flex flex-col flex-1">
+        <h3 className="font-display text-[12px] font-bold text-[var(--text-color)] uppercase truncate leading-tight">
+          {make} {model}
+        </h3>
+        <div className="mt-2"><Censored className="h-3.5 w-24" /></div>
+        <div className="mt-2 grid grid-cols-2 gap-y-2 gap-x-2 border-t border-[var(--border-color)] pt-2">
+          <Censored className="w-12" />
+          <Censored className="w-10" />
+          <Censored className="w-14" />
+          <Censored className="w-9" />
+        </div>
+        <UnlockButton
+          car={car}
+          className="mt-auto pt-3 text-left text-[10px] font-bold uppercase tracking-wider text-[var(--accent-color)] hover:underline w-fit"
+        />
+      </div>
+    </div>
+  );
+};
+
+const CarCard = (props) =>
+  props.car?.locked ? <LockedCarCard {...props} /> : <UnlockedCarCard {...props} />;
 
 export default CarCard;

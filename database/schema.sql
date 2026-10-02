@@ -199,6 +199,8 @@ CREATE TABLE IF NOT EXISTS `users` (
   `role` varchar(50) COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'user',
   `verification_code` varchar(50) COLLATE utf8mb4_general_ci DEFAULT NULL,
   `verification_attempts` int DEFAULT '0',
+  `stock_access` varchar(10) COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'full',
+  `stock_access_updated_at` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`),
   UNIQUE KEY `full_name` (`full_name`),

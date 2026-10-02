@@ -7,6 +7,7 @@
 session_start();
 require_once __DIR__ . '/../core/db_connection.php';
 require_once __DIR__ . '/../core/headers.php';
+require_once __DIR__ . '/../inventory/cars/stock_loader.php';
 
 if (!isset($_SESSION['user_id'])) {
     http_response_code(401);
@@ -58,7 +59,15 @@ $stmt->execute();
 $result = $stmt->get_result();
 
 $vehicles = [];
+// Free accounts only see full details for their preview units.
+$accessLevel = stock_access_level($conn);
+$previewKeys = $accessLevel === 'free' ? stock_preview_keys_cached($conn) : [];
 while ($row = $result->fetch_assoc()) {
+    if ($accessLevel === 'free' && !isset($previewKeys[strtoupper(trim((string)$row['ref_no']))])) {
+        $row['year'] = null;
+        $row['price'] = null;
+        $row['locked'] = true;
+    }
     $vehicles[] = $row;
 }
 

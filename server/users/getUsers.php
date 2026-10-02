@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../core/db_connection.php';
 require_once __DIR__ . '/../core/headers.php';
+require_once __DIR__ . '/../core/stock_access.php';
 session_start();
 
 // Full user/customer list incl. emails, phones and addresses - staff only.
@@ -13,8 +14,10 @@ if (!isset($_SESSION['user_id']) || !in_array($_SESSION['role'] ?? '', ['admin',
 
 $response = ['status' => 'success', 'data' => []];
 
+stock_access_ensure_schema($conn);
+
 // Fetch users
-$userQuery = "SELECT id, full_name, email, phone, country,joined_date, company , address, role, 'user' as type FROM users";
+$userQuery = "SELECT id, full_name, email, phone, country,joined_date, company , address, role, stock_access, stock_access_updated_at, 'user' as type FROM users";
 $userResult = $conn->query($userQuery);
 if ($userResult) {
     while ($row = $userResult->fetch_assoc()) {
@@ -31,6 +34,8 @@ if ($userResult) {
             'joined_date' => $row['joined_date'],
             "company" => $row['company'],
             'role' => $row['role'],
+            'stock_access' => $row['stock_access'],
+            'stock_access_updated_at' => $row['stock_access_updated_at'],
              // Add any additional fields you need here
         ];
     }

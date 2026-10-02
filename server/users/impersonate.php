@@ -69,6 +69,7 @@ $_SESSION['user_id'] = $user['id'];
 $_SESSION['full_name'] = $user['full_name'];
 $_SESSION['uid'] = $user['uid'];
 $_SESSION['email'] = $user['email'];
+$_SESSION['auth_source'] = 'users';
 
 $isImpersonating = isset($_SESSION['impersonator']);
 

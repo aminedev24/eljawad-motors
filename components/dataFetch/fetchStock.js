@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback, useMemo } from "react";
 import getConfig from "next/config";
 import { apiBaseUrl } from '../utilities/apiBase';
 import CarCard from '../vehicles/carCard';
+import { useStockAccess, stockUrl, FreeTierBanner, UnlockButton, FREE_PREVIEW_COUNT } from '../vehicles/stockAccess';
 
 // Each row maps to an existing sort mode on /stock-list (see sortSelections in
 // stockListV2.js) so "View All" actually reproduces the ordering shown here.
@@ -14,6 +15,7 @@ const ROWS = [
 ];
 
 const ROW_SIZE = 24;
+const TEASER_SIZE = 8;
 
 const HOT_MODELS = ['land cruiser', 'hilux', 'hiace', 'prado', 'x-trail', 'pajero', 'alphard', 'patrol', 'fortuner', 'navara'];
 
@@ -63,11 +65,13 @@ const SkeletonRow = () => (
 const CarsList = () => {
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { tier, loading: accessLoading } = useStockAccess();
 
   const apiUrl = apiBaseUrl;
 
   useEffect(() => {
-    fetch(`${apiUrl}/inventory/cars/fetchStock.php`)
+    if (accessLoading) return;
+    fetch(stockUrl(`${apiUrl}/inventory/cars/fetchStock.php`, tier), { credentials: 'include' })
       .then((res) => res.json())
       .then((data) => {
         setCars(Array.isArray(data) ? data : []);
@@ -77,7 +81,7 @@ const CarsList = () => {
         console.error("Error fetching cars:", err);
         setLoading(false);
       });
-  }, [apiUrl]);
+  }, [apiUrl, tier, accessLoading]);
 
   const handleViewDetails = useCallback((car) => {
     if (!car) return;
@@ -89,6 +93,15 @@ const CarsList = () => {
     const basePath = publicRuntimeConfig?.basePath || "";
     window.open(`${basePath}/vehicle?id=${encodeURIComponent(String(identifier).trim())}`, '_blank', 'noopener');
   }, []);
+
+  // Free / guest tiers: the unlocked preview (free only) plus a teaser of
+  // locked units with photos, instead of the price-ranked rows.
+  const limitedRows = useMemo(() => {
+    const unlocked = cars.filter((car) => !car.locked);
+    const hasPhoto = (car) => car.image_urls && car.image_urls !== '[]';
+    const locked = cars.filter((car) => car.locked && hasPhoto(car)).slice(0, TEASER_SIZE);
+    return { unlocked, locked, lockedTotal: cars.length - unlocked.length };
+  }, [cars]);
 
   const rowCars = useMemo(() => {
     if (!cars.length) return { new: [], premium: [], hot: [] };
@@ -111,6 +124,67 @@ const CarsList = () => {
   }
 
   if (cars.length === 0) return null;
+
+  if (tier !== 'full') {
+    return (
+      <div className="px-4 py-6 max-w-[1400px] mx-auto">
+        {tier === 'free' && limitedRows.unlocked.length > 0 && (
+          <div className="mb-10">
+            <h2 className="mb-4 text-lg md:text-2xl font-bold text-[var(--primary-color)] tracking-tight">
+              Your Free Preview: {FREE_PREVIEW_COUNT} Newest Arrivals
+            </h2>
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
+              {limitedRows.unlocked.map((car, index) => (
+                <div key={`${car.ref_no || car.id || 'car'}-${index}`}>
+                  <CarCard car={car} onViewDetails={handleViewDetails} />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <h2 className="mb-4 text-lg md:text-2xl font-bold text-[var(--primary-color)] tracking-tight">
+          {tier === 'free' ? 'More in Stock' : 'Our Stock'}
+        </h2>
+        {tier === 'free' && <FreeTierBanner lockedCount={limitedRows.lockedTotal} />}
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8">
+          {limitedRows.locked.map((car, index) => (
+            <div key={`${car.ref_no || car.id || 'car'}-${index}`}>
+              <CarCard car={car} />
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-8 rounded border border-[var(--border-color)] bg-[var(--white)] p-6 text-center">
+          {tier === 'guest' ? (
+            <>
+              <p className="font-display text-lg font-bold text-[var(--primary-color)]">
+                {cars.length.toLocaleString()} vehicles in stock, ready to ship from Japan
+              </p>
+              <p className="mt-1 text-sm text-gray-600">
+                Create a free account to view our newest arrivals with full specifications and prices.
+              </p>
+              <div className="mt-4 flex flex-col items-center justify-center gap-2 sm:flex-row">
+                <a href="/register" className="rounded bg-[var(--primary-color)] px-6 py-2.5 text-sm font-extrabold uppercase tracking-wider text-white hover:opacity-90">
+                  Sign up free
+                </a>
+                <a href="/login" className="rounded border-2 border-[var(--primary-color)] px-6 py-2.5 text-sm font-extrabold uppercase tracking-wider text-[var(--primary-color)]">
+                  Log in
+                </a>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-gray-600">
+                Want the full {cars.length.toLocaleString()}-vehicle inventory with prices and specifications?
+              </p>
+              <UnlockButton className="mt-3 inline-block rounded bg-[var(--accent-color)] px-6 py-2.5 text-sm font-extrabold uppercase tracking-wider text-white hover:opacity-90" />
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="px-4 py-6 max-w-[1400px] mx-auto">

@@ -4,6 +4,12 @@ session_start();
 
 require_once __DIR__ . '/../core/db_connection.php';
 require_once __DIR__ . '/../core/headers.php';
+require_once __DIR__ . '/../core/stock_access.php';
+require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../core/mailer.php';
+
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
 
 
 
@@ -81,25 +87,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Hash the password for security
     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
+    // Self-registered accounts start on the free stock preview until staff
+    // activate them (see core/stock_access.php).
+    stock_access_ensure_schema($conn);
+
     // Prepare and bind the database statement for inserting the user
-    $stmt = $conn->prepare("INSERT INTO users (uid, full_name, email, password, country, phone, company, address,is_verified, joined_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())");
+    $stmt = $conn->prepare("INSERT INTO users (uid, full_name, email, password, country, phone, company, address,is_verified, joined_date, stock_access) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), 'free')");
     $stmt->bind_param("sssssssss", $uid, $fullName, $email, $hashedPassword, $country, $phone, $company, $address, $is_verified);
 
     if ($stmt->execute()) {
-        // Send email notification to admin
-        $adminEmail = "contact@artisbay.com"; 
-        $subject = "New User Signup Notification";
-        $message = "A new user has signed up:\n\n"
-                 . "Full Name: $fullName\n"
-                 . "Email: $email\n"
-                 . "Country: $country\n"
-                 . "Phone: $phone\n"
-                 . "Company: $company\n"
-                 . "Address: $address\n";
-        $headers = "From: noreply@artisbay.com";
-
-        mail($adminEmail, $subject, $message, $headers);
-
+        // Tell sales a new account is waiting for stock activation.
+        notifySignup($fullName, $email, $country, $phone, $company, $address);
+
         echo json_encode(['success' => true, 'uid' => $uid]);
     } else {
         echo json_encode(['success' => false, 'error' => 'Error: ' . $stmt->error]);
@@ -111,4 +110,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $conn->close();
+
+function notifySignup($fullName, $email, $country, $phone, $company, $address) {
+    $esc = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
+    $activateUrl = SITE_URL . '/admin?tab=customers';
+    $rows = '';
+    foreach (['Name' => $fullName, 'Email' => $email, 'Country' => $country, 'Phone' => $phone, 'Company' => $company, 'Address' => $address] as $label => $value) {
+        $rows .= "<tr><td style=\"padding:4px 12px 4px 0;color:#6b7280\">{$label}</td><td style=\"padding:4px 0\">" . $esc($value ?: '-') . "</td></tr>";
+    }
+    $mail = new PHPMailer(true);
+    try {
+        configureMailer($mail);
+        $mail->addAddress(siteContactEmail());
+        $mail->addReplyTo($email, $fullName);
+        $mail->isHTML(true);
+        $mail->Subject = 'New sign-up awaiting stock activation: ' . $fullName;
+        $mail->Body = "<p>A new customer has signed up. They can see the " . STOCK_FREE_PREVIEW_COUNT
+            . " newest vehicles; the rest of the stock stays locked until you activate their account.</p>"
+            . "<table style=\"font-size:14px\">{$rows}</table>"
+            . "<p><a href=\"{$activateUrl}\">Open Customer Management to activate</a></p>";
+        $mail->AltBody = "New sign-up awaiting stock activation\n\nName: $fullName\nEmail: $email\nCountry: $country\nPhone: $phone\nCompany: $company\nAddress: $address\n\nActivate: $activateUrl";
+        $mail->send();
+    } catch (Exception $e) {
+        // The account is created either way; staff still see it in the admin list.
+        error_log('Signup notification failed: ' . $e->getMessage());
+    }
+}
 ?>
