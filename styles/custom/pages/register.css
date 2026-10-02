@@ -107,6 +107,19 @@
     transform: translateY(-2px); /* Slight lift effect */
 }
 
+/* Secondary "go back one step" button under the main action */
+.signup-form button.back-step {
+    margin-top: 10px;
+    background: transparent;
+    border: 1px solid #cbd5e1;
+    color: #0f4c5c;
+}
+
+.signup-form button.back-step:hover {
+    background: #f1f5f9;
+    transform: none;
+}
+
 /* Phone Number Group Styling */
 .phone-number-group {
     position: relative;

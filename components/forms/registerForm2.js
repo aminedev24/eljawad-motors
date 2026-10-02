@@ -4,7 +4,7 @@ import { useRouter } from "next/router";
 import { useUser } from '../user/userContext';
 import { apiBaseUrl } from '../utilities/apiBase';
 
-const SignupForm = ({ setIsModalOpen, setModalType }) => {
+const SignupForm = ({ setModalType }) => {
   const router = useRouter();
   const { user, loading } = useUser();
 
@@ -78,6 +78,21 @@ const SignupForm = ({ setIsModalOpen, setModalType }) => {
       setIsError(true);
     }
   };
+
+  // Back one step. From step 3 that is step 1, not 2: the server discards the
+  // code once it's verified, so changing the name/email means a new code.
+  const goBack = () => {
+    setMessage("");
+    setIsError(false);
+    setVerificationCode("");
+    setStep(1);
+  };
+
+  const backButton = (
+    <button type="button" className="back-step" onClick={goBack}>
+      &larr; {step === 3 ? "Back to name & email" : "Back"}
+    </button>
+  );
 
   // --- Common Handlers ---
   const handleCountryChange = (event) => {
@@ -243,6 +258,7 @@ const SignupForm = ({ setIsModalOpen, setModalType }) => {
               <button type="submit">
                 Verify Email
               </button>
+              {backButton}
             </form>
 
             {message && (
@@ -360,9 +376,9 @@ const SignupForm = ({ setIsModalOpen, setModalType }) => {
                 I agree to the{" "}
                 <span
                   className="terms-highlight"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.preventDefault();
                     setModalType("terms");
-                    setIsModalOpen(true);
                   }}
                 >
                   Terms & Conditions
@@ -370,9 +386,9 @@ const SignupForm = ({ setIsModalOpen, setModalType }) => {
                 and the{" "}
                 <span
                   className="terms-highlight"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.preventDefault();
                     setModalType("privacy");
-                    setIsModalOpen(true);
                   }}
                 >
                   Privacy Policy
@@ -387,6 +403,7 @@ const SignupForm = ({ setIsModalOpen, setModalType }) => {
             )}
 
             <button type="submit">Sign Up</button>
+            {backButton}
           </form>
         )}
       </div>
