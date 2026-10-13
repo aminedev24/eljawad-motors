@@ -4,6 +4,7 @@ header("Access-Control-Allow-Credentials: true");
 header("Access-Control-Allow-Headers: Content-Type, Authorization");
 header("Access-Control-Allow-Methods: POST, OPTIONS");
 header('Content-Type: application/json');
+require_once __DIR__ . '/../core/site.php';
 
 error_reporting(E_ALL);
 ini_set('log_errors', '1');
@@ -43,7 +44,7 @@ $country = htmlspecialchars($country);
 $message = htmlspecialchars($message);
 $stars   = str_repeat('★', $rating) . str_repeat('☆', 5 - $rating);
 
-$to      = 'contact@artisbay.com';
+$to      = SITE_CONTACT_EMAIL;
 $subject = "Customer Feedback – $name ($stars)";
 
 $text_body = "New customer feedback received.\n\n" .
@@ -98,6 +99,6 @@ if (mail($to, $subject, $body, $headers)) {
     echo json_encode(['status' => 'success', 'message' => 'Thank you! Your feedback has been sent successfully.']);
 } else {
     error_log("[feedback.php] mail() failed for $email");
-    echo json_encode(['status' => 'error', 'message' => 'Unable to send feedback. Please contact us directly at contact@artisbay.com']);
+    echo json_encode(['status' => 'error', 'message' => 'Unable to send feedback. Please contact us directly at ' . SITE_CONTACT_EMAIL]);
 }
 ?>

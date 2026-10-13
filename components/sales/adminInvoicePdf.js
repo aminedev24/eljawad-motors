@@ -4,7 +4,7 @@ import { InvoiceHeaders } from "./invoiceHeaders";
 import SalesAgreementPDF from "./salesAgreementPdf";
 import "./pdfFonts";
 import styles from "./adminInvoicePdfStyles";
-import { BANK_DETAILS_PENDING_NOTICE, hasBankDetails } from "../forms/invoiceForm/constants";
+import { bankDetailsPendingNotice, hasBankDetails } from "../forms/invoiceForm/constants";
 
 const AddressDetail = ({ label, value, labelStyle }) => (
   <View style={styles.addressRow}>
@@ -113,7 +113,7 @@ const AdminInvoicePdf = ({ invoiceData }) => {
           <Text style={styles.bankHeader}>BANK INFORMATION</Text>
           {!hasBankDetails(invoiceData) ? (
             <View style={styles.bankRowLast}>
-              <Text style={styles.bankCellLabel}>{BANK_DETAILS_PENDING_NOTICE}</Text>
+              <Text style={styles.bankCellLabel}>{bankDetailsPendingNotice()}</Text>
             </View>
           ) : invoiceData.currency === "USD" ? (
             <>

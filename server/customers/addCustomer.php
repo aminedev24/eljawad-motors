@@ -158,7 +158,7 @@ function sendNotifyEmail($toEmail, $customerName, $tempPassword) {
         configureMailer($mail);
         $mail->addAddress($toEmail, $customerName);
         $mail->isHTML(true);
-        $mail->Subject = 'Your Eljawad Motors Account Has Been Created!';
+        $mail->Subject = 'Your ' . SITE_NAME . ' Account Has Been Created!';
 
         $loginUrl = SITE_URL . '/login';
 
@@ -167,7 +167,7 @@ function sendNotifyEmail($toEmail, $customerName, $tempPassword) {
         <div style='font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px;'>
             <div style='text-align: center; padding-bottom: 20px;'>
                         <img src='" . SITE_EMAIL_LOGO . "' alt='" . SITE_NAME . "' style='max-width: 220px; margin-bottom: 10px;' />
-                <h2 style='color: #333;'>Welcome to Eljawad Motors</h2>
+                <h2 style='color: #333;'>Welcome to " . SITE_NAME . "</h2>
             </div>
             <p>Dear <strong>{$customerName}</strong>,</p>
             <p>We’re pleased to inform you that an account has been created for you on our website. You can now log in to manage your transactions, track orders, and access our services.</p>
@@ -183,17 +183,17 @@ function sendNotifyEmail($toEmail, $customerName, $tempPassword) {
 
             <p style='margin-top: 20px;'>For security reasons, we recommend changing your password upon first login. If you have any questions or need assistance, feel free to contact us.</p>
 
-            <p style='margin-top: 40px;'>Best regards,<br><strong>Eljawad Motors</strong></p>
+            <p style='margin-top: 40px;'>Best regards,<br><strong>" . SITE_NAME . "</strong></p>
         </div>
         ";
 
         $mail->AltBody = "Dear {$customerName},\n\n"
-            . "An account has been created for you on Eljawad Motors.\n\n"
+            . "An account has been created for you on " . SITE_NAME . ".\n\n"
             . "Username: {$customerName}\n"
             . "Temporary Password: {$tempPassword}\n"
             . "Login Link: {$loginUrl}\n\n"
             . "Please change your password after logging in.\n\n"
-            . "Best regards,\nEljawad Motors";
+            . "Best regards,\n" . SITE_NAME . "";
 
         $mail->send();
     } catch (Exception $e) {

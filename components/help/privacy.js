@@ -1,7 +1,9 @@
 import React from 'react';
 import AgreementForm from '../forms/agreementForm';
+import { useSite } from '../utilities/siteConfig';
 
 const PrivacyPolicy = ({ userProfile, agreementType }) => {
+  const site = useSite();
 
   // Define the content as a plain text or HTML string
   const agreementContent = `
@@ -41,7 +43,7 @@ const PrivacyPolicy = ({ userProfile, agreementType }) => {
       <li>Opt-out of marketing communications.</li>
       <li>Request a copy of the information we hold about you.</li>
     </ul>
-    <p>To exercise your rights, contact us at contact@eljawad.com.</p>
+    <p>To exercise your rights, contact us at ${site.contactEmail}.</p>
     
     <h4>5. Security of Your Information</h4>
     <p>We implement industry-standard security measures to protect your data. However, no online service can guarantee 100% security.</p>

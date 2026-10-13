@@ -1,6 +1,8 @@
 import React from 'react';
 import  Link  from 'next/link';
+import { useSite } from '../utilities/siteConfig';
 const TelegraphicTransfer = () => {
+  const site = useSite();
   return (
     <div className = 'terms-container'>
 
@@ -20,9 +22,9 @@ const TelegraphicTransfer = () => {
           <h4>Verify the Payment Details</h4>
           <ul>
             <li>Double-check the bank account information on the invoice to ensure it matches our official details.</li>
-            {/* Must match the domain invoices are actually sent from (server/core/mail_secrets.php
-                on the host: noreply@eljawad.com), or genuine invoices fail this anti-fraud check. */}
-            <li>Ensure the email containing the invoice is from @eljawad.com to avoid fraudulent activity.</li>
+            {/* Must match the domain invoices are actually sent from (noreply@<domain>, see
+                server/core/site.php), or genuine invoices fail this anti-fraud check. */}
+            <li>Ensure the email containing the invoice is from @{site.domain} to avoid fraudulent activity.</li>
           </ul>
         </li>
         <li>

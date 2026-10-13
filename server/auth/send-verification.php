@@ -124,17 +124,17 @@ try {
                     <p>Thank you for signing up. Please use the verification code below to confirm your email address:</p>
                     <div class='verification-code'>$verificationCode</div>
                     <p>If you did not request this, please ignore this email.</p>
-                    <p>Best regards,<br>Eljawad Motors</p>
+                    <p>Best regards,<br>" . SITE_NAME . "</p>
                 </div>
                 <div class='email-footer'>
-                    &copy; " . date('Y') . " Eljawad Motors. All rights reserved.
+                    &copy; " . date('Y') . " " . SITE_NAME . ". All rights reserved.
                 </div>
             </div>
         </body>
         </html>
     ";
     // Provide a plain text alternative for non-HTML email clients
-    $mail->AltBody = "Hi $fullName,\n\nYour verification code is: $verificationCode\n\nPlease enter this code in the signup form to verify your email address.\n\nBest regards,\nEljawad Motors";
+    $mail->AltBody = "Hi $fullName,\n\nYour verification code is: $verificationCode\n\nPlease enter this code in the signup form to verify your email address.\n\nBest regards,\n" . SITE_NAME . "";
     
     $mail->send();
     echo json_encode(['success' => true]);

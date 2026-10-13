@@ -100,7 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                               </td>
                               <td style='padding: 0 10px;'>
                                 <a href='" . SITE_URL . "' style='text-decoration: none; color: #1e398a; font-size: 14px;'>
-                                  <i class='fas fa-globe' style='vertical-align: middle;'></i> eljawad.com
+                                  <i class='fas fa-globe' style='vertical-align: middle;'></i> " . SITE_DOMAIN . "
                                 </a>
                               </td>
                             </tr>

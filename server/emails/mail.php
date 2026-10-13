@@ -1,8 +1,9 @@
 <?php
+require_once __DIR__ . '/../core/site.php';
 $to = 'test@example.com';  // You can put any email address here
 $subject = 'Test Email';
 $message = 'This is a test email.';
-$headers = 'From: noreply@yourdomain.com';
+$headers = 'From: ' . SITE_NOREPLY_EMAIL;
 
 //phpinfo();
 

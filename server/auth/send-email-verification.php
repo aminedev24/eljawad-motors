@@ -97,7 +97,7 @@ function sendVerificationEmail($userId, $email) {
                 <p>If you did not request this, please ignore this email.</p>
                 <div class='footer'>
                 <p>Need help? Contact us at <a href='mailto:" . siteContactEmail() . "'>" . siteContactEmail() . "</a>.</p>
-                <p>Best regards,<br>Eljawad Motors</p>
+                <p>Best regards,<br>" . SITE_NAME . "</p>
                 </div>
             </div>
             </body>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { getSite } from '../utilities/siteConfig';
 import './ProformaInvoice.css'; // Assuming you will create a separate CSS file for styles
 
 const ProformaInvoice = () => {
@@ -44,7 +45,7 @@ const ProformaInvoice = () => {
             <div className="header">
                 <div className="contact-info">
                     <p>An online platform for the sale and export of used vehicles and auto parts</p>
-                    <p>Email: contact@eljawad.com</p>
+                    <p>Email: {getSite().contactEmail}</p>
                 </div>
             </div>
             <div className="invoice-title">Proforma Invoice</div>

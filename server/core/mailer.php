@@ -1,11 +1,11 @@
 <?php
 // Shared SMTP configuration for all outbound mail.
 //
-// Mail goes out through the eljawad.com cPanel mailbox on HostGator: the
-// domain's SPF record (a mx include:websitewelcome.com) authorizes HostGator's
-// servers and cPanel publishes the DKIM key, so Gmail etc. accept it. Server,
-// login and addresses live in the host-only mail_secrets.php (see
-// mail_secrets.example.php); nothing here is specific to one mailbox.
+// Mail goes out through the current domain's cPanel mailbox on HostGator
+// (noreply@eljawad.com, noreply@start-auction.com, ...): each domain's SPF
+// record authorizes HostGator's servers and cPanel publishes its DKIM key, so
+// Gmail etc. accept it. Server and logins live in the host-only
+// mail_secrets.php (see mail_secrets.example.php); site.php picks the domain.
 
 use PHPMailer\PHPMailer\PHPMailer;
 // Every caller does `use PHPMailer\PHPMailer\Exception` and catches that, so
@@ -30,7 +30,7 @@ function mailSettings(): array
         // MailHog on localhost:1025 catches everything; no credentials needed.
         return $settings = [
             'host' => 'localhost', 'port' => 1025, 'secure' => '', 'username' => '', 'password' => '',
-            'from_email' => 'noreply@eljawad.com', 'from_name' => SITE_NAME, 'contact_email' => 'contact@eljawad.com',
+            'from_email' => SITE_NOREPLY_EMAIL, 'from_name' => SITE_NAME, 'contact_email' => SITE_CONTACT_EMAIL,
         ];
     }
     $secretsFile = __DIR__ . '/mail_secrets.php';
@@ -41,15 +41,23 @@ function mailSettings(): array
         );
     }
     $s = require $secretsFile;
+    // Older single-mailbox files put username/password at the top level;
+    // treat that as the mailbox for the domain of its address.
+    $mailboxes = $s['mailboxes'] ?? [substr(strrchr($s['username'], '@'), 1) => $s];
+    $box = $mailboxes[SITE_DOMAIN] ?? null;
+    if ($box === null) {
+        // Sending as another domain's mailbox would fail SPF/DKIM checks.
+        throw new Exception('No mailbox for ' . SITE_DOMAIN . ' in server/core/mail_secrets.php.');
+    }
     return $settings = [
-        'host' => $s['host'] ?? 'gator4421.hostgator.com',
-        'port' => (int)($s['port'] ?? 465),
-        'secure' => $s['secure'] ?? PHPMailer::ENCRYPTION_SMTPS,
-        'username' => $s['username'],
-        'password' => $s['password'],
-        'from_email' => $s['from_email'] ?? $s['username'],
-        'from_name' => $s['from_name'] ?? SITE_NAME,
-        'contact_email' => $s['contact_email'] ?? ($s['from_email'] ?? $s['username']),
+        'host' => $box['host'] ?? $s['host'] ?? 'gator4421.hostgator.com',
+        'port' => (int)($box['port'] ?? $s['port'] ?? 465),
+        'secure' => $box['secure'] ?? $s['secure'] ?? PHPMailer::ENCRYPTION_SMTPS,
+        'username' => $box['username'],
+        'password' => $box['password'],
+        'from_email' => $box['from_email'] ?? $box['username'],
+        'from_name' => $box['from_name'] ?? SITE_NAME,
+        'contact_email' => $box['contact_email'] ?? SITE_CONTACT_EMAIL,
     ];
 }
 
@@ -60,7 +68,7 @@ function siteContactEmail(): string
     try {
         return mailSettings()['contact_email'];
     } catch (Exception $e) {
-        return 'contact@eljawad.com';
+        return SITE_CONTACT_EMAIL;
     }
 }
 

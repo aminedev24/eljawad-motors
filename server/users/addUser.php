@@ -93,7 +93,7 @@ $mail->SMTPAuth = false;
 $mail->SMTPSecure = false;
 $mail->Port = 1025; // TCP port for TLS
 
-$mail->setFrom('your_email@example.com', 'Your Company Name');
+configureMailer($mail);
 $mail->addAddress($email, $fullName);
 $mail->isHTML(true);
 
@@ -171,28 +171,28 @@ $mail->Body = "
     <ul>
       <li><strong>Email:</strong> $email</li>
       <li><strong>Temporary Password:</strong> $randomPassword</li>
-      <li><strong>Login Link:</strong> <a href=\"https://artisbay.com/login\">https://artisbay.com/login</a></li>
+      <li><strong>Login Link:</strong> <a href=\"" . SITE_URL . "/login\">" . SITE_URL . "/login</a></li>
     </ul>
     <p>Please log in and change your password as soon as possible for security reasons.</p>
-    <p>If you have any questions or need assistance, feel free to contact us at <a href=\"mailto:contact@artisbay.com\">contact@artisbay.com</a></p>
+    <p>If you have any questions or need assistance, feel free to contact us at <a href=\"mailto:" . SITE_CONTACT_EMAIL . "\">" . SITE_CONTACT_EMAIL . "</a></p>
     <p>Best Regards,</p>
-    <p>Artisbay Lite Inc.</p>
+    <p>" . SITE_NAME . "</p>
     <table width=\"100%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\">
       <tr>
         <td class=\"footer\">
-          <img src=\"https://artisbay.com/images/Signatureforemail.png\" alt=\"Artisbay Lite Inc. Logo\">
+          <img src=\"" . SITE_EMAIL_LOGO . "\" alt=\"" . SITE_NAME . "\">
           <p style=\"font-weight:bold;\">Your trusted platform for the sale and export of used vehicles and auto parts</p>
           <p>Registered in Japan | Registered with the Miyagi Ken Legal Affairs Bureau</p>
           <table class=\"contact-table\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\">
             <tr>
               <td>
-                <a href=\"mailto:contact@artisbay.com\">
-                  <i class=\"fas fa-envelope\" style=\"vertical-align: middle;\"></i> contact@artisbay.com
+                <a href=\"mailto:" . SITE_CONTACT_EMAIL . "\">
+                  <i class=\"fas fa-envelope\" style=\"vertical-align: middle;\"></i> " . SITE_CONTACT_EMAIL . "
                 </a>
               </td>
               <td>
-                <a href=\"https://www.artisbay.com\">
-                  <i class=\"fas fa-globe\" style=\"vertical-align: middle;\"></i> www.artisbay.com
+                <a href=\"" . SITE_URL . "\">
+                  <i class=\"fas fa-globe\" style=\"vertical-align: middle;\"></i> " . SITE_DOMAIN . "
                 </a>
               </td>
             </tr>

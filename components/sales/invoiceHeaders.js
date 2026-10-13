@@ -2,6 +2,7 @@
 import { Document, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
 import React from 'react';
 import { FaEnvelope, FaGlobe } from "react-icons/fa";
+import { getSite } from '../utilities/siteConfig';
 
 const styles = StyleSheet.create({
     description: {
@@ -64,6 +65,7 @@ const styles = StyleSheet.create({
 })
 
 export const InvoiceHeaders = ({invoiceData, formattedInvoiceNumber, commercial}) => {
+  const site = getSite();
   return (
     <View style={styles.invoiceHeader}>
       <View style={styles.headerFullWidth}>
@@ -80,10 +82,10 @@ export const InvoiceHeaders = ({invoiceData, formattedInvoiceNumber, commercial}
             </Text>
             <Text style={styles.iconParagraph}>
              
-              <Text>Email: contact@eljawad.com</Text>
+              <Text>Email: {site.contactEmail}</Text>
             </Text>
             <Text style={styles.iconParagraph}>
-              <Text>Website: www.eljawad.com</Text>
+              <Text>Website: {site.website}</Text>
             </Text>
           </View>
         </View>

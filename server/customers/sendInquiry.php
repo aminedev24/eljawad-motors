@@ -1,6 +1,6 @@
 <?php
 
-$allowedOrigins = ['http://localhost:3000', 'https://artisbay.com'];
+$allowedOrigins = ['http://localhost:3000', 'https://artisbay.com', 'https://eljawad.com', 'https://www.eljawad.com', 'https://start-auction.com', 'https://www.start-auction.com'];
 $origin = isset($_SERVER['HTTP_ORIGIN']) ? $_SERVER['HTTP_ORIGIN'] : '';
 if (in_array($origin, $allowedOrigins)) {
     header("Access-Control-Allow-Origin: $origin");
@@ -8,6 +8,7 @@ if (in_array($origin, $allowedOrigins)) {
 
 require_once __DIR__ . '/../core/db_connection.php';
 require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../core/mailer.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -77,17 +78,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             http_response_code(200);
             echo json_encode(["status" => "success", "message" => "Inquiry sent successfully!"]);
 
-            // Send email notification via SMTP (MailHog on :1025 in dev)
+            // Send email notification via the shared SMTP mailer (MailHog in dev)
             try {
                 $mail = new PHPMailer(true);
-                $mail->isSMTP();
-                $mail->Host = 'localhost';
-                $mail->SMTPAuth = false;
-                $mail->Port = 1025;
-                $mail->SMTPSecure = false;
-
-                $mail->setFrom($inputs['email'], $inputs['name']);
-                $mail->addAddress('orders@artisbay.com');
+                configureMailer($mail);
+                $mail->addReplyTo($inputs['email'], $inputs['name']);
+                $mail->addAddress(siteContactEmail());
                 $mail->isHTML(false);
                 $mail->Subject = "New Vehicle Inquiry from " . $inputs['name'];
                 $mail->Body = "Name: " . $inputs['name'] . "\nAddress: " . $inputs['address'] . "\nEmail: " . $inputs['email'] . "\nCountry: " . $inputs['country'] . "\nTel: " . $inputs['tel'] . "\nPort: " . $inputs['port'] . "\nMessage: " . $inputs['message'] . "\n\nVehicle Information:\nMake: " . $inputs['make'] . "\nModel: " . $inputs['model'] . "\nRegistration Year: " . $inputs['year_from'] . " to " . $inputs['year_to'] . "\nPrice: " . $inputs['price_from'] . " to " . $inputs['price_to'] . "\nBody Type: " . $inputs['body_type'] . "\nMileage: " . $inputs['mileage_from'] . " to " . $inputs['mileage_to'] . "\nTransmission: " . $inputs['transmission'] . "\nSteering: " . $inputs['steering'];

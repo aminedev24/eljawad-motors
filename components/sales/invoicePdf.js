@@ -2,7 +2,8 @@ import React from "react";
 import { pdf } from "@react-pdf/renderer";
 import { saveAs } from "file-saver";
 import getConfig from "next/config";
-import { BANK_DETAILS_PENDING_NOTICE, INVOICE_TYPE_TITLES, hasBankDetails } from "../forms/invoiceForm/constants";
+import { bankDetailsPendingNotice, INVOICE_TYPE_TITLES, hasBankDetails } from "../forms/invoiceForm/constants";
+import { getSite } from "../utilities/siteConfig";
 
 import {
   StyleSheet,
@@ -262,6 +263,7 @@ const PayItem = ({ label, value, wide }) => (
 );
 
 const MyPdfDocument = ({ invoiceData, assets = {} }) => {
+  const site = getSite();
   const invoiceNumber = invoiceData.invoiceNumber || "";
   const formattedInvoiceNumber = invoiceNumber.replace(/(\b\w+\b)-\1-/, "$1-");
   const currency = invoiceData.depositCurrency || "";
@@ -322,10 +324,10 @@ const MyPdfDocument = ({ invoiceData, assets = {} }) => {
           </View>
           <View style={styles.card}>
             <Text style={styles.label}>From</Text>
-            <Text style={styles.cardName}>Eljawad Motors</Text>
+            <Text style={styles.cardName}>{site.name}</Text>
             <Text>Sale and export of used vehicles and auto parts</Text>
-            <Text style={styles.muted}>contact@eljawad.com</Text>
-            <Text style={styles.muted}>www.eljawad.com</Text>
+            <Text style={styles.muted}>{site.contactEmail}</Text>
+            <Text style={styles.muted}>{site.website}</Text>
           </View>
           {assets.qr ? (
             <View style={styles.qrBlock}>
@@ -351,7 +353,7 @@ const MyPdfDocument = ({ invoiceData, assets = {} }) => {
           <Text style={styles.sectionTitle}>Payment details</Text>
           {!hasBankDetails(invoiceData) ? (
             <View style={styles.pending}>
-              <Text>{BANK_DETAILS_PENDING_NOTICE}</Text>
+              <Text>{bankDetailsPendingNotice()}</Text>
             </View>
           ) : isUsd ? (
             <View style={styles.payGrid}>
@@ -379,7 +381,7 @@ const MyPdfDocument = ({ invoiceData, assets = {} }) => {
           <Text style={styles.bannerText}>
             Put <Text style={styles.bold}>{formattedInvoiceNumber}</Text> in your transfer reference.{" "}
             <Text style={styles.bannerStrong}>Beware of scams:</Text> only pay into an account confirmed by
-            an email from @eljawad.com.
+            an email from @{site.domain}.
           </Text>
         </View>
 
@@ -476,7 +478,7 @@ const MyPdfDocument = ({ invoiceData, assets = {} }) => {
         </View>
 
         <View style={styles.footer}>
-          <Text>Eljawad Motors · contact@eljawad.com · www.eljawad.com</Text>
+          <Text>{site.name} · {site.contactEmail} · {site.website}</Text>
           <Text>Invoice {formattedInvoiceNumber}</Text>
         </View>
       </Page>
