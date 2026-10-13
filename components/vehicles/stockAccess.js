@@ -10,9 +10,9 @@ import { useRouter } from 'next/router';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLock } from '@fortawesome/free-solid-svg-icons';
 import { useUser } from '../user/userContext';
+import { getSite } from '../utilities/siteConfig';
 
 export const FREE_PREVIEW_COUNT = 20;
-export const SALES_EMAIL = 'contact@eljawad.com';
 
 export function useStockAccess() {
   const { user, loading } = useUser();
@@ -38,7 +38,7 @@ export function unlockMailto(user, car) {
     user?.name && `Name: ${user.name}`,
     user?.email && `Account email: ${user.email}`,
   ].filter((l) => l !== false && l !== undefined && l !== null);
-  return `mailto:${SALES_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(lines.join('\n'))}`;
+  return `mailto:${getSite().contactEmail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(lines.join('\n'))}`;
 }
 
 // Locked units have no price/year/specs; keep them after the unlocked ones
