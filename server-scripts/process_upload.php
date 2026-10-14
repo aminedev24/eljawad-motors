@@ -19,10 +19,15 @@
  * the old slim single-photo behavior rather than dropping the vehicle.
  *
  * Imported rows are tagged company='ichinomiya_import' so they can be
- * cleanly replaced each run without touching manually added cars.
+ * cleanly replaced each run without touching manually added cars. Each row
+ * keeps the partner's own ref in source_ref, so a car keeps the same ref_no
+ * (and /vehicle/<ref_no> link) from one run to the next; only new cars get
+ * new numbers. Full records are fetched only for new or incomplete cars -
+ * prices still refresh every run from the slim per-make files. Cars the
+ * partner lists as sold or reserved are left out.
  *
  * Deploy location : /home2/yqjezvte/process_upload.php  (OUTSIDE web root)
- * cPanel cron     : 0 4 * * * php /home2/yqjezvte/process_upload.php >> /home2/yqjezvte/process_upload.log 2>&1
+ * cPanel cron     : 0 * * * * php /home2/yqjezvte/process_upload.php >> /home2/yqjezvte/process_upload.log 2>&1
  */
 
 // ============================================================
@@ -31,6 +36,7 @@
 $IMPORT_TAG    = 'ichinomiya_import';
 $PARTNER_BASE  = 'https://www.ichinomiya-motors.com/makes';
 $SEARCH_API    = 'https://www.ichinomiya-motors.com/api/search.php';
+$STATUS_API    = 'https://www.ichinomiya-motors.com/core-services'; // get-sold-refs.php / get-reserved-refs.php
 $FETCH_CONCURRENCY = 15; // simultaneous full-record requests per batch
 
 // Artisbay Lite margin added on top of the partner's price_usd (which already
@@ -158,7 +164,7 @@ function is_allowed_vehicle(string $make, string $model, int $year, string $grad
 // ============================================================
 // HTTP helpers (cURL)
 // ============================================================
-function fetch_json(string $url, string $partnerKey): ?array {
+function fetch_json(string $url, string $partnerKey, string $cookie = ''): ?array {
     $ch = curl_init($url);
     curl_setopt_array($ch, [
         CURLOPT_RETURNTRANSFER => true,
@@ -166,6 +172,7 @@ function fetch_json(string $url, string $partnerKey): ?array {
         CURLOPT_TIMEOUT        => 30,
         CURLOPT_USERAGENT      => 'Artisbay Lite-Importer/1.0',
         CURLOPT_HTTPHEADER     => ["X-Partner-Key: $partnerKey"],
+        CURLOPT_COOKIE         => $cookie,
     ]);
     $body = curl_exec($ch);
     $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -224,6 +231,27 @@ function fetch_full_records(array $refs, string $searchApi, int $concurrency, st
     return $results;
 }
 
+// Hourly runs must not overlap: a slow first run (full records for every
+// car) can take longer than the interval.
+$lock = fopen(sys_get_temp_dir() . '/artisbay_partner_import.lock', 'c');
+if (!$lock || !flock($lock, LOCK_EX | LOCK_NB)) {
+    die("[INFO] " . date('c') . " — previous import still running; skipping this run.\n");
+}
+
+// ============================================================
+// Cars the partner has sold or reserved - not for sale here either
+// ============================================================
+$unavailable = [];
+foreach (['get-sold-refs', 'get-reserved-refs'] as $endpoint) {
+    $data = fetch_json("$STATUS_API/$endpoint.php", $PARTNER_KEY, $HUMAN_CHECK_COOKIE);
+    if (!is_array($data['refs'] ?? null)) {
+        echo "[WARN] Could not read $endpoint; its cars stay listed this run\n";
+        continue;
+    }
+    foreach ($data['refs'] as $r) $unavailable[(string)$r] = true;
+}
+echo "[INFO] Sold/reserved at partner: " . count($unavailable) . "\n";
+
 // ============================================================
 // Fetch and filter vehicles from partner makes JSON files
 // ============================================================
@@ -237,6 +265,7 @@ foreach ($MAKE_FILES as $makeName => $filename) {
     }
     $count = 0;
     foreach ($data['vehicles'] as $car) {
+        if (isset($unavailable[(string)($car['ref'] ?? '')])) continue;
         $year = (int)($car['year'] ?? 0);
         if (is_allowed_vehicle((string)($car['make'] ?? ''), (string)($car['model'] ?? ''), $year, (string)($car['grade'] ?? ''))) {
             $allVehicles[] = $car;
@@ -246,15 +275,6 @@ foreach ($MAKE_FILES as $makeName => $filename) {
     echo "[INFO] $makeName — {$data['total']} total, $count matched filter\n";
 }
 echo "[INFO] Total matched: " . count($allVehicles) . "\n";
-
-// ============================================================
-// Fetch full per-vehicle records (photos, chassis, model code, options)
-// ============================================================
-$refsToFetch = array_map(fn($c) => (string)($c['ref'] ?? ''), $allVehicles);
-echo "[INFO] Fetching full vehicle records for " . count(array_filter($refsToFetch)) . " eligible vehicles...\n";
-$fullRecords = fetch_full_records($refsToFetch, $SEARCH_API, $FETCH_CONCURRENCY, $PARTNER_KEY, $HUMAN_CHECK_COOKIE);
-echo "[INFO] Got full records for " . count($fullRecords) . " of " . count(array_filter($refsToFetch)) . " vehicles"
-    . " (" . (count($refsToFetch) - count($fullRecords)) . " will fall back to slim single-photo data)\n";
 
 mysqli_report(MYSQLI_REPORT_OFF);
 $conn = new mysqli($DB_HOST, $DB_USER, $DB_PASS, $DB_NAME);
@@ -311,6 +331,59 @@ function ensure_column(mysqli $conn, string $table, string $column, string $defi
 }
 ensure_column($conn, 'cars_stock', 'model_code', 'varchar(50) DEFAULT NULL');
 ensure_column($conn, 'cars_stock', 'options', 'text');
+ensure_column($conn, 'cars_stock', 'source_ref', 'varchar(50) DEFAULT NULL');
+
+// ============================================================
+// Previous import: keeps each car's ref_no stable and lets us skip
+// re-fetching full records we already have.
+// ============================================================
+$previousBySource  = [];   // source_ref => row
+$previousByChassis = [];   // chassis_no => row (rows imported before source_ref existed)
+$previousByProfile = [];   // make|model|year|mileage => row (same, when chassis is blank)
+$maxRef = 0;
+function car_profile(string $make, string $model, string $year, string $mileage): string {
+    return strtoupper(trim($make)) . '|' . strtoupper(trim($model)) . '|' . (int)$year . '|' . (int)$mileage;
+}
+$res = $conn->query("SELECT ref_no, source_ref, chassis_no, model_code, options, image_urls, make, model, year, mileage
+                     FROM cars_stock WHERE company = '$IMPORT_TAG'");
+if ($res) {
+    while ($row = $res->fetch_assoc()) {
+        $maxRef = max($maxRef, (int)$row['ref_no']);
+        if ($row['source_ref'] !== null && $row['source_ref'] !== '') {
+            $previousBySource[$row['source_ref']] = $row;
+        } else {
+            if (trim((string)$row['chassis_no']) !== '') {
+                $previousByChassis[strtoupper(trim($row['chassis_no']))] = $row;
+            }
+            $previousByProfile[car_profile($row['make'], $row['model'], $row['year'], $row['mileage'])] = $row;
+        }
+    }
+}
+// A previous row is complete when its full record was fetched (it has a
+// chassis number or more than one photo); otherwise fetch it again.
+function previous_is_complete(?array $row): bool {
+    if (!$row) return false;
+    $images = json_decode((string)$row['image_urls'], true);
+    return trim((string)$row['chassis_no']) !== '' || (is_array($images) && count($images) > 1);
+}
+echo "[INFO] Previous import: " . count($previousBySource) . " cars with a source ref, highest ref_no $maxRef\n";
+
+
+// ============================================================
+// Fetch full per-vehicle records (photos, chassis, model code, options)
+// ============================================================
+$refsToFetch = [];
+foreach ($allVehicles as $c) {
+    $sourceRef = (string)($c['ref'] ?? '');
+    if ($sourceRef !== '' && !previous_is_complete($previousBySource[$sourceRef] ?? null)) {
+        $refsToFetch[] = $sourceRef;
+    }
+}
+echo "[INFO] Reusing stored full records for " . (count($allVehicles) - count($refsToFetch)) . " cars\n";
+echo "[INFO] Fetching full vehicle records for " . count(array_filter($refsToFetch)) . " eligible vehicles...\n";
+$fullRecords = fetch_full_records($refsToFetch, $SEARCH_API, $FETCH_CONCURRENCY, $PARTNER_KEY, $HUMAN_CHECK_COOKIE);
+echo "[INFO] Got full records for " . count($fullRecords) . " of " . count(array_filter($refsToFetch)) . " vehicles"
+    . " (" . (count($refsToFetch) - count($fullRecords)) . " fall back to stored or slim single-photo data)\n";
 
 // ============================================================
 // Safety guard — never wipe the existing import on a failed fetch.
@@ -326,6 +399,9 @@ if (count($allVehicles) === 0) {
 // ============================================================
 // Clear previous import (preserves manually added cars)
 // ============================================================
+// One transaction: visitors see the old list or the new one, never a
+// half-filled table while the inserts run.
+$conn->begin_transaction();
 $conn->query("DELETE FROM cars_stock WHERE company = '$IMPORT_TAG'");
 $deleted = $conn->affected_rows;
 echo "[INFO] Removed $deleted previously imported rows\n";
@@ -337,8 +413,8 @@ $stmt = $conn->prepare("
     INSERT INTO cars_stock
         (ref_no, make, model, year, engine_capacity, mileage, transmission,
          fuel, color, drive, door, seat, chassis_no, category,
-         price, currency, buying_price, image_urls, company, model_code, options)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'USD', ?, ?, ?, ?, ?)
+         price, currency, buying_price, image_urls, company, model_code, options, source_ref)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'USD', ?, ?, ?, ?, ?, ?)
 ");
 
 if (!$stmt) {
@@ -350,8 +426,8 @@ if (!$stmt) {
 // ============================================================
 $inserted    = 0;
 $skipped     = 0;
-$refCounter  = 1;
 $fullUsed    = 0;
+$usedRefs    = [];
 
 foreach ($allVehicles as $car) {
     $make  = trim((string)($car['make']  ?? ''));
@@ -362,7 +438,6 @@ foreach ($allVehicles as $car) {
     $currentYear = (int)date('Y');
     if ($yearInt <= 0 || $yearInt > $currentYear) { $skipped++; continue; }
 
-    $ref    = str_pad($refCounter, 4, '0', STR_PAD_LEFT);
     $year   = (string)$yearInt;
     $cc     = (string)($car['cc']           ?? '');
     $miles  = (int)($car['mileage']         ?? 0);
@@ -378,34 +453,53 @@ foreach ($allVehicles as $car) {
     $sourceRef = (string)($car['ref'] ?? '');
     $full = $fullRecords[$sourceRef] ?? null;
     if ($full) $fullUsed++;
+    $chassis = $full ? trim((string)($full['chassis'] ?? '')) : '';
 
-    // Images — prefer the full record's complete gallery; fall back to the
-    // slim record's single img URL if the full fetch failed for this car.
-    if ($full && !empty($full['images']) && is_array($full['images'])) {
-        $imageJson = json_encode(array_values(array_filter(array_map('strval', $full['images']))), JSON_UNESCAPED_UNICODE);
+    // The same car from the previous run: by partner ref, or (rows imported
+    // before source_ref existed) by chassis number, then make/model/year/mileage.
+    $prev = $previousBySource[$sourceRef]
+        ?? ($chassis !== '' ? ($previousByChassis[strtoupper($chassis)] ?? null) : null)
+        ?? ($previousByProfile[car_profile($make, $model, (string)$yearInt, (string)$miles)] ?? null);
+
+    if ($full) {
+        $images      = is_array($full['images'] ?? null) ? array_values(array_filter(array_map('strval', $full['images']))) : [];
+        $imgUrl      = trim((string)($car['img'] ?? ''));
+        $imageJson   = json_encode($images ?: ($imgUrl ? [$imgUrl] : []), JSON_UNESCAPED_UNICODE);
+        $modelCode   = trim((string)($full['model_code'] ?? ''));
+        $optionsArr  = is_array($full['options'] ?? null) ? array_values(array_filter(array_map('strval', $full['options']))) : [];
+        $optionsJson = json_encode($optionsArr, JSON_UNESCAPED_UNICODE);
+    } elseif ($prev && previous_is_complete($prev)) {
+        // Unchanged details from the last run - only the price is refreshed.
+        $imageJson   = (string)$prev['image_urls'];
+        $chassis     = trim((string)$prev['chassis_no']);
+        $modelCode   = (string)$prev['model_code'];
+        $optionsJson = (string)($prev['options'] ?: '[]');
     } else {
-        $imgUrl    = trim((string)($car['img'] ?? ''));
-        $imageJson = $imgUrl ? json_encode([$imgUrl], JSON_UNESCAPED_UNICODE) : '[]';
+        // Full fetch failed: slim record's single photo.
+        $imgUrl      = trim((string)($car['img'] ?? ''));
+        $imageJson   = $imgUrl ? json_encode([$imgUrl], JSON_UNESCAPED_UNICODE) : '[]';
+        $modelCode   = '';
+        $optionsJson = '[]';
     }
 
-    $chassis    = $full ? trim((string)($full['chassis'] ?? '')) : '';
-    $modelCode  = $full ? trim((string)($full['model_code'] ?? '')) : '';
-    $optionsArr = ($full && is_array($full['options'] ?? null)) ? array_values(array_filter(array_map('strval', $full['options']))) : [];
-    $optionsJson = json_encode($optionsArr, JSON_UNESCAPED_UNICODE);
+    $ref = $prev ? (string)$prev['ref_no'] : '';
+    if ($ref === '' || isset($usedRefs[$ref])) {
+        $ref = str_pad((string)(++$maxRef), 4, '0', STR_PAD_LEFT);
+    }
 
     $door = '';
     $seat = '';
 
     $stmt->bind_param(
-        'sssssssssssssssdssss',
+        'sssssssssssssssdsssss',
         $ref, $make, $model, $year, $cc, $miles, $trans,
         $fuel, $color, $drive, $door, $seat, $chassis, $body,
-        $price, $buying, $imageJson, $IMPORT_TAG, $modelCode, $optionsJson
+        $price, $buying, $imageJson, $IMPORT_TAG, $modelCode, $optionsJson, $sourceRef
     );
 
     if ($stmt->execute()) {
         $inserted++;
-        $refCounter++;
+        $usedRefs[$ref] = true;
     } else {
         echo "[WARN] Row skipped ({$make} {$model}): " . $stmt->error . "\n";
         $skipped++;
@@ -413,6 +507,10 @@ foreach ($allVehicles as $car) {
 }
 
 $stmt->close();
+if (!$conn->commit()) {
+    $conn->rollback();
+    die("[ERROR] " . date('c') . " — commit failed, previous import kept: " . $conn->error . "\n");
+}
 $conn->close();
 
 echo "[OK] " . date('c') . " — Inserted: $inserted | Skipped: $skipped | Full records used: $fullUsed\n";
