@@ -1,4 +1,5 @@
-import { apiBaseUrl } from '../utilities/apiBase';
+import { apiBaseUrl } from '../utilities/apiBase';
+import { SITE } from '../utilities/siteConfig';
 ﻿import React, { useState } from 'react';
 //import '../../css/forgotPassword.css';
 const ForgotPassword = () => {
@@ -33,7 +34,7 @@ const ForgotPassword = () => {
     <div className="forgot-password-container">
 
       <form onSubmit={handleForgotPassword}>
-      <img src={`/images/logo-eljawad-dark.svg`} alt="Logo" className="logo-form" />
+      <img src={SITE.logo} alt="Logo" className="logo-form" />
 
         <h2>Forgot Password</h2>
         <input

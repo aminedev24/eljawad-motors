@@ -3,6 +3,7 @@ import { Document, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 import { FaEnvelope, FaGlobe } from "react-icons/fa";
 import { InvoiceHeaders } from './invoiceHeaders';
 import "./pdfFonts";
+import { SITE } from '../utilities/siteConfig';
 
 const styles = StyleSheet.create({
   container: {
@@ -100,7 +101,7 @@ return(
         <Text style={styles.paragraph}>
           If the Buyer is unable to complete the balance payment due to unforeseen circumstances 
           (e.g., health issues or demise), a nominated representative may settle the balance, 
-          subject to proper documentation and approval by Eljawad Motors Inc.
+          subject to proper documentation and approval by {SITE.legalNameEnd}
         </Text>
       </View>
     </View>
@@ -109,13 +110,13 @@ return(
       <Text style={styles.listItemTitle}>3. Shipment Arrangements</Text>
       <View style={styles.paragraphContainer}>
         <Text style={styles.paragraph}>
-          Upon confirmation of payment, Eljawad Motors Inc. will arrange for shipment.
+          Upon confirmation of payment, {SITE.legalName} will arrange for shipment.
         </Text>
         <Text style={styles.paragraph}>
           Shipping schedules, routes, and arrival times are subject to change without prior notice.
         </Text>
         <Text style={styles.paragraph}>
-          Eljawad Motors Inc. is not liable for delays or losses caused by external factors, including 
+          {SITE.legalName} is not liable for delays or losses caused by external factors, including 
           natural disasters, government actions, or shipping company policies.
         </Text>
       </View>
@@ -136,7 +137,7 @@ return(
       <Text style={styles.listItemTitle}>5. Copyright and Trademark Protection</Text>
       <View style={styles.paragraphContainer}>
         <Text style={styles.paragraph}>
-          All materials, including website content and documentation, are the exclusive property of Eljawad Motors Inc.
+          All materials, including website content and documentation, are the exclusive property of {SITE.legalNameEnd}
         </Text>
         <Text style={styles.paragraph}>
           Unauthorized use, reproduction, or modification is prohibited.
@@ -152,7 +153,7 @@ return(
           (e.g., photos, videos, or port inspection reports).
         </Text>
         <Text style={styles.paragraph}>
-          Eljawad Motors Inc. will respond to valid claims within 21 business days of submission.
+          {SITE.legalName} will respond to valid claims within 21 business days of submission.
         </Text>
       </View>
     </View>
@@ -171,7 +172,7 @@ return(
       <Text style={styles.listItemTitle}>8. Internet Services</Text>
       <View style={styles.paragraphContainer}>
         <Text style={styles.paragraph}>
-          Eljawad Motors Inc. is not responsible for any delays caused by internet service 
+          {SITE.legalName} is not responsible for any delays caused by internet service 
           interruptions or failures.
         </Text>
       </View>
@@ -181,7 +182,7 @@ return(
       <Text style={styles.listItemTitle}>9. Loss or Damage During Shipment</Text>
       <View style={styles.paragraphContainer}>
         <Text style={styles.paragraph}>
-          Eljawad Motors Inc. is not liable for any damage, theft, or loss of items during transportation.
+          {SITE.legalName} is not liable for any damage, theft, or loss of items during transportation.
         </Text>
       </View>
     </View>
@@ -190,7 +191,7 @@ return(
       <Text style={styles.listItemTitle}>10. Clearing and Forwarding Services</Text>
       <View style={styles.paragraphContainer}>
         <Text style={styles.paragraph}>
-          Eljawad Motors Inc. may provide introductions to clearing and forwarding agents upon request, 
+          {SITE.legalName} may provide introductions to clearing and forwarding agents upon request, 
           but it does not undertake responsibility for these services.
         </Text>
       </View>
@@ -201,7 +202,7 @@ return(
       <View style={styles.paragraphContainer}>
         <Text style={styles.paragraph}>
           Payments for purchases must be made via telegraphic transfer (T/T) to the official 
-          Eljawad Motors Inc. bank account.
+          {SITE.legalName} bank account.
         </Text>
         <Text style={styles.paragraph}>
           Customers should verify account details with their designated sales representative 
@@ -255,7 +256,7 @@ return(
       <Text style={styles.listItemTitle}>16. Indemnity</Text>
       <View style={styles.paragraphContainer}>
         <Text style={styles.paragraph}>
-          The Buyer agrees to indemnify Eljawad Motors Inc. against any claims resulting from 
+          The Buyer agrees to indemnify {SITE.legalName} against any claims resulting from 
           non-compliance with local regulations or third-party agreements.
         </Text>
       </View>
@@ -274,7 +275,7 @@ return(
       <Text style={styles.listItemTitle}>18. Amendments</Text>
       <View style={styles.paragraphContainer}>
         <Text style={styles.paragraph}>
-          Eljawad Motors Inc. reserves the right to amend these terms as necessary. 
+          {SITE.legalName} reserves the right to amend these terms as necessary. 
           Buyers will be bound by the revised terms once implemented.
         </Text>
       </View>
@@ -284,7 +285,7 @@ return(
       <Text style={styles.listItemTitle}>19. Import Regulations and Tariffs</Text>
       <View style={styles.paragraphContainer}>
         <Text style={styles.paragraph}>
-          Eljawad Motors Inc. is not responsible for any issues or fees arising from 
+          {SITE.legalName} is not responsible for any issues or fees arising from 
           import tariffs or regulations.
         </Text>
       </View>

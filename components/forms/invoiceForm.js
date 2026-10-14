@@ -14,6 +14,7 @@ import {
   BankNoteSection,
   SubmitSection,
 } from "./invoiceForm/sections";
+import { SITE } from '../utilities/siteConfig';
 
 const ProformaInvoiceForm = () => {
   const {
@@ -55,7 +56,7 @@ const ProformaInvoiceForm = () => {
   return (
     <>
       <Head>
-        <title>Eljawad Motors Inc. | Invoice Generator</title>
+        <title>{`${SITE.legalName} | Invoice Generator`}</title>
         <meta name="description" content="Easily generate invoices." />
       </Head>
       <div className="enquiry-wrapper invoice-wrapper">
@@ -69,7 +70,7 @@ const ProformaInvoiceForm = () => {
 
         <form onSubmit={handleSubmit}>
           <div className="enquiryContainer contact-container">
-            <img src="/images/logo-eljawad-dark.svg" alt="Logo" className="logo-form" />
+            <img src={SITE.logo} alt="Logo" className="logo-form" />
 
             <h2 className="header">Invoice Generator</h2>
 

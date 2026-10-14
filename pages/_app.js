@@ -47,6 +47,7 @@ import Header from '../components/common/header';
 import Footer from '../components/common/footer';
 import WidgetDock from '../components/utilities/widgetDock';
 import CompareTray from '../components/misc/compareTray';
+import { SITE } from '../components/utilities/siteConfig';
 //import Chatbot from '../components/utilities/chatbot';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
@@ -67,10 +68,10 @@ export default function MyApp({ Component, pageProps }) {
     <ThemeProvider>
       <div className={`${inter.variable} ${spaceGrotesk.variable} contents`}>
       <Head>
-        <title>Eljawad Motors Inc. | Japanese Used Cars, Tires & Auto Parts Exporter</title>
+        <title>{`${SITE.legalName} | Japanese Used Cars, Tires & Auto Parts Exporter`}</title>
         <meta
           name="description"
-          content="Eljawad Motors Inc. exports genuine Japanese used vehicles, tires, and auto parts. Trusted by buyers worldwide for quality and reliability."
+          content={`${SITE.legalName} exports genuine Japanese used vehicles, tires, and auto parts. Trusted by buyers worldwide for quality and reliability.`}
         />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       </Head>

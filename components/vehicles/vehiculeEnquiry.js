@@ -11,7 +11,8 @@ import useCheckScreenSize from "../utilities/screenSize";
 import { useUser } from "../user/userContext";
 import Image from "next/image";
 import { apiBaseUrl } from '../utilities/apiBase';
-import { formatNumberWithUnit } from '../utilities/numberFormat';
+import { formatNumberWithUnit } from '../utilities/numberFormat';
+import { SITE } from '../utilities/siteConfig';
 
 const InquiryForm = () => {
   const [makes, setMakes] = useState([]);
@@ -237,7 +238,7 @@ const InquiryForm = () => {
       <form onSubmit={handleSubmit}>
 
         <div className="enquiryContainer">
-        <img src={`/images/logo-eljawad-dark.svg`} alt="Logo" className="logo-form" />
+        <img src={SITE.logo} alt="Logo" className="logo-form" />
 
           {notification.message && (
             <div className={`message-status ${notification.type}`}>

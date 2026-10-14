@@ -1,5 +1,6 @@
 import React from 'react';
 import AgreementForm from '../forms/agreementForm';
+import { SITE } from '../utilities/siteConfig';
 const AntiSocialForcesPolicy = ({userProfile,agreementType}) => {
 const agreementContent = (
   `
@@ -7,7 +8,7 @@ const agreementContent = (
     <section>
         <h4>1. Prohibition on Transactions with Anti-Social Forces</h4>
         <p>
-          Eljawad Motors Ltd. (hereinafter referred to as “the Company”) enforces a strict policy against any dealings, affiliations, or interactions with individuals or entities connected to anti-social force. This includes, but is not limited to, criminal organizations, violent groups, or those associated with such entities (hereinafter referred to as “Anti-Social Forces”).
+          ${SITE.legalName} (hereinafter referred to as “the Company”) enforces a strict policy against any dealings, affiliations, or interactions with individuals or entities connected to anti-social force. This includes, but is not limited to, criminal organizations, violent groups, or those associated with such entities (hereinafter referred to as “Anti-Social Forces”).
         </p>
       </section>
       <section>

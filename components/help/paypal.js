@@ -1,4 +1,5 @@
 import React from 'react';
+import { SITE } from '../utilities/siteConfig';
 
 const PaypalInfo = () => {
   return (
@@ -7,7 +8,7 @@ const PaypalInfo = () => {
       {/*<img style={{ maxHeight : 'unset' }}  src={`${process.env.PUBLIC_URL}/images/paypalbanner.png`} alt={'company-profile'} className="topic-image" />*/}
       <h4>Simple & Secure Payments with PayPal</h4>
       <p>
-        At Eljawad Motors, we prioritize security and convenience in every transaction. That’s why we’ve chosen PayPal as our trusted partner to process all payments safely and seamlessly.
+        At {SITE.name}, we prioritize security and convenience in every transaction. That’s why we’ve chosen PayPal as our trusted partner to process all payments safely and seamlessly.
       </p>
       <h4>What is PayPal?</h4>
       <p>

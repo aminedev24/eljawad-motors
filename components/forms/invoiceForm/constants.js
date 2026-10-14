@@ -1,5 +1,5 @@
 import { apiBaseUrl } from "../../utilities/apiBase";
-import { getSite } from "../../utilities/siteConfig";
+import { SITE } from "../../utilities/siteConfig";
 
 export const API_URL = apiBaseUrl;
 
@@ -23,11 +23,10 @@ export const BANK_DETAILS = {
 };
 
 export const bankDetailsPendingNotice = () => {
-  const site = getSite();
   return (
     "Bank details for this payment will be sent to you separately by our team. " +
-    `Please do not pay to any account until you receive them from @${site.domain}. ` +
-    `Questions: ${site.contactEmail}`
+    `Please do not pay to any account until you receive them from @${SITE.domain}. ` +
+    `Questions: ${SITE.contactEmail}`
   );
 };
 

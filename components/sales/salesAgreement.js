@@ -1,4 +1,5 @@
 import React from 'react';
+import { SITE } from '../utilities/siteConfig';
 
 const SalesAgreement = () => {
   return (
@@ -6,7 +7,7 @@ const SalesAgreement = () => {
       <h1>Sales Contract</h1>
       <p>This agreement is entered into by:</p>
       <ul>
-        <li><strong>Eljawad Motors Inc.</strong>, referred to as the “Seller.”</li>
+        <li><strong>{SITE.legalName}</strong>, referred to as the “Seller.”</li>
         <li><strong>Customer</strong>, referred to as the “Buyer.”</li>
       </ul>
 
@@ -29,13 +30,13 @@ const SalesAgreement = () => {
         </li>
         <li>
           <strong>Inspection and Payment Contingency</strong>
-          <p>If the Buyer is unable to complete the balance payment due to unforeseen circumstances (e.g., health issues or demise), a nominated representative may settle the balance, subject to proper documentation and approval by Eljawad Motors Inc.</p>
+          <p>If the Buyer is unable to complete the balance payment due to unforeseen circumstances (e.g., health issues or demise), a nominated representative may settle the balance, subject to proper documentation and approval by {SITE.legalNameEnd}</p>
         </li>
         <li>
           <strong>Shipment Arrangements</strong>
-          <p>Upon confirmation of payment, Eljawad Motors Inc. will arrange for shipment.</p>
+          <p>Upon confirmation of payment, {SITE.legalName} will arrange for shipment.</p>
           <p>Shipping schedules, routes, and arrival times are subject to change without prior notice.</p>
-          <p>Eljawad Motors Inc. is not liable for delays or losses caused by external factors, including natural disasters, government actions, or shipping company policies.</p>
+          <p>{SITE.legalName} is not liable for delays or losses caused by external factors, including natural disasters, government actions, or shipping company policies.</p>
         </li>
         <li>
           <strong>Container Shipping</strong>
@@ -43,13 +44,13 @@ const SalesAgreement = () => {
         </li>
         <li>
           <strong>Copyright and Trademark Protection</strong>
-          <p>All materials, including website content and documentation, are the exclusive property of Eljawad Motors Inc.</p>
+          <p>All materials, including website content and documentation, are the exclusive property of {SITE.legalNameEnd}</p>
           <p>Unauthorized use, reproduction, or modification is prohibited.</p>
         </li>
         <li>
           <strong>Claims and Liability</strong>
           <p>Claims related to mechanical issues must be supported by evidence (e.g., photos, videos, or port inspection reports).</p>
-          <p>Eljawad Motors Inc. will respond to valid claims within 21 business days of submission.</p>
+          <p>{SITE.legalName} will respond to valid claims within 21 business days of submission.</p>
         </li>
         <li>
           <strong>Time Limit for Claims</strong>
@@ -57,19 +58,19 @@ const SalesAgreement = () => {
         </li>
         <li>
           <strong>Internet Services</strong>
-          <p>Eljawad Motors Inc. is not responsible for any delays caused by internet service interruptions or failures.</p>
+          <p>{SITE.legalName} is not responsible for any delays caused by internet service interruptions or failures.</p>
         </li>
         <li>
           <strong>Loss or Damage During Shipment</strong>
-          <p>Eljawad Motors Inc. is not liable for any damage, theft, or loss of items during transportation.</p>
+          <p>{SITE.legalName} is not liable for any damage, theft, or loss of items during transportation.</p>
         </li>
         <li>
           <strong>Clearing and Forwarding Services</strong>
-          <p>Eljawad Motors Inc. may provide introductions to clearing and forwarding agents upon request, but it does not undertake responsibility for these services.</p>
+          <p>{SITE.legalName} may provide introductions to clearing and forwarding agents upon request, but it does not undertake responsibility for these services.</p>
         </li>
         <li>
           <strong>Invoices</strong>
-          <p>Payments for purchases must be made via telegraphic transfer (T/T) to the official Eljawad Motors Inc. bank account.</p>
+          <p>Payments for purchases must be made via telegraphic transfer (T/T) to the official {SITE.legalName} bank account.</p>
           <p>Customers should verify account details with their designated sales representative to avoid fraud.</p>
         </li>
         <li>
@@ -91,7 +92,7 @@ const SalesAgreement = () => {
         </li>
         <li>
           <strong>Indemnity</strong>
-          <p>The Buyer agrees to indemnify Eljawad Motors Inc. against any claims resulting from non-compliance with local regulations or third-party agreements.</p>
+          <p>The Buyer agrees to indemnify {SITE.legalName} against any claims resulting from non-compliance with local regulations or third-party agreements.</p>
         </li>
         <li>
           <strong>Validity of Agreement</strong>
@@ -99,11 +100,11 @@ const SalesAgreement = () => {
         </li>
         <li>
           <strong>Amendments</strong>
-          <p>Eljawad Motors Inc. reserves the right to amend these terms as necessary. Buyers will be bound by the revised terms once implemented.</p>
+          <p>{SITE.legalName} reserves the right to amend these terms as necessary. Buyers will be bound by the revised terms once implemented.</p>
         </li>
         <li>
           <strong>Import Regulations and Tariffs</strong>
-          <p>Eljawad Motors Inc. is not responsible for any issues or fees arising from import tariffs or regulations at the destination port.</p>
+          <p>{SITE.legalName} is not responsible for any issues or fees arising from import tariffs or regulations at the destination port.</p>
         </li>
       </ol>
     </div>

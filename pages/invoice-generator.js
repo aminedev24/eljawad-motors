@@ -4,6 +4,7 @@ import dynamic from 'next/dynamic';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useUser } from '../components/user/userContext';
+import { SITE } from '../components/utilities/siteConfig';
 
 const ProformaInvoiceForm = dynamic(
   () => import('../components/forms/invoiceForm'),
@@ -35,14 +36,14 @@ export default function InvoiceGeneratorPage() {
   return (
     <>
       <Head>
-        <title>Invoice Generator | Eljawad Motors Inc.</title>
+        <title>{`Invoice Generator | ${SITE.legalName}`}</title>
         <meta
           name="description"
-          content="Generate proforma invoices for your transactions with Eljawad Motors Inc."
+          content={`Generate proforma invoices for your transactions with ${SITE.legalNameEnd}`}
         />
         <meta
           name="keywords"
-          content="proforma invoice, invoice generator, Eljawad Motors Inc., used cars, auto parts, vehicle shipping"
+          content={`proforma invoice, invoice generator, ${SITE.legalName}, used cars, auto parts, vehicle shipping`}
         />
         <meta name="robots" content="noindex,nofollow" />
       </Head>

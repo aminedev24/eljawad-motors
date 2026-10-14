@@ -1,5 +1,5 @@
 import React from 'react';
-import { getSite } from '../utilities/siteConfig';
+import { SITE } from '../utilities/siteConfig';
 import './ProformaInvoice.css'; // Assuming you will create a separate CSS file for styles
 
 const ProformaInvoice = () => {
@@ -33,19 +33,19 @@ const ProformaInvoice = () => {
         <div className="container">
             <div className="header">
                 <img
-                    alt="Eljawad Motors Inc. Logo"
+                    alt={`${SITE.legalName} Logo`}
                     height="50"
                     src="https://storage.googleapis.com/a1aa/image/6LfMKmuZf0gmKUBiJiWK8XAj2bOII5VCjDDzF78NLd14VIenA.jpg"
                     width="150"
                 />
                 <div className="contact-info">
-                    <p>Eljawad Motors Inc</p>
+                    <p>{SITE.legalName}</p>
                 </div>
             </div>
             <div className="header">
                 <div className="contact-info">
                     <p>An online platform for the sale and export of used vehicles and auto parts</p>
-                    <p>Email: {getSite().contactEmail}</p>
+                    <p>Email: {SITE.contactEmail}</p>
                 </div>
             </div>
             <div className="invoice-title">Proforma Invoice</div>

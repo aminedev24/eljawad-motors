@@ -1,5 +1,6 @@
 //import { Link } from 'react-router-dom';
 import AgreementForm from '../forms/agreementForm';
+import { SITE } from '../utilities/siteConfig';
 
 
 const TermsAndConditions = ({ userProfile, agreementType }) => {
@@ -7,7 +8,7 @@ const TermsAndConditions = ({ userProfile, agreementType }) => {
   const agreementContent = (
     `
     <div>
-      <p>These terms and conditions (hereinafter referred to as “Terms”) govern the use of the services provided by Eljawad Motors Inc. (hereinafter referred to as the “the Company”) through its online platform (hereinafter referred to as “the Service”). All registered users (hereinafter referred to as “Users”) agree to comply with the Terms outlined below. Specific terms regarding purchases can be found in the relevant sales conditions applicable to each transaction.</p>
+      <p>These terms and conditions (hereinafter referred to as “Terms”) govern the use of the services provided by ${SITE.legalName} (hereinafter referred to as the “the Company”) through its online platform (hereinafter referred to as “the Service”). All registered users (hereinafter referred to as “Users”) agree to comply with the Terms outlined below. Specific terms regarding purchases can be found in the relevant sales conditions applicable to each transaction.</p>
       <h4>Article 1 (Scope of Application)</h4>
       <p>These Terms apply to all interactions between the Company and the Users related to the use of the Service. By accessing or using the Service, Users agree to be bound by these Terms.</p>
       <h4>Article 2 (User Registration)</h4>

@@ -12,6 +12,7 @@ import AuctionLanding         from '../../components/help/auction';
 import TelegraphicTransfer    from '../../components/help/telegraphicTransfer';
 import PrivacyPolicy          from '../../components/help/privacy';
 import FAQComponent           from '../../components/help/faq';
+import { SITE } from '../../components/utilities/siteConfig';
 
 // ---- DATA: Only use serializable values (no JSX or React elements!) ----
 const topicGroups = [
@@ -39,14 +40,14 @@ const topicGroups = [
 
 const topicMeta = {
   help: {
-    title: 'Help Center | Eljawad Motors Inc.',
+    title: `Help Center | ${SITE.legalName}`,
     description: 'Find out how to buy, company profile, FAQs, and more.',
-    keywords: 'Eljawad Motors, help, company profile, FAQs',
+    keywords: `${SITE.name}, help, company profile, FAQs`,
   },
   'how-to-buy-used-cars': {
-    title: 'How to Buy Used Cars | Eljawad Motors Inc.',
-    description: 'Step-by-step guide on purchasing used cars from Japanese auctions via Eljawad Motors.',
-    keywords: 'buy used cars, Eljawad Motors, Japanese auctions, how to buy',
+    title: `How to Buy Used Cars | ${SITE.legalName}`,
+    description: `Step-by-step guide on purchasing used cars from Japanese auctions via ${SITE.name}.`,
+    keywords: `buy used cars, ${SITE.name}, Japanese auctions, how to buy`,
   },
 };
 
@@ -77,9 +78,9 @@ export default function HelpPage({ initialSlug }) {
 
   const meta = topicMeta[slug] || (selectedTopic
     ? {
-        title: `${selectedTopic.name} | Eljawad Motors Inc.`,
-        description: `Learn more about ${selectedTopic.name} at Eljawad Motors Inc.`,
-        keywords: `${selectedTopic.name.toLowerCase()}, Eljawad Motors Inc.`,
+        title: `${selectedTopic.name} | ${SITE.legalName}`,
+        description: `Learn more about ${selectedTopic.name} at ${SITE.legalNameEnd}`,
+        keywords: `${selectedTopic.name.toLowerCase()}, ${SITE.legalName}`,
       }
     : topicMeta.help);
 

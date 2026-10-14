@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import CountryList from '../../utilities/countryList';
 import { useSearchParams } from 'next/navigation';
 import { apiBaseUrl } from '../../utilities/apiBase';
+import { SITE } from '../../utilities/siteConfig';
 
 const useContact = ({ sell, japanExports }) => {
   const [formData, setFormData] = useState({
@@ -9,7 +10,7 @@ const useContact = ({ sell, japanExports }) => {
     email: '',
     country: sell ? 'Japan' : '',
     phone: '',
-    enquiry: sell ? 'sell on Eljawad Motors' : '',
+    enquiry: sell ? `sell on ${SITE.name}` : '',
     message: '',
     prefecture: '',
     city: '',
@@ -120,7 +121,7 @@ const useContact = ({ sell, japanExports }) => {
         setMessageInfo({
           type: 'success',
           text: sell
-            ? "Thank you for your interest in joining Eljawad Motors! We will review your application and get back to you within a few days."
+            ? `Thank you for your interest in joining ${SITE.name}! We will review your application and get back to you within a few days.`
             : 'Thank you for your message! We will get back to you shortly.'
         });
       } else {

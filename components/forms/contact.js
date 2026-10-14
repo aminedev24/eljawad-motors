@@ -1,7 +1,8 @@
 ﻿import React from 'react';
 import CountryList from '../utilities/countryList';
 import ImageWithLoader from '../misc/imageWithLoader';
-import useContact from './contact/useContact';
+import useContact from './contact/useContact';
+import { SITE } from '../utilities/siteConfig';
 
 const Contact = ({ sell, japanExports }) => {
   const {
@@ -21,7 +22,7 @@ const Contact = ({ sell, japanExports }) => {
       <div className="signup-container contact-container">
         <form className="signup-form contact-form" onSubmit={handleSubmit}>
           {!sell &&
-            <ImageWithLoader src={`/images/logo-eljawad-dark.svg`} alt="Logo" className="logo-form logo-img" />
+            <ImageWithLoader src={SITE.logo} alt="Logo" className="logo-form logo-img" />
           }
 
           {!sell && !japanExports && lang === 'en' && lang === 'jp' && <h2>We like to hear from you!</h2>}

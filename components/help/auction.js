@@ -2,6 +2,7 @@ import React from 'react';
 import Link from 'next/link';
 import Section from '../common/Section';
 import Button from '../common/Button';
+import { SITE } from '../utilities/siteConfig';
 
 const HOW_IT_WORKS_STEPS = [
   { step: '01', title: 'Send Your Deposit' },
@@ -21,10 +22,10 @@ const AuctionLanding = () => {
     <div>
       <Section tone="navy" className="text-center">
         <h2 className="font-display text-2xl md:text-4xl font-bold mb-4">
-          Source Cars from Japanese Auctions with Eljawad Motors Inc.
+          Source Cars from Japanese Auctions with {SITE.legalName}
         </h2>
         <p className="max-w-2xl mx-auto opacity-90">
-          At Eljawad Motors Inc., we connect overseas buyers with reliable suppliers in Japan, granting you access to high-quality cars directly from auctions at exceptionally fair prices. Whether you&rsquo;re an individual buyer or a dealer, our goal is to simplify the process and maximize your value.
+          At {SITE.legalName}, we connect overseas buyers with reliable suppliers in Japan, granting you access to high-quality cars directly from auctions at exceptionally fair prices. Whether you&rsquo;re an individual buyer or a dealer, our goal is to simplify the process and maximize your value.
         </p>
         <ul className="flex flex-wrap justify-center gap-x-6 gap-y-2 mt-6 text-sm opacity-90">
           <li>Fair and Transparent Pricing</li>
@@ -92,9 +93,9 @@ const AuctionLanding = () => {
       </Section>
 
       <Section tone="muted" className="text-center">
-        <h2 className="text-2xl font-semibold mb-4">Start Your Auction Journey with Eljawad Motors Inc.</h2>
+        <h2 className="text-2xl font-semibold mb-4">Start Your Auction Journey with {SITE.legalName}</h2>
         <p className="max-w-2xl mx-auto text-gray-700 mb-2">
-          Take control of your car-sourcing experience with Eljawad Motors Inc. Whether you&rsquo;re ready to buy or need assistance with the process, we&rsquo;re here to help.
+          Take control of your car-sourcing experience with {SITE.legalNameEnd} Whether you&rsquo;re ready to buy or need assistance with the process, we&rsquo;re here to help.
         </p>
         <p className="text-gray-700">
           <strong><Link className="cta-link" href="/contact">Contact us today</Link></strong> to discuss your needs and secure the best vehicles from Japanese auctions.

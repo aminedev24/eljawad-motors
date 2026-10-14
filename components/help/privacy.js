@@ -1,14 +1,13 @@
 import React from 'react';
 import AgreementForm from '../forms/agreementForm';
-import { useSite } from '../utilities/siteConfig';
+import { SITE } from '../utilities/siteConfig';
 
 const PrivacyPolicy = ({ userProfile, agreementType }) => {
-  const site = useSite();
 
   // Define the content as a plain text or HTML string
   const agreementContent = `
   <div>
-    <p>At Eljawad Motors Inc., we are committed to protecting your privacy and ensuring that your personal information is handled securely and responsibly. This Privacy Policy outlines how we collect, use, store, and share your information when you interact with our services.</p>
+    <p>At ${SITE.legalName}, we are committed to protecting your privacy and ensuring that your personal information is handled securely and responsibly. This Privacy Policy outlines how we collect, use, store, and share your information when you interact with our services.</p>
       
     <h4>1. Information We Collect</h4>
     <ul>
@@ -43,7 +42,7 @@ const PrivacyPolicy = ({ userProfile, agreementType }) => {
       <li>Opt-out of marketing communications.</li>
       <li>Request a copy of the information we hold about you.</li>
     </ul>
-    <p>To exercise your rights, contact us at ${site.contactEmail}.</p>
+    <p>To exercise your rights, contact us at ${SITE.contactEmail}.</p>
     
     <h4>5. Security of Your Information</h4>
     <p>We implement industry-standard security measures to protect your data. However, no online service can guarantee 100% security.</p>

@@ -94,21 +94,38 @@ jobs:
         run: |
           pnpm install --frozen-lockfile
           # Retry: a transient Google Fonts fetch failure shouldn't need a manual re-run.
-          for attempt in 1 2 3; do
-            pnpm run build && exit 0
-            echo "Build attempt $attempt failed; retrying in 15s..."
-            sleep 15
-          done
-          exit 1
+          build() {
+            for attempt in 1 2 3; do
+              "$@" && return 0
+              echo "Build attempt $attempt failed; retrying in 15s..."
+              sleep 15
+            done
+            return 1
+          }
+          # start-auction.com shares the document root: its own branded build
+          # goes in start-auction/, and public/.htaccess routes that domain there.
+          build pnpm run build:start-auction
+          mv out out-start-auction
+          build pnpm run build
 
       - name: Deploy to HostGator
         run: |
           source "$RUNNER_TEMP/ssh-retry.sh"
           tar -czf deploy_site.tar.gz -C out .
-          retry scp deploy_site.tar.gz "hg:/home2/yqjezvte/"
+          tar -czf deploy_site_sa.tar.gz -C out-start-auction .
+          retry scp deploy_site.tar.gz deploy_site_sa.tar.gz "hg:/home2/yqjezvte/"
+          # The Start-Auction build is unpacked beside the live one and swapped
+          # in, so start-auction.com never serves a half-extracted copy. It goes
+          # first: the main build carries the .htaccess that routes to it.
           retry ssh hg \
-            "mkdir -p $WEBROOT && tar xzf /home2/yqjezvte/deploy_site.tar.gz -C $WEBROOT/ && \
-             rm -f /home2/yqjezvte/deploy_site.tar.gz && \
+            "mkdir -p $WEBROOT && \
+             rm -rf $WEBROOT/start-auction.new && mkdir $WEBROOT/start-auction.new && \
+             tar xzf /home2/yqjezvte/deploy_site_sa.tar.gz -C $WEBROOT/start-auction.new/ && \
+             rm -rf $WEBROOT/start-auction.old && \
+             { [ ! -d $WEBROOT/start-auction ] || mv $WEBROOT/start-auction $WEBROOT/start-auction.old; } && \
+             mv $WEBROOT/start-auction.new $WEBROOT/start-auction && rm -rf $WEBROOT/start-auction.old && \
+             tar xzf /home2/yqjezvte/deploy_site.tar.gz -C $WEBROOT/ && \
+             rm -f /home2/yqjezvte/deploy_site.tar.gz /home2/yqjezvte/deploy_site_sa.tar.gz && \
              find $WEBROOT -type d -exec chmod 755 {} \; && \
              find $WEBROOT -type f -exec chmod 644 {} \; && \
              echo DEPLOY_DONE"
@@ -144,6 +161,9 @@ jobs:
       - name: Verify
         run: |
           curl -sf -o /dev/null -w "site: %{http_code}\n" https://eljawad.com || echo "eljawad.com not reachable yet (DNS?)"
+          curl -s https://start-auction.com/ | grep -q "<title[^>]*>Start-Auction" \
+            && echo "start-auction.com: Start-Auction build OK" \
+            || { echo "start-auction.com is not serving the Start-Auction build"; exit 1; }
           # Must be real JSON - an HTML 200 means the host's SPA fallback
           # answered because the PHP isn't there.
           curl -s "$API_BASE/inventory/cars/fetchStock.php" | head -c 1 | grep -q '\[' \

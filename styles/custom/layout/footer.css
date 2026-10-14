@@ -22,6 +22,10 @@
   max-width: 100%;
 }
 
+.footer-logo.logo-wide {
+  width: 190px !important;
+}
+
 .footer-links {
   display: flex;
   align-items: center;

@@ -4,7 +4,8 @@ import { useRouter } from 'next/router';
 import { useUser } from '../user/userContext';
 import useCheckScreenSize from '../utilities/screenSize';
 import { apiBaseUrl } from '../utilities/apiBase';
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { SITE } from '../utilities/siteConfig';
 
 const apiUrl = apiBaseUrl;
 
@@ -191,7 +192,7 @@ const Login = () => {
     <div className="login-form-wrapper">
       <div className="login-container">
         <img
-          src="/images/logo-eljawad-dark.svg"
+          src={SITE.logo}
           alt="Logo"
           className="logo-form"
         />

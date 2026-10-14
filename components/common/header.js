@@ -9,6 +9,7 @@ import ImageWithLoader from '../misc/imageWithLoader';
 import TopBar from './topbar';
 import helpLinks from './helpLinks';
 import auctionLinks from './auctionLinks';
+import { SITE } from '../utilities/siteConfig';
 
 const MOBILE_MENU_BREAKPOINT = 1000;
 const AUTH_MAINTENANCE_MODE = false;
@@ -219,9 +220,9 @@ const Header = () => {
             <div className="menu-logo-container flex shrink-0 items-center gap-3">
               <Link className="logo flex items-center shrink-0" href="/">
                 <ImageWithLoader
-                  src="/images/logo-eljawad-dark.svg"
-                  alt="Eljawad Motors Inc. logo"
-                  className="logo-img"
+                  src={SITE.logo}
+                  alt={`${SITE.legalName} logo`}
+                  className={`logo-img ${SITE.logoClass}`}
                 />
               </Link>
             </div>

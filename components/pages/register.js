@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import TermsAndConditions from "../help/terms";
 import PrivacyPolicy from '../help/privacy';
-import SignupForm from '../forms/registerForm2';
+import SignupForm from '../forms/registerForm2';
+import { SITE } from '../utilities/siteConfig';
 
 const POLICY_MODALS = {
   terms: { title: 'Terms & Conditions', Component: TermsAndConditions },
@@ -69,7 +70,7 @@ const RegisterForm = () => {
     <div className='register-wrapper'>
       <div className="register-container">
         <div className="account-container">
-          <img src={`/images/logo-eljawad-dark.svg`} alt="Logo" className="logo-form" />
+          <img src={SITE.logo} alt="Logo" className="logo-form" />
 
           <div className="header">
             <span className="person-icon">

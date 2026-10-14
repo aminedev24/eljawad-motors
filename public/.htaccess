@@ -1,5 +1,26 @@
 RewriteEngine On
 
+# start-auction.com shares this document root with eljawad.com but has its own
+# build of the site in /start-auction/ (deploy-eljawad.yml builds both). Serve
+# every start-auction.com request from there, except the shared PHP backend.
+# A directory without its trailing slash gets the slash added here first;
+# otherwise Apache's own redirect would expose the /start-auction/ prefix.
+RewriteCond %{HTTP_HOST} ^(www\.)?start-auction\.com$ [NC]
+RewriteCond %{REQUEST_URI} !^/(start-auction|server)(/|$)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{DOCUMENT_ROOT}/start-auction/$1 -d
+RewriteRule ^(.*[^/])$ /$1/ [R=301,L]
+
+RewriteCond %{HTTP_HOST} ^(www\.)?start-auction\.com$ [NC]
+RewriteCond %{REQUEST_URI} !^/(start-auction|server)(/|$)
+RewriteRule ^(.*)$ /start-auction/$1 [L]
+
+# The Start-Auction build is only reachable through start-auction.com. Matched
+# on REQUEST_URI because inside /start-auction/ this file's copy there applies.
+RewriteCond %{HTTP_HOST} !^(www\.)?start-auction\.com$ [NC]
+RewriteCond %{REQUEST_URI} ^/start-auction(/|$)
+RewriteRule ^ - [R=404,L]
+
 # Dynamic routes: Next.js's static export (ssr:false + fallback) builds a
 # generic fallback shell for each of these at the literal "[paramName]"
 # folder name (e.g. vehicle/[vehicleId]/index.html). Apache has no way to

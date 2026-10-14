@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { SITE } from './siteConfig';
 const AURORA_API = 'https://api.aurora-lumen.com';
 
 const welcomeMessage =
-  "Hi there! I'm the Eljawad Motors assistant. Ask me anything about our vehicles, services, or tools and I'll guide you.";
+  `Hi there! I'm the ${SITE.name} assistant. Ask me anything about our vehicles, services, or tools and I'll guide you.`;
 const initialMessages = [{ role: 'assistant', content: welcomeMessage }];
 
 const quickReplies = [
@@ -267,7 +268,7 @@ const Chatbot = () => {
             <div className="chatbot-header-left">
               <div className="chatbot-header-avatar">🤖</div>
               <div className="chatbot-header-info">
-                <span className="chatbot-header-name">Eljawad Motors Assistant</span>
+                <span className="chatbot-header-name">{SITE.name} Assistant</span>
                 <span className="chatbot-header-status">Online</span>
               </div>
             </div>

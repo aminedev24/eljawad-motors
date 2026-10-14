@@ -2,7 +2,7 @@
 import { Document, Text, View, StyleSheet, Font } from '@react-pdf/renderer';
 import React from 'react';
 import { FaEnvelope, FaGlobe } from "react-icons/fa";
-import { getSite } from '../utilities/siteConfig';
+import { SITE } from '../utilities/siteConfig';
 
 const styles = StyleSheet.create({
     description: {
@@ -65,7 +65,6 @@ const styles = StyleSheet.create({
 })
 
 export const InvoiceHeaders = ({invoiceData, formattedInvoiceNumber, commercial}) => {
-  const site = getSite();
   return (
     <View style={styles.invoiceHeader}>
       <View style={styles.headerFullWidth}>
@@ -82,15 +81,15 @@ export const InvoiceHeaders = ({invoiceData, formattedInvoiceNumber, commercial}
             </Text>
             <Text style={styles.iconParagraph}>
              
-              <Text>Email: {site.contactEmail}</Text>
+              <Text>Email: {SITE.contactEmail}</Text>
             </Text>
             <Text style={styles.iconParagraph}>
-              <Text>Website: {site.website}</Text>
+              <Text>Website: {SITE.website}</Text>
             </Text>
           </View>
         </View>
         <View style={styles.headerRight}>
-          <Text style={styles.companyName}>Eljawad Motors Inc</Text>
+          <Text style={styles.companyName}>{SITE.legalName}</Text>
           <Text style={styles.rightText}>
             <Text style={{ fontWeight: "bold" }}>Date:</Text>{" "}
             {invoiceData.invoiceDate}

@@ -3,7 +3,7 @@ import { pdf } from "@react-pdf/renderer";
 import { saveAs } from "file-saver";
 import getConfig from "next/config";
 import { bankDetailsPendingNotice, INVOICE_TYPE_TITLES, hasBankDetails } from "../forms/invoiceForm/constants";
-import { getSite } from "../utilities/siteConfig";
+import { SITE } from "../utilities/siteConfig";
 
 import {
   StyleSheet,
@@ -94,8 +94,8 @@ export const loadInvoiceAssets = async () => {
   }
 
   const [logo, qr] = await Promise.all([
-    fetchAssetAsDataUri(withBasePath("/images/invoice/logo-eljawad.png")),
-    fetchAssetAsDataUri(withBasePath("/images/invoice/qr-eljawad.png")),
+    fetchAssetAsDataUri(withBasePath(SITE.invoiceLogo)),
+    fetchAssetAsDataUri(withBasePath(SITE.invoiceQr)),
   ]);
 
   invoiceAssetCache = { logo, qr };
@@ -263,7 +263,6 @@ const PayItem = ({ label, value, wide }) => (
 );
 
 const MyPdfDocument = ({ invoiceData, assets = {} }) => {
-  const site = getSite();
   const invoiceNumber = invoiceData.invoiceNumber || "";
   const formattedInvoiceNumber = invoiceNumber.replace(/(\b\w+\b)-\1-/, "$1-");
   const currency = invoiceData.depositCurrency || "";
@@ -282,11 +281,11 @@ const MyPdfDocument = ({ invoiceData, assets = {} }) => {
   const isUsd = invoiceData.depositCurrency === "USD";
 
   return (
-    <Document title={`${title} ${formattedInvoiceNumber}`} author="Eljawad Motors">
+    <Document title={`${title} ${formattedInvoiceNumber}`} author={SITE.name}>
       <Page size="A4" style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
-          {assets.logo ? <Image style={styles.logo} src={assets.logo} /> : <Text style={styles.title}>Eljawad Motors</Text>}
+          {assets.logo ? <Image style={styles.logo} src={assets.logo} /> : <Text style={styles.title}>{SITE.name}</Text>}
           <View style={styles.titleBlock}>
             <Text style={styles.title}>{title}</Text>
             {invoiceData.serialNumber ? <Text style={styles.serial}>{invoiceData.serialNumber}</Text> : null}
@@ -324,15 +323,15 @@ const MyPdfDocument = ({ invoiceData, assets = {} }) => {
           </View>
           <View style={styles.card}>
             <Text style={styles.label}>From</Text>
-            <Text style={styles.cardName}>{site.name}</Text>
+            <Text style={styles.cardName}>{SITE.name}</Text>
             <Text>Sale and export of used vehicles and auto parts</Text>
-            <Text style={styles.muted}>{site.contactEmail}</Text>
-            <Text style={styles.muted}>{site.website}</Text>
+            <Text style={styles.muted}>{SITE.contactEmail}</Text>
+            <Text style={styles.muted}>{SITE.website}</Text>
           </View>
           {assets.qr ? (
             <View style={styles.qrBlock}>
               <Image style={styles.qr} src={assets.qr} />
-              <Text style={styles.qrCaption}>Scan to visit eljawad.com</Text>
+              <Text style={styles.qrCaption}>Scan to visit {SITE.domain}</Text>
             </View>
           ) : null}
         </View>
@@ -381,7 +380,7 @@ const MyPdfDocument = ({ invoiceData, assets = {} }) => {
           <Text style={styles.bannerText}>
             Put <Text style={styles.bold}>{formattedInvoiceNumber}</Text> in your transfer reference.{" "}
             <Text style={styles.bannerStrong}>Beware of scams:</Text> only pay into an account confirmed by
-            an email from @{site.domain}.
+            an email from @{SITE.domain}.
           </Text>
         </View>
 
@@ -478,7 +477,7 @@ const MyPdfDocument = ({ invoiceData, assets = {} }) => {
         </View>
 
         <View style={styles.footer}>
-          <Text>{site.name} · {site.contactEmail} · {site.website}</Text>
+          <Text>{SITE.name} · {SITE.contactEmail} · {SITE.website}</Text>
           <Text>Invoice {formattedInvoiceNumber}</Text>
         </View>
       </Page>

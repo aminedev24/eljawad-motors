@@ -1,33 +1,39 @@
-import { useEffect, useState } from 'react';
-
-// Brand and addresses for the domain the site is opened on. One build serves
-// every domain, so this is decided in the browser. Keep in sync with
-// SITE_BRANDS in server/core/site.php, which sends the emails.
+// Brand this build is for. eljawad.com and start-auction.com share one
+// document root, so the site is built once per brand (NEXT_PUBLIC_SITE, set
+// by the deploy workflow) and .htaccess serves each domain its own build.
+// Keep in sync with SITE_BRANDS in server/core/site.php, which sends the emails.
 const SITES = {
-  'eljawad.com': { name: 'Eljawad Motors' },
-  'start-auction.com': { name: 'Start Auction' },
+  'eljawad.com': {
+    name: 'Eljawad Motors',
+    // Company name in legal text, invoices and agreements.
+    legalName: 'Eljawad Motors Inc.',
+    logo: '/images/logo-eljawad-dark.svg', // on light backgrounds
+    logoLight: '/images/logo-eljawad.svg', // on dark backgrounds (footer)
+    logoClass: '',
+    iconDir: '/icons',
+    invoiceLogo: '/images/invoice/logo-eljawad.png',
+    invoiceQr: '/images/invoice/qr-eljawad.png',
+  },
+  'start-auction.com': {
+    name: 'Start-Auction',
+    legalName: 'Start-Auction',
+    logo: '/images/logo-start-auction.png',
+    logoLight: '/images/logo-start-auction-light.png',
+    // Wide wordmark: needs more width than the Eljawad badge to stay legible.
+    logoClass: 'logo-wide',
+    iconDir: '/icons/start-auction',
+    invoiceLogo: '/images/invoice/logo-start-auction.png',
+    invoiceQr: '/images/invoice/qr-start-auction.png',
+  },
 };
-const DEFAULT_DOMAIN = 'eljawad.com';
 
-const siteFor = (hostname = '') => {
-  const host = hostname.toLowerCase().replace(/^www\./, '');
-  const domain = SITES[host] ? host : DEFAULT_DOMAIN;
-  return {
-    domain,
-    name: SITES[domain].name,
-    contactEmail: `contact@${domain}`,
-    website: `www.${domain}`,
-  };
-};
+const domain = SITES[process.env.NEXT_PUBLIC_SITE] ? process.env.NEXT_PUBLIC_SITE : 'eljawad.com';
 
-// For code that runs on a click (PDFs, Excel, emails), when window exists.
-export const getSite = () =>
-  siteFor(typeof window !== 'undefined' ? window.location.hostname : '');
-
-// For rendered pages: the static export is built with the default domain, so
-// switch after mount to avoid a hydration mismatch.
-export const useSite = () => {
-  const [site, setSite] = useState(() => siteFor());
-  useEffect(() => setSite(getSite()), []);
-  return site;
+export const SITE = {
+  ...SITES[domain],
+  domain,
+  contactEmail: `contact@${domain}`,
+  website: `www.${domain}`,
+  // For the end of a sentence, where "Inc." already supplies the full stop.
+  legalNameEnd: SITES[domain].legalName.endsWith('.') ? SITES[domain].legalName : `${SITES[domain].legalName}.`,
 };

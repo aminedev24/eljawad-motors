@@ -3,7 +3,7 @@ import {
   INVOICE_TYPE_TITLES,
   hasBankDetails,
 } from "../forms/invoiceForm/constants";
-import { getSite } from "../utilities/siteConfig";
+import { SITE } from "../utilities/siteConfig";
 
 const toNumber = (v) => {
   const n = Number(String(v ?? "").replace(/,/g, ""));
@@ -19,10 +19,9 @@ export const exportInvoiceXlsx = async (invoiceData, invoiceNumber) => {
   const total = toNumber(invoiceData.totalPrice);
   const title = INVOICE_TYPE_TITLES[invoiceData.invoiceType] || "DEPOSIT INVOICE";
 
-  const site = getSite();
   const rows = [
-    [site.name, ""],
-    [`${site.contactEmail} · ${site.website}`, ""],
+    [SITE.name, ""],
+    [`${SITE.contactEmail} · ${SITE.website}`, ""],
     [title, ""],
     [],
     ["Invoice number", invoiceNumber],
@@ -86,7 +85,7 @@ export const exportInvoiceXlsx = async (invoiceData, invoiceNumber) => {
     rows.push(["Note", bankDetailsPendingNotice()]);
   }
   if (invoiceData.bankNote) rows.push(["Note from the remitter", invoiceData.bankNote]);
-  rows.push([], [`Put the invoice number in your transfer reference. Only pay into an account confirmed by an email from @${site.domain}.`, ""]);
+  rows.push([], [`Put the invoice number in your transfer reference. Only pay into an account confirmed by an email from @${SITE.domain}.`, ""]);
 
   const sheet = XLSX.utils.aoa_to_sheet(rows);
   sheet["!cols"] = [{ wch: 28 }, { wch: 60 }];

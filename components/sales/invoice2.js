@@ -6,7 +6,7 @@ import { generatePdfBlob } from "./invoicePdf"; // Import the generatePdfBlob fu
 import { apiBaseUrl } from '../utilities/apiBase';
 import { getCsrfToken } from '../utilities/csrfToken';
 import { INVOICE_TYPE_TITLES } from "../forms/invoiceForm/constants";
-import { getSite } from "../utilities/siteConfig";
+import { SITE } from "../utilities/siteConfig";
 import { exportInvoiceXlsx } from "./invoiceExcel";
 
 // Customer-entered text goes into an HTML email; escape it.
@@ -106,11 +106,10 @@ const InvoiceModal = ({ isOpen, onClose, invoiceData, onEdit, setInvoiceState, r
       const totalNum = Number(String(invoiceData.totalPrice ?? "").replace(/,/g, "")) || 0;
       const dueNum = Number(String(invoiceData.depositAmount ?? "").replace(/,/g, "")) || 0;
       const li = (label, value) => (value ? `<li><strong>${label}:</strong> ${esc(value)}</li>` : "");
-      const site = getSite();
       const emailBody = `
       <div style="font-family: Arial, sans-serif; color: #333;">
           <h2 style="color: #0f4c5c;">Dear ${esc(invoiceData.customerFullName)},</h2>
-          <p>Thank you for your order with <strong>${esc(site.name)}</strong>. Your ${esc(typeLabel.toLowerCase())} is attached as a PDF. Here are the details:</p>
+          <p>Thank you for your order with <strong>${esc(SITE.name)}</strong>. Your ${esc(typeLabel.toLowerCase())} is attached as a PDF. Here are the details:</p>
           <ul>
               ${li("Invoice Number", formattedInvoiceNumber)}
               ${li("Invoice Date", invoiceData.invoiceDate)}
@@ -121,9 +120,9 @@ const InvoiceModal = ({ isOpen, onClose, invoiceData, onEdit, setInvoiceState, r
               ${totalNum > dueNum ? li("Balance Due", money(totalNum - dueNum, cur)) : ""}
               ${li("Destination", [invoiceData.destinationCountry, invoiceData.destinationPort].filter(Boolean).join(", "))}
           </ul>
-          <p>Please put the invoice number in your payment reference. Only pay into an account confirmed by an email from @${site.domain}.</p>
-          <p>Questions? Contact us at <a href="mailto:${site.contactEmail}">${site.contactEmail}</a>.</p>
-          <p style="color: #0f4c5c;"><strong>Best regards,</strong><br>${esc(site.name)}</p>
+          <p>Please put the invoice number in your payment reference. Only pay into an account confirmed by an email from @${SITE.domain}.</p>
+          <p>Questions? Contact us at <a href="mailto:${SITE.contactEmail}">${SITE.contactEmail}</a>.</p>
+          <p style="color: #0f4c5c;"><strong>Best regards,</strong><br>${esc(SITE.name)}</p>
       </div>
     `;
 
@@ -134,8 +133,8 @@ const InvoiceModal = ({ isOpen, onClose, invoiceData, onEdit, setInvoiceState, r
         headers: { "Content-Type": "application/json", "X-CSRF-Token": getCsrfToken() || "" },
         body: JSON.stringify({
           to: invoiceData.customerEmail,
-          bcc: site.contactEmail,
-          subject: `${typeLabel} ${formattedInvoiceNumber} from ${site.name}`,
+          bcc: SITE.contactEmail,
+          subject: `${typeLabel} ${formattedInvoiceNumber} from ${SITE.name}`,
           body: emailBody,
           attachment: base64Pdf,
           invoiceNumber: formattedInvoiceNumber,

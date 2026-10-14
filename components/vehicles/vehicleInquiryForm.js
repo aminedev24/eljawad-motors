@@ -10,6 +10,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheckCircle, faPaperPlane, faSpinner } from "@fortawesome/free-solid-svg-icons";
 import { apiBaseUrl } from "../utilities/apiBase";
 import { useUser } from "../user/userContext";
+import { SITE } from "../utilities/siteConfig";
 
 // Mirrors the destination-country list used by the ichinomiya-motors
 // details-page inquiry form (196 countries + an International fallback).
@@ -200,7 +201,7 @@ const VehicleInquiryForm = ({ car }) => {
             vehicle_name: vehicleName,
             vehicle_status: rawStatus,
             vehicle_details: vehicleDetails,
-            page_url: typeof window !== "undefined" ? window.location.href : "https://eljawad.com",
+            page_url: typeof window !== "undefined" ? window.location.href : `https://${SITE.domain}`,
             name: form.name,
             email: form.email,
             phone: form.phone,

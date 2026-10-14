@@ -2,6 +2,7 @@
 import { useUser } from "../user/userContext";
 import useExchangeRate from '../dataFetch/useExchangeRate';
 import { apiFinance } from '../utilities/apiBase';
+import { SITE } from '../utilities/siteConfig';
 
 const TopBar = () => {
   const [japanTime, setJapanTime] = useState('');
@@ -70,7 +71,7 @@ const TopBar = () => {
     <div className="top-bar-wrapper">
       <div className="top-bar">
         <div className="app-info">
-          <span className="app-name">Eljawad Motors Inc.</span>
+          <span className="app-name">{SITE.legalName}</span>
           <span className="total-cars stock font-mono tabular-nums">Total Cars in Stock: 120</span>
           <span aria-hidden="true" className="opacity-40">|</span>
           <span className="cars-added-today stock font-mono tabular-nums">Cars Added Today: 5</span>

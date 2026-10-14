@@ -11,8 +11,8 @@ const SITE_BRANDS = [
         'email_logo' => '/images/logo-eljawad-email.png',
     ],
     'start-auction.com' => [
-        'name' => 'Start Auction',
-        'email_logo' => '/images/logo-eljawad-email.png',
+        'name' => 'Start-Auction',
+        'email_logo' => '/images/logo-start-auction-email.png',
     ],
 ];
 

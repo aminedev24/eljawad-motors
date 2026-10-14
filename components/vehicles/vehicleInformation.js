@@ -5,6 +5,7 @@ import Image from 'next/image';
 import ImageWithLoader from '../misc/imageWithLoader';
 import { apiBaseUrl } from '../utilities/apiBase';
 import { formatNumberWithUnit } from '../utilities/numberFormat';
+import { SITE } from '../utilities/siteConfig';
 const VehicleInfo = ({onClose, selectedCar}) => {
   const [mainImage, setMainImage] = useState(null);
   const router = useRouter();
@@ -153,7 +154,7 @@ const VehicleInfo = ({onClose, selectedCar}) => {
             ) : (
               <p>No main image available.</p>
             )}
-            <p className="text-center">Eljawad Motors Inc. - Ref No {ref_no}</p>
+            <p className="text-center">{SITE.legalName} - Ref No {ref_no}</p>
           </div>
         
           <div className="thumbnail-grid">
