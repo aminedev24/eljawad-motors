@@ -10,6 +10,14 @@ const VARIANT_CLASSES = {
 const Button = ({ variant = 'primary', href, className = '', children, ...props }) => {
   const classes = `font-display inline-block px-8 py-3 font-bold text-center uppercase text-sm tracking-wide transition-colors duration-200 ${VARIANT_CLASSES[variant] || VARIANT_CLASSES.primary} ${className}`;
 
+  if (href && /^https?:\/\//.test(href)) {
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" className={classes} {...props}>
+        {children}
+      </a>
+    );
+  }
+
   if (href) {
     return (
       <Link href={href} className={classes} {...props}>

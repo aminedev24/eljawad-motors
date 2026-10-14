@@ -942,14 +942,21 @@ body.mobile-nav-open {
 
 /* Phones */
 @media (max-width: 750px) {
+  /* Logo was 88px and crowded the search bar on phones - shrink it and let
+     the search take all the remaining width between logo and menu button */
   .logo-img,
   .header-top img {
-    width: 88px !important;
+    width: 68px !important;
     margin: 0;
   }
 
+  /* Wide wordmark (Start-Auction) - 130px was still too much of the row */
   .logo-img.logo-wide {
-    width: 130px !important;
+    width: 96px !important;
+  }
+
+  .header-search.mobile-only {
+    flex: 1 1 0;
   }
 
   .app-name {
@@ -994,11 +1001,6 @@ body.mobile-nav-open {
     font-size: 0.92rem;
   }
 
-  .menu-logo-container {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    width: auto;
-    gap: 8px;
-  }
+  /* Search sits between logo and menu button with equal gaps on both sides
+     (its auto left/right margins split the leftover space evenly). */
 }

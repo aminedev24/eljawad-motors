@@ -197,6 +197,20 @@ const Header = () => {
     links.map((link) => (
       <Fragment key={`${link.group || ''}-${link.text}`}>
         {link.group && <p className="dropdown-group">{link.group}</p>}
+        {link.external ? (
+          <a
+            href={link.path}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="dropdown-link"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            <span className="dropdown-link-text">
+              <span className="dropdown-link-title">{link.text}</span>
+              {link.desc && <small className="dropdown-link-desc">{link.desc}</small>}
+            </span>
+          </a>
+        ) : (
         <Link
           href={link.path}
           className={`dropdown-link${isActive(link.path.split('#')[0]) ? ' current' : ''}`}
@@ -208,6 +222,7 @@ const Header = () => {
             {link.desc && <small className="dropdown-link-desc">{link.desc}</small>}
           </span>
         </Link>
+        )}
       </Fragment>
     ));
 

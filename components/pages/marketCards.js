@@ -80,7 +80,7 @@ const MarketCards = () => (
         title="Bid at Japanese auctions"
         text="Source cars directly from major Japanese auction houses like USS, TAA and JU. We handle the bidding, inspection sheets and shipping."
         points={['45,000+ vehicles listed daily across 190+ auction houses', 'Inspection sheets before you bid', 'Already found a car? Send us the lot number']}
-        cta={<Button variant="primary" href="/help/auction" className="w-full !px-6 !py-2 sm:w-auto">Explore auctions</Button>}
+        cta={<Button variant="primary" href="https://auc.start-auction.com" className="w-full !px-6 !py-2 sm:w-auto">Explore auctions</Button>}
         footer={
           <p className="text-xs text-gray-600">
             Have a car in mind?{' '}

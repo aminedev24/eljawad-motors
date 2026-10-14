@@ -1,5 +1,8 @@
 // pages/_app.js
 import '../styles/globals.css';
+// FontAwesome SVG sizing - without it react-fontawesome icons render at full
+// width until the JS-injected styles load, then shrink.
+import '@fortawesome/fontawesome-svg-core/styles.css';
 import '../styles/custom/global/App.css';                    // <-- your old CRA global CSS
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';

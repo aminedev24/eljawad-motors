@@ -1,5 +1,12 @@
 const auctionLinks = [
   {
+    text: 'Start Auction',
+    path: 'https://auc.start-auction.com',
+    external: true,
+    icon: 'fa-arrow-up-right-from-square',
+    desc: 'Bid on auc.start-auction.com',
+  },
+  {
     text: 'How Auctions Work',
     path: '/help/auction',
     icon: 'fa-gavel',
