@@ -4,7 +4,7 @@
     "private": true,
     "scripts": {
         "dev": "next dev -p 3000",
-        "dev:start-auction": "NEXT_PUBLIC_SITE=start-auction.com next dev -p 3000",
+        "dev:start-auction": "cross-env NEXT_PUBLIC_SITE=start-auction.com NEXT_PUBLIC_DEV_API=http://localhost:8080/server next dev -p 3000",
         "dev:xampp": "set NEXT_PUBLIC_DEV_API=http://localhost/eljawad-motors/server && next dev -p 3000",
         "dev:php": "cross-env NEXT_PUBLIC_DEV_API=http://localhost:8080/server next dev -p 3000",
         "php": "php -S localhost:8080",

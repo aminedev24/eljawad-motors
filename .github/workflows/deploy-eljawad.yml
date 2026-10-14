@@ -166,5 +166,11 @@ jobs:
             || { echo "start-auction.com is not serving the Start-Auction build"; exit 1; }
           # Must be real JSON - an HTML 200 means the host's SPA fallback
           # answered because the PHP isn't there.
-          curl -s "$API_BASE/inventory/cars/fetchStock.php" | head -c 1 | grep -q '\[' \
-            && echo "backend: real JSON OK" || { echo "backend: NOT returning JSON"; exit 1; }
+          # Retried: right after the upload the host can briefly answer with
+          # something else while it settles.
+          for attempt in 1 2 3 4 5; do
+            curl -s "$API_BASE/inventory/cars/fetchStock.php" | head -c 1 | grep -q '\[' \
+              && { echo "backend: real JSON OK"; exit 0; }
+            echo "backend not returning JSON yet (attempt $attempt/5)"; sleep 10
+          done
+          echo "backend: NOT returning JSON"; exit 1
