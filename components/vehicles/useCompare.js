@@ -28,6 +28,9 @@ const subscribe = (listener) => {
   return () => listeners.delete(listener);
 };
 const getSnapshot = () => items;
+// Must be the same array every call, or React re-renders forever.
+const EMPTY = [];
+const getServerSnapshot = () => EMPTY;
 const emit = () => {
   try {
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(items));
@@ -84,7 +87,7 @@ export function clearCompare() {
 }
 
 export function useCompare() {
-  const snapshot = useSyncExternalStore(subscribe, getSnapshot, () => []);
+  const snapshot = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   const isComparing = useCallback(
     (car) => snapshot.some((c) => c.ref === refOf(car)),
     [snapshot]
