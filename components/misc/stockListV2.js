@@ -6,13 +6,14 @@
 // The existing /stock-list and its components are left untouched.
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useRouter } from "next/router";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSliders, faXmark, faCarSide, faGrip, faList, faTableCellsLarge } from "@fortawesome/free-solid-svg-icons";
 import CarCardV2 from "../vehicles/carCard";
 import StockFilterBarV2 from "./stockFilterBarV2";
 import StockSidebarV2 from "./stockSidebarV2";
+import Pagination from "./Pagination";
 import { getCarPlaceholderImage } from "../utilities/stockPlaceholders";
 import { apiInventory } from "../utilities/apiBase";
 import { fetchAllMakesModels, getMakesData, getModelsData } from "../vehicles/vehicleData";
@@ -266,8 +267,8 @@ const StocklistV2 = () => {
       ? "http://localhost/artisbay-inc/server/inventory/cars"
       : "/server/inventory/cars";
 
-  const itemsPerPage = 15;
-  const maxPageButtons = 5;
+  // 24 fills whole rows at 2, 3, 4 and 6 cards across.
+  const itemsPerPage = 24;
   const [currentPage, setCurrentPage] = useState(1);
   const [sortOption, setSortOption] = useState("newest");
   const [viewMode, setViewMode] = useState("grid");
@@ -308,6 +309,8 @@ const StocklistV2 = () => {
     if (sortFromUrl === "price" || sortFromUrl === "mileage" || sortFromUrl === "popularity" || sortFromUrl === "newest") {
       setSortOption(sortFromUrl);
     }
+    const pageFromUrl = parseInt(val("page"), 10);
+    if (pageFromUrl > 1) setCurrentPage(pageFromUrl);
     setInitialized(true);
   }, [router.isReady, router.query, initialized]);
 
@@ -324,12 +327,15 @@ const StocklistV2 = () => {
     Object.entries(filters).forEach(([key, value]) => {
       if (value) query[key] = value;
     });
+    // Sort and page too, so Back from a vehicle lands on the same page.
+    if (sortOption !== "newest") query.sort = sortOption;
+    if (currentPage > 1) query.page = String(currentPage);
     router.replace({ pathname: router.pathname, query }, undefined, {
       shallow: true,
       scroll: false,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filters, initialized, router.isReady]);
+  }, [filters, sortOption, currentPage, initialized, router.isReady]);
 
   // The header's own quick-search box (present on every page) falls back to
   // this key when it's not showing a page with its own ?search= — keep it in
@@ -666,9 +672,14 @@ const StocklistV2 = () => {
     ]
   );
 
+  // A new search starts at page 1 - but not the initial filters read from
+  // the URL, which would throw away a ?page= the visitor came back to.
+  const lastSignature = useRef(null);
   useEffect(() => {
-    setCurrentPage(1);
-  }, [filtersSignature]);
+    if (!initialized) return;
+    if (lastSignature.current !== null && lastSignature.current !== filtersSignature) setCurrentPage(1);
+    lastSignature.current = filtersSignature;
+  }, [filtersSignature, initialized]);
 
   // Number of matching vehicles: the server's count in server mode, where
   // `cars` only holds the current page.
@@ -680,8 +691,9 @@ const StocklistV2 = () => {
   );
 
   useEffect(() => {
-    // In server mode the total is unknown while a request is in flight.
-    if (SERVER_MODE && loading) return;
+    // The total is unknown until the stock has loaded; clamping earlier would
+    // reset a ?page= from the URL to 1.
+    if (loading) return;
     setCurrentPage((prev) => Math.min(prev, totalPages));
   }, [totalPages, loading]);
 
@@ -702,23 +714,6 @@ const StocklistV2 = () => {
     const timer = setTimeout(() => setViewLoading(false), 80);
     return () => clearTimeout(timer);
   }, [loading, currentPage, filtersSignature]);
-
-  const visiblePageNumbers = useMemo(() => {
-    const total = totalPages;
-    const maxButtons = Math.max(1, maxPageButtons);
-    if (total <= maxButtons) return Array.from({ length: total }, (_, i) => i + 1);
-    const half = Math.floor(maxButtons / 2);
-    let start = currentPage - half;
-    let end = currentPage + half;
-    if (start < 1) {
-      start = 1;
-      end = start + maxButtons - 1;
-    } else if (end > total) {
-      end = total;
-      start = end - maxButtons + 1;
-    }
-    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
-  }, [currentPage, maxPageButtons, totalPages]);
 
   const goToPage = (page) => {
     setViewLoading(true);
@@ -1132,45 +1127,14 @@ const StocklistV2 = () => {
             ) : null}
 
             {/* Pagination */}
-            {!viewLoading && sortedCars.length > 0 && totalPages > 1 && (
-              <div className="mt-8 flex flex-col items-center gap-3">
-                <div className="flex flex-wrap items-center justify-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => goToPage(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className="rounded-md border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-600 transition hover:border-brand-navy hover:text-brand-navy disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    ‹ Prev
-                  </button>
-                  {visiblePageNumbers.map((n) => (
-                    <button
-                      key={n}
-                      type="button"
-                      onClick={() => goToPage(n)}
-                      aria-current={currentPage === n ? "page" : undefined}
-                      className={`min-w-[2.5rem] rounded-md border px-3 py-2 text-sm font-semibold transition ${
-                        currentPage === n
-                          ? "border-brand-charcoal bg-brand-charcoal text-white"
-                          : "border-gray-300 text-gray-600 hover:border-brand-navy hover:text-brand-navy"
-                      }`}
-                    >
-                      {n}
-                    </button>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => goToPage(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    className="rounded-md border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-600 transition hover:border-brand-navy hover:text-brand-navy disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    Next ›
-                  </button>
-                </div>
-                <span className="text-xs text-gray-400">
-                  Page {currentPage} of {totalPages}
-                </span>
-              </div>
+            {!viewLoading && sortedCars.length > 0 && (
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={resultCount}
+                perPage={itemsPerPage}
+                onPageChange={goToPage}
+              />
             )}
           </main>
         </div>
