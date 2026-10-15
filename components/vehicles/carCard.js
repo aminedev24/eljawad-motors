@@ -183,6 +183,12 @@ const UnlockedCarCard = ({ car, imgBasePath, onViewDetails }) => {
             </div>
           </div>
         )}
+        {/* Stock ref on the photo, so the make/model line keeps its full width */}
+        {stockRef && (
+          <span className="absolute bottom-1 left-1 z-10 rounded bg-black/60 px-1.5 py-0.5 font-mono text-[9px] font-bold tracking-wide text-white">
+            {stockRef}
+          </span>
+        )}
         {imageCount > 1 && (
           <span className="absolute bottom-1 right-1 z-10 flex items-center gap-1 rounded bg-black/60 px-1.5 py-0.5 text-[9px] font-semibold text-white">
             <FontAwesomeIcon icon={faImages} className="h-2.5 w-2.5" />
@@ -193,16 +199,13 @@ const UnlockedCarCard = ({ car, imgBasePath, onViewDetails }) => {
 
       {/* Details Section */}
       <div className="p-3 flex flex-col flex-1">
-        <div className="flex items-center justify-between gap-2">
-          <h3 className="font-display text-[12px] font-bold text-[var(--text-color)] uppercase truncate leading-tight cursor-pointer" onClick={() => onViewDetails && onViewDetails(car)}>
-            {make} {model}
-          </h3>
-          {stockRef && (
-            <span className="shrink-0 font-mono text-[9px] font-bold text-white bg-[var(--grey-text)] px-1.5 py-0.5 tracking-wide">
-              {stockRef}
-            </span>
-          )}
-        </div>
+        <h3
+          className="font-display text-[12px] font-bold text-[var(--text-color)] uppercase truncate leading-tight cursor-pointer"
+          title={`${make} ${model}`}
+          onClick={() => onViewDetails && onViewDetails(car)}
+        >
+          {make} {model}
+        </h3>
         {isSold || isReserved ? (
           <div className="mt-1 font-display text-[15px] font-bold italic text-[var(--grey-text)]">Price on request</div>
         ) : (
