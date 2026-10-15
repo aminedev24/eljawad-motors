@@ -6,7 +6,7 @@ RewriteEngine On
 # files stay reachable; start-auction.com is unaffected. Delete this block
 # (and the ErrorDocument line) to switch eljawad.com back on.
 RewriteCond %{HTTP_HOST} ^(www\.)?eljawad\.com$ [NC]
-RewriteCond %{REQUEST_URI} !^/(server/|eljawad-maintenance\.html$|images/logo-eljawad-dark\.svg$|icons/favicon\.ico$)
+RewriteCond %{REQUEST_URI} !^/(server/|eljawad-maintenance\.html$|images/logo-eljawad-only\.svg$|icons/favicon\.ico$)
 RewriteRule ^ - [R=503,L]
 ErrorDocument 503 /eljawad-maintenance.html
 
