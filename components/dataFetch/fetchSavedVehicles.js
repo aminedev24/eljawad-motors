@@ -84,13 +84,13 @@ const SavedVehicles = () => {
                   <img src={img} alt={name} className="h-full w-full object-cover" loading="lazy" />
                   {isSold && (
                     <span className="absolute inset-0 flex items-center justify-center bg-black/60">
-                      <span className="rounded bg-red-700 px-2 py-0.5 text-[8px] font-extrabold uppercase tracking-widest text-white">Sold</span>
+                      <span className="rounded bg-red-700 px-2 py-1 text-[10px] font-extrabold uppercase tracking-widest text-white">Sold</span>
                     </span>
                   )}
                   {isReserved && (
                     <span className="absolute inset-0 flex items-center justify-center bg-black/50">
-                      <span className="flex items-center gap-1 rounded bg-blue-600 px-2 py-0.5 text-[8px] font-extrabold uppercase tracking-widest text-white">
-                        <span className="inline-block h-1 w-1 animate-pulse rounded-full bg-white" /> Negotiation
+                      <span className="flex items-center gap-1 rounded bg-blue-600 px-2 py-1 text-[10px] font-extrabold uppercase tracking-widest text-white">
+                        <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-white" /> Under Negotiation
                       </span>
                     </span>
                   )}

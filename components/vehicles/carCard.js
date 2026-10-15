@@ -168,15 +168,15 @@ const UnlockedCarCard = ({ car, imgBasePath, onViewDetails }) => {
         </button>
         {isSold && (
           <div className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/65">
-            <div className="rounded bg-red-700 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-widest text-white shadow-lg">
+            <div className="rounded bg-red-700 px-3.5 py-2 text-xs font-extrabold uppercase tracking-widest text-white shadow-lg">
               Sold
             </div>
           </div>
         )}
         {isReserved && (
           <div className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/55">
-            <div className="flex items-center gap-1.5 rounded bg-blue-600 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-widest text-white shadow-lg">
-              <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
+            <div className="flex items-center gap-2 rounded bg-blue-600 px-3.5 py-2 text-xs font-extrabold uppercase tracking-widest text-white shadow-lg ring-2 ring-white/70">
+              <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-white" />
               Under Negotiation
             </div>
           </div>

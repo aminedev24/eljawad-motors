@@ -22,6 +22,11 @@ import {
   faHeart,
   faScaleBalanced,
   faTriangleExclamation,
+  faBan,
+  faListCheck,
+  faCircleInfo,
+  faCircleCheck,
+  faHandshake,
 } from "@fortawesome/free-solid-svg-icons";
 import { useUser } from "../user/userContext";
 import { useFavorites, toggleFavorite } from "./useFavorites";
@@ -29,6 +34,7 @@ import { useCompare } from "./useCompare";
 import { apiBaseUrl } from "../utilities/apiBase";
 import { formatNumberWithUnit } from "../utilities/numberFormat";
 import VehicleInquiryForm from "./vehicleInquiryForm";
+import { SITE } from "../utilities/siteConfig";
 import { useStockAccess, LoginWall, UnlockButton, Censored } from "./stockAccess";
 import {
   normalizeCurrency,
@@ -104,8 +110,8 @@ const Highlight = ({ tone = "accent", children }) => (
 // sentence - research on disclaimer scanning (NN/g) shows highlighting a
 // short key phrase beats a uniform block, which readers skip entirely.
 const WarnLine = ({ children, critical }) => (
-  <div className="flex items-start gap-2 border-b border-gray-100 py-2 text-xs leading-relaxed text-[var(--text-color)] last:border-b-0">
-    <FontAwesomeIcon icon={faTriangleExclamation} className="mt-0.5 shrink-0 text-[11px] text-amber-600" />
+  <div className="flex items-start gap-2.5 border-b border-amber-200/70 py-2.5 text-sm leading-relaxed text-[var(--text-color)] last:border-b-0">
+    <FontAwesomeIcon icon={faTriangleExclamation} className="mt-1 shrink-0 text-sm text-amber-600" />
     <p>
       {children} <strong className="bg-amber-100 px-1 font-bold text-amber-800">{critical}</strong>
     </p>
@@ -461,18 +467,18 @@ const VehicleDetailsV2 = ({ initialVehicleId = "" }) => {
 
           {isSold && (
             <div
-              className="pointer-events-none absolute right-6 top-5 border-[3px] border-double px-3 py-1.5 font-mono text-base font-extrabold uppercase tracking-widest"
-              style={{ transform: "rotate(-9deg)", borderColor: "#a8341f", color: "#a8341f", background: "rgba(254,254,254,0.76)" }}
+              className="pointer-events-none absolute right-4 top-4 border-[4px] border-double px-4 py-2 font-mono text-xl font-extrabold uppercase tracking-widest shadow-lg md:right-6 md:top-5 md:text-2xl"
+              style={{ transform: "rotate(-9deg)", borderColor: "#b91c1c", color: "#b91c1c", background: "rgba(255,255,255,0.9)" }}
             >
               Sold
             </div>
           )}
           {isReserved && (
             <div
-              className="pointer-events-none absolute right-6 top-5 border-[3px] border-double px-3 py-1.5 font-mono text-base font-extrabold uppercase tracking-widest"
-              style={{ transform: "rotate(-9deg)", borderColor: "var(--secondary-color)", color: "var(--secondary-color)", background: "rgba(254,254,254,0.76)" }}
+              className="pointer-events-none absolute right-4 top-4 border-[4px] border-double px-4 py-2 font-mono text-xl font-extrabold uppercase tracking-widest shadow-lg md:right-6 md:top-5 md:text-2xl"
+              style={{ transform: "rotate(-9deg)", borderColor: "#2563eb", color: "#2563eb", background: "rgba(255,255,255,0.9)" }}
             >
-              Negotiating
+              Under Negotiation
             </div>
           )}
           {!isSold && !isReserved && (
@@ -545,14 +551,31 @@ const VehicleDetailsV2 = ({ initialVehicleId = "" }) => {
               buyers scan first; sticks beside the gallery on desktop */}
           <aside className="mt-3 shrink-0 lg:sticky lg:top-[120px] lg:mt-0 lg:w-[400px]">
             <div className="border border-[var(--border-color)] bg-[var(--white)] p-4">
-              <div className="mb-3 flex flex-wrap items-center gap-2">
-                <span
-                  className={`px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-white ${
-                    isSold ? "bg-[#a8341f]" : isReserved ? "bg-[var(--secondary-color)]" : "bg-[var(--accent-color)]"
-                  }`}
+              {(isSold || isReserved) && (
+                <div
+                  role="status"
+                  className={`mb-3 flex items-start gap-3 px-4 py-3 text-white ${isSold ? "bg-red-700" : "bg-blue-600"}`}
                 >
-                  {isSold ? "Sold" : isReserved ? "Under Negotiation" : "Available Now"}
-                </span>
+                  <FontAwesomeIcon icon={isSold ? faBan : faHandshake} className="mt-0.5 text-lg" />
+                  <div>
+                    <p className="flex items-center gap-2 text-sm font-extrabold uppercase tracking-widest">
+                      {!isSold && <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-white" />}
+                      {isSold ? "Sold" : "Under Negotiation"}
+                    </p>
+                    <p className="mt-1 text-xs leading-relaxed text-white/90">
+                      {isSold
+                        ? "This vehicle has been sold. Send a request and we\u2019ll find you a similar unit."
+                        : "Another buyer is finalizing this vehicle. Send a request and we\u2019ll tell you if it becomes available, or offer a similar unit."}
+                    </p>
+                  </div>
+                </div>
+              )}
+              <div className="mb-3 flex flex-wrap items-center gap-2">
+                {!isSold && !isReserved && (
+                  <span className="bg-[var(--accent-color)] px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-white">
+                    Available Now
+                  </span>
+                )}
                 {equippedItems.length > 0 && (
                   <span className="bg-[var(--primary-color)] px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-white">
                     {equippedItems.length} Features
@@ -613,6 +636,13 @@ const VehicleDetailsV2 = ({ initialVehicleId = "" }) => {
               >
                 <FontAwesomeIcon icon={faPaperPlane} /> Request This Vehicle
               </button>
+              <button
+                type="button"
+                onClick={() => document.getElementById("important-notes")?.scrollIntoView({ behavior: "smooth", block: "center" })}
+                className="mt-2 flex w-full items-center justify-center gap-1.5 text-xs font-semibold text-amber-700 underline-offset-2 hover:underline"
+              >
+                <FontAwesomeIcon icon={faTriangleExclamation} /> Please read the important notes before ordering
+              </button>
 
               <div className="mt-3 grid grid-cols-2 gap-x-5 border-t border-[var(--border-color)] pt-3">
                 {quickSpecs.map((spec) => (
@@ -636,55 +666,67 @@ const VehicleDetailsV2 = ({ initialVehicleId = "" }) => {
 
         <TornEdge />
 
-        {/* Spec band - full ledger beside its equipment panel on desktop
-            (halves the vertical run the old stacked layout needed) */}
-        <div className="mt-3 lg:flex lg:items-start lg:gap-5">
-          <div className="min-w-0 flex-1 border border-[var(--border-color)] bg-[var(--white)] p-4">
-            <h4 className="mb-1 text-[10px] font-extrabold uppercase tracking-widest text-gray-400">Manifest</h4>
-            <dl>
+        {/* Spec band - specification tiles beside the equipment panel on desktop */}
+        <div className="mt-3 lg:flex lg:items-stretch lg:gap-5">
+          <section className="min-w-0 flex-1 border border-[var(--border-color)] bg-[var(--white)] p-4 md:p-5">
+            <h3 className="mb-3 flex items-center gap-2 text-sm font-extrabold uppercase tracking-wide text-[var(--primary-color)]">
+              <FontAwesomeIcon icon={faListCheck} /> Specifications
+            </h3>
+            <dl className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {ledgerRows.map((row) => (
-                <div key={row.label} className="flex items-baseline justify-between gap-3.5 border-b border-gray-100 py-1.5 last:border-b-0">
-                  <dt className="flex items-baseline gap-2.5">
-                    <span className="font-mono text-[10px] font-bold text-gray-300">{row.index}</span>
-                    <span className="text-[11px] font-bold uppercase tracking-wide text-gray-400">{row.label}</span>
-                  </dt>
-                  <dd className="font-mono text-right text-[13px] font-semibold text-[var(--text-color)]">{row.value}</dd>
+                <div key={row.label} className="border border-gray-100 bg-gray-50 px-3 py-2">
+                  <dt className="text-[10px] font-bold uppercase tracking-wide text-gray-500">{row.label}</dt>
+                  <dd className="mt-0.5 break-words text-sm font-semibold text-[var(--text-color)]">{row.value}</dd>
                 </div>
               ))}
             </dl>
-          </div>
+          </section>
 
           {/* Equipment & inclusions panel */}
-          <div className="mt-3 border border-[var(--border-color)] bg-[var(--white)] p-4 text-xs leading-relaxed text-[var(--text-color)] lg:mt-0 lg:w-[420px] lg:shrink-0">
-            {carOptions.length === 0 ? (
-                <span className="text-gray-500">Equipment data not available for this vehicle — contact us to confirm specific features.</span>
+          <aside className="mt-3 flex flex-col gap-4 border border-[var(--border-color)] bg-[var(--white)] p-4 md:p-5 lg:mt-0 lg:w-[400px] lg:shrink-0">
+            <div>
+              <h3 className="mb-2 text-sm font-extrabold uppercase tracking-wide text-[var(--primary-color)]">Equipment</h3>
+              {carOptions.length === 0 ? (
+                <p className="flex items-start gap-2 text-xs leading-relaxed text-gray-500">
+                  <FontAwesomeIcon icon={faCircleInfo} className="mt-0.5 text-gray-400" />
+                  Equipment data isn&rsquo;t available for this vehicle. Contact us to confirm specific features.
+                </p>
               ) : (
                 <>
-                  <strong className="text-[var(--charcoal-color)]">Equipped with —</strong>{" "}
-                  <span className="mt-1.5 flex flex-wrap gap-1.5 py-1">
+                  <div className="flex flex-wrap gap-1.5">
                     {equippedItems.map((item) => (
                       <Highlight key={item}>{item}</Highlight>
                     ))}
-                  </span>
-                  <span className="text-gray-500">List reflects features noted on the seller&rsquo;s inspection sheet and may not be exhaustive — contact us to confirm any specific feature.</span>
+                  </div>
+                  <p className="mt-2 text-[11px] leading-relaxed text-gray-500">
+                    From the seller&rsquo;s inspection sheet; may not be exhaustive. Contact us to confirm a specific feature.
+                  </p>
                 </>
               )}
+            </div>
 
-              <div className="mt-2.5 text-xs leading-relaxed text-[var(--text-color)]">
-                <strong className="text-[var(--charcoal-color)]">Included —</strong>
-                <span className="mt-1.5 flex flex-wrap gap-1.5 py-1">
-                  <Highlight tone="primary">Pre-export inspection</Highlight>
-                  <Highlight tone="primary">Export documents handled end to end</Highlight>
-                  <Highlight tone="primary">Worldwide RoRo / container shipping</Highlight>
-                </span>
-              </div>
-          </div>
+            <div className="border-t border-[var(--border-color)] pt-4">
+              <h3 className="mb-2 text-sm font-extrabold uppercase tracking-wide text-[var(--primary-color)]">Included with every vehicle</h3>
+              <ul className="space-y-2 text-sm text-[var(--text-color)]">
+                {["Pre-export inspection", "Export documents handled end to end", "Worldwide RoRo / container shipping"].map((item) => (
+                  <li key={item} className="flex items-start gap-2">
+                    <FontAwesomeIcon icon={faCircleCheck} className="mt-0.5 text-[var(--accent-color)]" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </aside>
         </div>
 
         <TornEdge flip />
 
-        {/* Disclaimer - slim full-width strip */}
-        <div className="mt-4 border border-amber-200 bg-amber-50 px-4">
+        {/* Disclaimer - the terms buyers most often miss, so it gets a
+            heading and a strong edge instead of a quiet strip */}
+        <div id="important-notes" className="mt-4 border border-amber-300 border-l-[6px] border-l-amber-500 bg-amber-50 px-4 pb-1 pt-3 md:px-5">
+          <h3 className="flex items-center gap-2 text-sm font-extrabold uppercase tracking-wide text-amber-800">
+            <FontAwesomeIcon icon={faTriangleExclamation} /> Important — please read before ordering
+          </h3>
           <WarnLine critical="excludes freight, insurance, and import duties.">
             Prices are approximate FOB Japan and
           </WarnLine>
@@ -708,7 +750,7 @@ const VehicleDetailsV2 = ({ initialVehicleId = "" }) => {
             <h3 className="text-base font-bold uppercase text-[var(--primary-color)]">
               Request quotation &mdash; Lot #{displayStockId(car)}
             </h3>
-            <span className="font-mono text-[10px] text-gray-400">FILE WITH ELJAWAD MOTORS</span>
+            <span className="font-mono text-[10px] uppercase text-gray-400">File with {SITE.name}</span>
           </div>
           <VehicleInquiryForm car={car} />
         </div>
