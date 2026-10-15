@@ -87,8 +87,12 @@ const StockSidebarV2 = ({
   };
 
   return (
-    <aside className="hidden w-[230px] shrink-0 lg:block">
-      <div className="sticky top-4">
+    // The aside itself sticks: a sticky box only moves within its parent, and
+    // the old inner wrapper's parent was exactly its own height. It sits just
+    // under the sticky site header (147px) and scrolls on its own when the
+    // filters are taller than the space left.
+    <aside className="sticky top-[155px] hidden max-h-[calc(100vh-163px)] w-[230px] shrink-0 self-start overflow-y-auto overscroll-contain [scrollbar-width:thin] lg:block">
+      <div>
         <div className="mb-3 overflow-hidden rounded-lg border border-gray-200 bg-white p-3 shadow-sm">
           <div className="mb-2 flex items-center justify-between">
             <span className="text-[11px] font-bold uppercase tracking-wider text-brand-navy">Filters</span>

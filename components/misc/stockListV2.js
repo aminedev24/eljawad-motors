@@ -267,8 +267,9 @@ const StocklistV2 = () => {
       ? "http://localhost/artisbay-inc/server/inventory/cars"
       : "/server/inventory/cars";
 
-  // 24 fills whole rows at 2, 3, 4 and 6 cards across.
-  const itemsPerPage = 24;
+  // The grid shows 2, 3, 4 or 5 cards per row by screen width; 40 fills
+  // every row at 2, 4 and 5 (tablets at 3 end on a single card).
+  const itemsPerPage = 40;
   const [currentPage, setCurrentPage] = useState(1);
   const [sortOption, setSortOption] = useState("newest");
   const [viewMode, setViewMode] = useState("grid");
