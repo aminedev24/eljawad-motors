@@ -145,6 +145,7 @@ function stock_lock_row(array $row): array
         'make'       => $row['make'] ?? '',
         'model'      => $row['model'] ?? '',
         'status'     => $row['status'] ?? '',
+        'company'    => $row['company'] ?? '',  // picks the displayed ref format
         'image_urls' => json_encode($image ? [$image] : []),
         'locked'     => true,
     ];

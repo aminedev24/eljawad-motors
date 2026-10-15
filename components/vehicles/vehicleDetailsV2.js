@@ -45,7 +45,7 @@ import {
   parseImageUrls,
 } from "../utilities/ichinomiyaCardAdapter";
 
-const PLACEHOLDER_IMAGE = "/images/vehicles/artisbay-placeholder.svg";
+const PLACEHOLDER_IMAGE = SITE.vehiclePlaceholder;
 const absoluteUrlPattern = /https?:\/\/[^\s"']+/gi;
 const UNKNOWN = new Set(["", "n/a", "na", "unknown", "0", "null", "undefined", "-", "--"]);
 const isUnknownLike = (v) => UNKNOWN.has(String(v ?? "").trim().toLowerCase());
@@ -148,7 +148,7 @@ const VehicleDetailsV2 = ({ initialVehicleId = "" }) => {
       if (!imagePath) return PLACEHOLDER_IMAGE;
       const trimmed = String(imagePath).trim();
       if (!trimmed || trimmed === "[]" || trimmed.toLowerCase() === "null") return PLACEHOLDER_IMAGE;
-      if (trimmed === PLACEHOLDER_IMAGE || trimmed.endsWith("images/vehicles/artisbay-placeholder.svg")) {
+      if (trimmed === PLACEHOLDER_IMAGE || /images\/vehicles\/(artisbay|start-auction)-placeholder\.svg$/.test(trimmed)) {
         return PLACEHOLDER_IMAGE;
       }
       const absolute = [...trimmed.matchAll(absoluteUrlPattern)];

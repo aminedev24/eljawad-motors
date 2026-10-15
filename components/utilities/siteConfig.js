@@ -13,6 +13,8 @@ const SITES = {
     iconDir: '/icons',
     invoiceLogo: '/images/invoice/logo-eljawad.png',
     invoiceQr: '/images/invoice/qr-eljawad.png',
+    // Shown when a car has no photo. Saved favourites store this path.
+    vehiclePlaceholder: '/images/vehicles/artisbay-placeholder.svg',
   },
   'start-auction.com': {
     name: 'Start-Auction',
@@ -24,6 +26,10 @@ const SITES = {
     iconDir: '/icons/start-auction',
     invoiceLogo: '/images/invoice/logo-start-auction.png',
     invoiceQr: '/images/invoice/qr-start-auction.png',
+    vehiclePlaceholder: '/images/vehicles/start-auction-placeholder.svg',
+    // Stock pages search the full Ichinomiya catalog on the server
+    // (server/inventory/catalog) instead of loading the curated list.
+    fullCatalog: false, // switched on once the first server import has run
   },
 };
 

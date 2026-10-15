@@ -25,9 +25,23 @@ if (!$identifier) {
 //   1. partner DB credentials from the external config file (production)
 //   2. partner DB schema visible to this MySQL user
 //   3. local 'artisbay' DB (dev copy of the partner feed)
+// Full Ichinomiya catalog car (start-auction.com). Its photo gallery is
+// fetched from the partner the first time someone allowed to see it opens it.
+require_once __DIR__ . '/../catalog/catalog_lib.php';
+$isCatalogCar = false;
+$car = null;
+if (catalog_is_ref($identifier) && ($row = catalog_find($conn, $identifier))) {
+    $isCatalogCar = true;
+    $catalogPreview = $accessLevel === 'free' ? catalog_preview_keys($conn) : [];
+    if ($accessLevel === 'full' || isset($catalogPreview[strtoupper($identifier)])) {
+        $row = catalog_fill_full_record($conn, $row);
+    }
+    $car = catalog_to_stock_row($row);
+}
+
 $pdo = null;
 $partnerConfigPath = '/home2/yqjezvte/partner_db_config.php';
-if (is_readable($partnerConfigPath)) {
+if (empty($car) && is_readable($partnerConfigPath)) {
     $p = include $partnerConfigPath;
     if (is_array($p) && !empty($p['db'])) {
         mysqli_report(MYSQLI_REPORT_OFF);
@@ -135,7 +149,7 @@ if (!$isStaff) {
 }
 if ($accessLevel === 'free') {
     $key = stock_car_key($car);
-    $previewKeys = stock_preview_keys_cached($conn);
+    $previewKeys = $isCatalogCar ? $catalogPreview : stock_preview_keys_cached($conn);
     if ($key === null || !isset($previewKeys[$key])) $car = stock_lock_row($car);
 }
 

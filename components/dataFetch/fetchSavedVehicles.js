@@ -7,8 +7,9 @@ import { useRouter } from "next/router";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faHeart, faTrashAlt, faExternalLinkAlt } from "@fortawesome/free-solid-svg-icons";
 import { useFavorites, removeFavorite } from "../vehicles/useFavorites";
+import { SITE } from "../utilities/siteConfig";
 
-const PLACEHOLDER_IMAGE = "/images/vehicles/artisbay-placeholder.svg";
+const PLACEHOLDER_IMAGE = SITE.vehiclePlaceholder;
 
 const firstImage = (value) => {
   if (!value) return "";

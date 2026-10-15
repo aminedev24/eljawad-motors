@@ -10,6 +10,12 @@ import { apiInventory } from "../utilities/apiBase";
 import { useStockAccess, stockUrl } from "../vehicles/stockAccess";
 import { getCarBodyType, getCarMake } from "../utilities/ichinomiyaCardAdapter";
 import { fetchAllMakesModels, getMakesData, getModelsData } from "../vehicles/vehicleData";
+import { SITE } from "../utilities/siteConfig";
+import { fetchCatalogFacets } from "../dataFetch/catalogApi";
+
+// start-auction.com: counts come from the full catalog's precomputed filter
+// counts instead of downloading every car (see components/dataFetch/catalogApi.js).
+const SERVER_MODE = Boolean(SITE.fullCatalog);
 
 const BUDGETS = [
   { label: "Under $10,000", minPrice: "", maxPrice: "10000" },
@@ -34,6 +40,7 @@ const InventoryConsole = () => {
   const [selectedBodyType, setSelectedBodyType] = useState("");
   const [selectedBudget, setSelectedBudget] = useState("");
   const [catalogLoaded, setCatalogLoaded] = useState(false);
+  const [facets, setFacets] = useState(null);
   const { tier, loading: accessLoading } = useStockAccess();
   // Locked rows carry no price or body type, so those counts are only
   // meaningful for activated accounts.
@@ -46,14 +53,22 @@ const InventoryConsole = () => {
   // Same URL (tier included) as the stock rows below, so the browser serves
   // both from one request.
   useEffect(() => {
-    if (accessLoading) return;
+    if (!SERVER_MODE) return;
+    fetchCatalogFacets().then(setFacets).catch(() => setFacets(null));
+  }, []);
+
+  useEffect(() => {
+    if (SERVER_MODE || accessLoading) return;
     fetch(stockUrl(`${apiInventory}/cars/fetchStock.php`, tier), { credentials: "include" })
       .then((res) => res.json())
       .then((data) => setCars(Array.isArray(data) ? data : []))
       .catch(() => setCars([]));
   }, [tier, accessLoading]);
 
+  const totalCount = SERVER_MODE ? facets?.total || 0 : cars.length;
+
   const makesWithCounts = useMemo(() => {
+    if (SERVER_MODE) return (facets?.makes || []).slice(0, 12);
     const map = new Map();
     cars.forEach((car) => {
       const name = getCarMake(car);
@@ -64,13 +79,14 @@ const InventoryConsole = () => {
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 12);
-  }, [cars]);
+  }, [cars, facets]);
 
   // The full make catalog (67 makes / thousands of models) merged with live
   // stock counts, for the Make/Model selects - "Shop by Make" tiles above
   // stay stock-derived only, since they're a quick-browse shortcut rather
   // than an exhaustive filter.
   const selectMakes = useMemo(() => {
+    if (SERVER_MODE) return [...(facets?.makes || [])].sort((a, b) => a.name.localeCompare(b.name));
     const countMap = new Map(makesWithCounts.map((m) => [m.name, m.count]));
     const stockOnlyCounts = new Map();
     cars.forEach((car) => {
@@ -82,15 +98,17 @@ const InventoryConsole = () => {
     return Array.from(names)
       .map((name) => ({ name, count: countMap.get(name) || stockOnlyCounts.get(name) || 0 }))
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [cars, makesWithCounts, catalogLoaded]);
+  }, [cars, makesWithCounts, catalogLoaded, facets]);
 
   const modelsForSelectedMake = useMemo(() => {
     if (!selectedMake) return [];
+    if (SERVER_MODE) return (facets?.models?.[selectedMake] || []).map((m) => m.name).sort((a, b) => a.localeCompare(b));
     const models = getModelsData()[selectedMake];
     return Array.isArray(models) ? models : [];
-  }, [selectedMake, catalogLoaded]);
+  }, [selectedMake, catalogLoaded, facets]);
 
   const bodyTypesWithCounts = useMemo(() => {
+    if (SERVER_MODE) return (facets?.bodies || []).slice(0, 6);
     const map = new Map();
     cars.forEach((car) => {
       const name = getCarBodyType(car);
@@ -101,9 +119,10 @@ const InventoryConsole = () => {
       .map(([name, count]) => ({ name, count }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 6);
-  }, [cars]);
+  }, [cars, facets]);
 
   const budgetsWithCounts = useMemo(() => {
+    if (SERVER_MODE) return BUDGETS.map((b) => ({ ...b, count: facets?.budgets?.[`${b.minPrice}-${b.maxPrice}`] ?? 0 }));
     return BUDGETS.map((b) => {
       const min = b.minPrice ? Number(b.minPrice) : -Infinity;
       const max = b.maxPrice ? Number(b.maxPrice) : Infinity;
@@ -113,7 +132,7 @@ const InventoryConsole = () => {
       }).length;
       return { ...b, count };
     });
-  }, [cars]);
+  }, [cars, facets]);
 
   const goToMake = (name) => router.push(`/stock-list?make=${encodeURIComponent(name)}`);
   const goToBodyType = (name) => router.push(`/stock-list?bodyType=${encodeURIComponent(name)}`);
@@ -147,7 +166,7 @@ const InventoryConsole = () => {
             Search the Live Inventory
           </h1>
           <span className="font-mono text-xs text-white/80">
-            {cars.length ? `${cars.length.toLocaleString()} vehicles` : "Loading stock…"} &middot; updated from Japan
+            {totalCount ? `${totalCount.toLocaleString()} vehicles` : "Loading stock…"} &middot; updated from Japan
           </span>
         </div>
 
@@ -248,7 +267,7 @@ const InventoryConsole = () => {
           <div className="border-b border-gray-200 p-4 md:border-b-0 md:border-r">
             <p className="mb-2.5 text-[11px] font-bold uppercase tracking-wider text-gray-400">Shop by Body Type</p>
             <div className="flex flex-col gap-1.5">
-              {(bodyTypesWithCounts.length || cars.length ? bodyTypesWithCounts : Array.from({ length: 5 }, () => null)).map((b, i) =>
+              {(bodyTypesWithCounts.length || totalCount ? bodyTypesWithCounts : Array.from({ length: 5 }, () => null)).map((b, i) =>
                 b ? (
                   <button
                     key={b.name}

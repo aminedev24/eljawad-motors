@@ -28,7 +28,13 @@ import {
 } from "../utilities/ichinomiyaCardAdapter";
 import { formatNumberWithUnit } from "../utilities/numberFormat";
 import { useCompare } from "../vehicles/useCompare";
-import { useStockAccess, stockUrl, compareLockedLast, LoginWall, FreeTierBanner, Censored, UnlockButton } from "../vehicles/stockAccess";
+import { useStockAccess, stockUrl, compareLockedLast, LoginWall, FreeTierBanner, Censored, UnlockButton, FREE_PREVIEW_COUNT } from "../vehicles/stockAccess";
+import { SITE } from "../utilities/siteConfig";
+import { fetchCatalogPage, fetchCatalogFacets } from "../dataFetch/catalogApi";
+
+// start-auction.com searches the full ~80k-car catalog on the server, one page
+// at a time; eljawad.com loads its curated list and filters it here.
+const SERVER_MODE = Boolean(SITE.fullCatalog);
 
 // Denser row for the "list" view toggle - same fields as the grid card, laid
 // out horizontally instead of stacked, closer to an inventory-tool listing
@@ -66,7 +72,7 @@ const UnlockedListRow = ({ car, onViewDetails }) => {
   const comparing = isComparing(car);
   const priceAmount = getCarPriceUsd(car);
   const currency = normalizeCurrency(car);
-  const stockRef = car.ref_no || car.stock_no || "";
+  const stockRef = car.company === "ichinomiya_catalog" ? displayStockId(car) : car.ref_no || car.stock_no || "";
   const thumb = Array.isArray(car.images) ? car.images[0] : "";
 
   return (
@@ -152,7 +158,7 @@ const StockTableRow = ({ car, onViewDetails }) => {
   }
   const priceAmount = getCarPriceUsd(car);
   const currency = normalizeCurrency(car);
-  const stockRef = car.ref_no || car.stock_no || "";
+  const stockRef = car.company === "ichinomiya_catalog" ? displayStockId(car) : car.ref_no || car.stock_no || "";
   const chassis = getCarChassis(car);
   const thumb = Array.isArray(car.images) ? car.images[0] : "";
 
@@ -270,6 +276,8 @@ const StocklistV2 = () => {
   const [searchInput, setSearchInput] = useState("");
   const [initialized, setInitialized] = useState(false);
   const [unifiedMakesLoaded, setUnifiedMakesLoaded] = useState(false);
+  const [serverTotal, setServerTotal] = useState(0);
+  const [facets, setFacets] = useState(null);
   const numberFormatter = useMemo(() => new Intl.NumberFormat("en-US"), []);
 
   // Initialize filters from the URL query once (supports deep links / homepage
@@ -385,7 +393,7 @@ const StocklistV2 = () => {
   useEffect(() => {
     // Logged-out visitors get the login wall; wait for the session check so
     // the first fetch already carries the right tier.
-    if (accessLoading || tier === "guest") return;
+    if (SERVER_MODE || accessLoading || tier === "guest") return;
     setLoading(true);
     setViewLoading(true);
 
@@ -427,6 +435,43 @@ const StocklistV2 = () => {
         }
       });
   }, [apiUrl, tier, accessLoading]);
+
+  // Server mode: fetch the current page of results whenever filters, sort or
+  // page change. A newer request aborts the older one, so a slow response
+  // can never overwrite fresher results.
+  useEffect(() => {
+    if (!SERVER_MODE || !initialized || accessLoading || tier === "guest") return;
+    const controller = new AbortController();
+    setLoading(true);
+    setViewLoading(true);
+    fetchCatalogPage({ filters, sort: sortOption, page: currentPage, perPage: itemsPerPage, tier, signal: controller.signal })
+      .then((data) => {
+        const list = Array.isArray(data?.cars) ? data.cars : [];
+        setCars(
+          list.map((car) => {
+            const images = parseImageUrls(car.image_urls);
+            return { ...car, images: images.length > 0 ? images : [getCarPlaceholderImage(car)] };
+          })
+        );
+        setServerTotal(Number(data?.total) || 0);
+        setLoading(false);
+        setTimeout(() => setViewLoading(false), 80);
+      })
+      .catch((err) => {
+        if (err.name === "AbortError") return;
+        console.error("Error fetching catalog:", err);
+        setCars([]);
+        setServerTotal(0);
+        setLoading(false);
+        setViewLoading(false);
+      });
+    return () => controller.abort();
+  }, [filters, sortOption, currentPage, tier, accessLoading, initialized]);
+
+  useEffect(() => {
+    if (!SERVER_MODE) return;
+    fetchCatalogFacets().then(setFacets).catch((err) => console.error("Error fetching catalog filters:", err));
+  }, []);
 
   // Load the unified makes/models catalog once (same source the customer
   // forms use), so the filter bar offers every make/model — not just the
@@ -473,6 +518,9 @@ const StocklistV2 = () => {
   const handleQuickFilter = (key, value) => updateFilters({ [key]: value }, { reset: false });
 
   const filteredCars = useMemo(() => {
+    // The server already filtered this page (and locked rows carry too few
+    // fields to re-check here).
+    if (SERVER_MODE) return cars;
     const nMake = normalizeText(selectedMake);
     const nBody = normalizeText(selectedBodyType);
     const nModel = normalizeText(selectedModel);
@@ -562,9 +610,13 @@ const StocklistV2 = () => {
     searchKeyword,
   ]);
 
-  const lockedCount = useMemo(() => cars.filter((car) => car.locked).length, [cars]);
+  const lockedCount = useMemo(
+    () => (SERVER_MODE ? Math.max(0, serverTotal - FREE_PREVIEW_COUNT) : cars.filter((car) => car.locked).length),
+    [cars, serverTotal]
+  );
 
   const sortedCars = useMemo(() => {
+    if (SERVER_MODE) return filteredCars; // already in the server's order
     return [...filteredCars].sort((a, b) => {
       const lockedOrder = compareLockedLast(a, b);
       if (lockedOrder) return lockedOrder;
@@ -618,16 +670,23 @@ const StocklistV2 = () => {
     setCurrentPage(1);
   }, [filtersSignature]);
 
+  // Number of matching vehicles: the server's count in server mode, where
+  // `cars` only holds the current page.
+  const resultCount = SERVER_MODE ? serverTotal : sortedCars.length;
+
   const totalPages = useMemo(
-    () => Math.max(1, Math.ceil(sortedCars.length / itemsPerPage)),
-    [sortedCars.length, itemsPerPage]
+    () => Math.max(1, Math.ceil(resultCount / itemsPerPage)),
+    [resultCount, itemsPerPage]
   );
 
   useEffect(() => {
+    // In server mode the total is unknown while a request is in flight.
+    if (SERVER_MODE && loading) return;
     setCurrentPage((prev) => Math.min(prev, totalPages));
-  }, [totalPages]);
+  }, [totalPages, loading]);
 
   const paginatedCars = useMemo(() => {
+    if (SERVER_MODE) return sortedCars;
     const start = (currentPage - 1) * itemsPerPage;
     return sortedCars.slice(start, start + itemsPerPage);
   }, [sortedCars, currentPage, itemsPerPage]);
@@ -688,8 +747,14 @@ const StocklistV2 = () => {
     [cars]
   );
 
-  const makesWithCounts = useMemo(() => countBy((car) => getCarMake(car)), [countBy]);
-  const bodiesWithCounts = useMemo(() => countBy((car) => getCarBodyType(car)), [countBy]);
+  const makesWithCounts = useMemo(
+    () => (SERVER_MODE ? facets?.makes || [] : countBy((car) => getCarMake(car))),
+    [countBy, facets]
+  );
+  const bodiesWithCounts = useMemo(
+    () => (SERVER_MODE ? facets?.bodies || [] : countBy((car) => getCarBodyType(car))),
+    [countBy, facets]
+  );
 
   const availableMakes = useMemo(
     () => makesWithCounts.map((m) => m.name).sort((a, b) => a.localeCompare(b)),
@@ -700,21 +765,22 @@ const StocklistV2 = () => {
     [bodiesWithCounts]
   );
   const availableTransmissions = useMemo(
-    () => countBy("transmission").map((t) => t.name).sort((a, b) => a.localeCompare(b)),
-    [countBy]
+    () => (SERVER_MODE ? facets?.transmissions || [] : countBy("transmission")).map((t) => t.name).sort((a, b) => a.localeCompare(b)),
+    [countBy, facets]
   );
   const availableFuels = useMemo(
-    () => countBy("fuel").map((f) => f.name).sort((a, b) => a.localeCompare(b)),
-    [countBy]
+    () => (SERVER_MODE ? facets?.fuels || [] : countBy("fuel")).map((f) => f.name).sort((a, b) => a.localeCompare(b)),
+    [countBy, facets]
   );
   const availableYears = useMemo(() => {
+    if (SERVER_MODE) return facets?.years || [];
     const set = new Set();
     cars.forEach((car) => {
       const y = Number(car.year);
       if (Number.isFinite(y) && y > 1950 && y < 2100) set.add(y);
     });
     return Array.from(set).sort((a, b) => b - a);
-  }, [cars]);
+  }, [cars, facets]);
 
   // Scoped to the LIVE selected make (selectedMake === filters.make, updated
   // immediately on every change — there's no separate draft/committed split
@@ -724,6 +790,9 @@ const StocklistV2 = () => {
   // in stock — including ones not in stock today — surfaces automatically
   // the moment real units exist, with nothing to keep manually in sync.
   const availableModels = useMemo(() => {
+    if (SERVER_MODE) {
+      return (facets?.models?.[selectedMake] || []).map((m) => m.name).sort((a, b) => a.localeCompare(b));
+    }
     const nMake = normalizeText(selectedMake);
     const set = new Set();
     cars.forEach((car) => {
@@ -741,12 +810,14 @@ const StocklistV2 = () => {
       }
     }
     return Array.from(set).sort((a, b) => a.localeCompare(b));
-  }, [cars, selectedMake, unifiedMakesLoaded]);
+  }, [cars, selectedMake, unifiedMakesLoaded, facets]);
 
   // Unified catalog makes merged with any makes present in live stock that
   // aren't in the catalog yet — the filter bar offers the full list, while
   // the sidebar's "Shop by Make" keeps its stock-derived counts.
   const filterMakes = useMemo(() => {
+    // Server mode offers only makes that are actually in the catalog.
+    if (SERVER_MODE) return availableMakes;
     const set = new Set(availableMakes);
     getMakesData().forEach((m) => {
       if (m) set.add(m);
@@ -906,7 +977,7 @@ const StocklistV2 = () => {
                 <FontAwesomeIcon icon={faCarSide} className="h-4 w-4 text-brand-navy" />
                 <span>
                   <strong className="text-brand-charcoal">
-                    {numberFormatter.format(sortedCars.length)}
+                    {numberFormatter.format(resultCount)}
                   </strong>{" "}
                   vehicles
                 </span>

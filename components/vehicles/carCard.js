@@ -10,11 +10,12 @@ import { useRouter } from 'next/router';
 import { useUser } from '../user/userContext';
 import { useFavorites, toggleFavorite } from './useFavorites';
 import { useCompare } from './useCompare';
-import { getCarPriceUsd, normalizeCurrency, secureImageUrl } from '../utilities/ichinomiyaCardAdapter';
+import { getCarPriceUsd, normalizeCurrency, secureImageUrl, displayStockId } from '../utilities/ichinomiyaCardAdapter';
 import { formatNumberWithUnit } from '../utilities/numberFormat';
 import { Censored, UnlockButton } from './stockAccess';
+import { SITE } from '../utilities/siteConfig';
 
-const PLACEHOLDER_IMAGE = '/images/vehicles/artisbay-placeholder.svg';
+const PLACEHOLDER_IMAGE = SITE.vehiclePlaceholder;
 
 const absoluteUrlPattern = /https?:\/\/[^\s"']+/gi;
 const escapedAbsoluteUrlPattern = /https?:\\\/\\\/[^\s"']+/gi;
@@ -64,7 +65,8 @@ const UnlockedCarCard = ({ car, imgBasePath, onViewDetails }) => {
   const [favoriteBusy, setFavoriteBusy] = useState(false);
   const { isComparing, toggleCompare, isFull } = useCompare();
   const comparing = isComparing(car);
-  const stockRef = car.ref_no || car.stock_no || "";
+  // Full-catalog cars show the short SA-<number> form of their 10-digit ref.
+  const stockRef = car.company === "ichinomiya_catalog" ? displayStockId(car) : car.ref_no || car.stock_no || "";
   const make = car.make || "N/A";
   const model = car.model || "Model N/A";
   const priceAmount = getCarPriceUsd(car);

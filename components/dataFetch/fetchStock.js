@@ -3,6 +3,12 @@ import getConfig from "next/config";
 import { apiBaseUrl } from '../utilities/apiBase';
 import CarCard from '../vehicles/carCard';
 import { useStockAccess, stockUrl, FreeTierBanner, UnlockButton, FREE_PREVIEW_COUNT } from '../vehicles/stockAccess';
+import { SITE } from '../utilities/siteConfig';
+import { fetchCatalogPage } from './catalogApi';
+
+// start-auction.com: each row is one small server query on the full catalog
+// instead of sorting the whole stock here.
+const SERVER_MODE = Boolean(SITE.fullCatalog);
 
 // Each row maps to an existing sort mode on /stock-list (see sortSelections in
 // stockListV2.js) so "View All" actually reproduces the ordering shown here.
@@ -65,12 +71,38 @@ const SkeletonRow = () => (
 const CarsList = () => {
   const [cars, setCars] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [serverRows, setServerRows] = useState(null);
+  const [serverTotal, setServerTotal] = useState(0);
   const { tier, loading: accessLoading } = useStockAccess();
 
   const apiUrl = apiBaseUrl;
 
   useEffect(() => {
-    if (accessLoading) return;
+    if (!SERVER_MODE || accessLoading) return;
+    const controller = new AbortController();
+    const page = (sort, perPage) => fetchCatalogPage({ sort, perPage, tier, signal: controller.signal });
+    // Members get the three ranked rows; everyone else the newest cars, whose
+    // first FREE_PREVIEW_COUNT are a free account's unlocked preview.
+    const requests = tier === 'full'
+      ? [page('newest', ROW_SIZE), page('price_desc', ROW_SIZE), page('popularity', ROW_SIZE)]
+      : [page('newest', FREE_PREVIEW_COUNT + TEASER_SIZE)];
+    Promise.all(requests)
+      .then(([newest, premium, hot]) => {
+        setCars(newest.cars || []);
+        setServerTotal(Number(newest.total) || 0);
+        setServerRows({ new: newest.cars || [], premium: premium?.cars || [], hot: hot?.cars || [] });
+        setLoading(false);
+      })
+      .catch((err) => {
+        if (err.name === 'AbortError') return;
+        console.error("Error fetching cars:", err);
+        setLoading(false);
+      });
+    return () => controller.abort();
+  }, [tier, accessLoading]);
+
+  useEffect(() => {
+    if (SERVER_MODE || accessLoading) return;
     fetch(stockUrl(`${apiUrl}/inventory/cars/fetchStock.php`, tier), { credentials: 'include' })
       .then((res) => res.json())
       .then((data) => {
@@ -100,10 +132,12 @@ const CarsList = () => {
     const unlocked = cars.filter((car) => !car.locked);
     const hasPhoto = (car) => car.image_urls && car.image_urls !== '[]';
     const locked = cars.filter((car) => car.locked && hasPhoto(car)).slice(0, TEASER_SIZE);
-    return { unlocked, locked, lockedTotal: cars.length - unlocked.length };
-  }, [cars]);
+    const total = SERVER_MODE ? serverTotal : cars.length;
+    return { unlocked, locked, lockedTotal: total - unlocked.length };
+  }, [cars, serverTotal]);
 
   const rowCars = useMemo(() => {
+    if (SERVER_MODE) return serverRows || { new: [], premium: [], hot: [] };
     if (!cars.length) return { new: [], premium: [], hot: [] };
     const sortedNew = [...cars].sort((a, b) => (parseInt(b.year) || 0) - (parseInt(a.year) || 0));
     const sortedPremium = [...cars].sort((a, b) => (parseFloat(b.final_value || b.price || 0)) - (parseFloat(a.final_value || a.price || 0)));
@@ -113,7 +147,7 @@ const CarsList = () => {
       premium: sortedPremium.slice(0, ROW_SIZE),
       hot: hotByScore.slice(0, ROW_SIZE),
     };
-  }, [cars]);
+  }, [cars, serverRows]);
 
   if (loading) {
     return (
@@ -159,7 +193,7 @@ const CarsList = () => {
           {tier === 'guest' ? (
             <>
               <p className="font-display text-lg font-bold text-[var(--primary-color)]">
-                {cars.length.toLocaleString()} vehicles in stock, ready to ship from Japan
+                {(SERVER_MODE ? serverTotal : cars.length).toLocaleString()} vehicles in stock, ready to ship from Japan
               </p>
               <p className="mt-1 text-sm text-gray-600">
                 Create a free account to view our newest arrivals with full specifications and prices.
@@ -212,7 +246,7 @@ const CarsList = () => {
 
       <div className="text-center mt-6">
         <a href="/stock-list" className="inline-block bg-[var(--primary-color)] text-white py-2.5 px-8 text-sm font-extrabold uppercase tracking-wider rounded hover:opacity-90 transition">
-          View Full Inventory ({cars.length} vehicles)
+          View Full Inventory ({(SERVER_MODE ? serverTotal : cars.length).toLocaleString()} vehicles)
         </a>
       </div>
     </div>

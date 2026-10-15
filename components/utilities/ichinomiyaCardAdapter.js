@@ -81,6 +81,12 @@ export const steeringTag = (steering) => {
 // Display stock ID: third-party (partner) cars get a sequential "TP-" id derived
 // from their already-sequential ref_no; Eljawad Motors-own cars keep their ref/id.
 export const displayStockId = (car) => {
+  // Full-catalog cars (start-auction.com) carry the partner's 10-digit ref,
+  // shown shorter as SA-<number> (e.g. 0000628413 -> SA-628413).
+  if (String(car?.company || "").toLowerCase() === "ichinomiya_catalog") {
+    const digits = String(car?.ref_no ?? "").replace(/^0+/, "");
+    return `SA-${digits || "0"}`;
+  }
   const isPartner = String(car?.company || "").toLowerCase() === "ichinomiya_import";
   const ref = String(car?.ref_no ?? car?.id ?? "").trim();
   if (isPartner) {
