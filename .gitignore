@@ -43,3 +43,6 @@ android/*.iml
 android/captures/
 android/.externalNativeBuild/
 android/.cxx/
+
+# Catalog photos cached by server/inventory/catalog/img.php
+server/inventory/catalog/cache/

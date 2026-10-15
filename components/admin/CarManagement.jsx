@@ -38,7 +38,7 @@ const isAvailableStatus = (s) => !s || ['in_stock', 'available', 'pending'].incl
 // Partner/3rd-party stock (company 'ichinomiya_import') is priced in USD even
 // when the feed row mislabels currency as "JPY". Own cars keep their currency.
 const displayCurrency = (v) =>
-  String(v?.company || '').toLowerCase() === 'ichinomiya_import' ? 'USD' : (v?.currency || 'USD');
+  ['partner', 'ichinomiya_import'].includes(String(v?.company || '').toLowerCase()) ? 'USD' : (v?.currency || 'USD');
 
 const EQUIPMENT_LIST = [
   'Air Bag','Anti-lock Brakes','Air Conditioner','Alloy Wheels','Power Window',

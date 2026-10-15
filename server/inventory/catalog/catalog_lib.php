@@ -9,7 +9,11 @@
 
 const CATALOG_TABLE = 'ichinomiya_catalog';
 const CATALOG_META_TABLE = 'ichinomiya_catalog_meta';
-const CATALOG_COMPANY = 'ichinomiya_catalog';
+// Sent to browsers, so it must not name the partner.
+const CATALOG_COMPANY = 'catalog';
+// Our own car numbers (SA-100001...), unrelated to the partner's refs so a
+// listing can't be traced back to the partner's site.
+const CATALOG_FIRST_SA_NO = 100001;
 // Same margin the curated importer adds on top of the partner's USD price.
 const CATALOG_MARKUP_RATE = 1.03;
 // Overridable so the importer can be tested against a local fake partner.
@@ -45,7 +49,9 @@ function catalog_ensure_schema(mysqli $conn): void
         `search_text` varchar(600) NOT NULL DEFAULT '',
         `first_seen` datetime NOT NULL,
         `full_fetched_at` datetime NULL,
+        `sa_no` int unsigned NOT NULL DEFAULT 0,
         PRIMARY KEY (`source_ref`),
+        KEY `sa_no` (`sa_no`),
         KEY `make_model` (`make`, `model`),
         KEY `body` (`body`),
         KEY `price` (`price_usd`),
@@ -53,6 +59,11 @@ function catalog_ensure_schema(mysqli $conn): void
         KEY `mileage` (`mileage`),
         KEY `first_seen` (`first_seen`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci");
+    // Tables created before sa_no existed.
+    require_once __DIR__ . '/../../core/db_migrations.php';
+    ensure_columns($conn, CATALOG_TABLE, ['sa_no' => 'int unsigned NOT NULL DEFAULT 0']);
+    $hasIndex = $conn->query("SHOW INDEX FROM `" . CATALOG_TABLE . "` WHERE Key_name = 'sa_no'");
+    if ($hasIndex && $hasIndex->num_rows === 0) $conn->query("ALTER TABLE `" . CATALOG_TABLE . "` ADD INDEX `sa_no` (`sa_no`)");
     $conn->query("CREATE TABLE IF NOT EXISTS `" . CATALOG_META_TABLE . "` (
         `name` varchar(50) NOT NULL,
         `value` mediumtext NOT NULL,
@@ -90,16 +101,45 @@ function catalog_set_meta(mysqli $conn, string $name, array $value): void
     $stmt->close();
 }
 
-// A catalog row in the same shape as a cars_stock row, so the existing card,
-// list and detail components (ichinomiyaCardAdapter.js) render it unchanged.
-function catalog_to_stock_row(array $r): array
+function catalog_sa_ref(array $r): string
+{
+    return 'SA-' . (int)$r['sa_no'];
+}
+
+// "SA-100001" / "sa100001" -> 100001, or null.
+function catalog_parse_sa(string $identifier): ?int
+{
+    return preg_match('/^SA-?(\d+)$/i', trim($identifier), $m) ? (int)$m[1] : null;
+}
+
+// The partner's photo addresses for a row (full gallery when fetched).
+function catalog_source_images(array $r): array
 {
     $images = json_decode((string)($r['images'] ?? ''), true);
     if (!is_array($images) || !$images) $images = $r['img'] !== '' ? [$r['img']] : [];
+    return array_values($images);
+}
+
+// Photos are served through img.php on our own domain, so browsers never see
+// the partner's image host.
+function catalog_image_url(array $r, int $n): string
+{
+    $https = ($_SERVER['HTTPS'] ?? '') === 'on' || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https';
+    $host = $_SERVER['HTTP_HOST'] ?? 'start-auction.com';
+    return ($https ? 'https' : 'http') . "://$host/server/inventory/catalog/img.php?car=" . catalog_sa_ref($r) . "&n=$n";
+}
+
+// A catalog row in the same shape as a cars_stock row, so the existing card,
+// list and detail components (ichinomiyaCardAdapter.js) render it unchanged.
+// Nothing in it points back to the partner: our SA number instead of their
+// ref, and photo URLs on our own domain.
+function catalog_to_stock_row(array $r): array
+{
+    $images = array_map(fn($i) => catalog_image_url($r, $i), array_keys(catalog_source_images($r)));
     $options = json_decode((string)($r['options'] ?? ''), true);
     return [
-        'id'              => $r['source_ref'],
-        'ref_no'          => $r['source_ref'],
+        'id'              => catalog_sa_ref($r),
+        'ref_no'          => catalog_sa_ref($r),
         'make'            => $r['make'],
         'model'           => $r['model'],
         'grade'           => $r['grade'],
@@ -173,27 +213,26 @@ function catalog_fill_full_record(mysqli $conn, array $row): array
     return $row;
 }
 
-// The newest cars a free (not yet activated) account sees in full.
+// The newest cars a free (not yet activated) account sees in full, keyed
+// like stock_car_key() (the SA ref).
 function catalog_preview_keys(mysqli $conn): array
 {
     $keys = [];
-    $res = $conn->query("SELECT source_ref FROM `" . CATALOG_TABLE . "`
+    $res = $conn->query("SELECT sa_no FROM `" . CATALOG_TABLE . "`
                          ORDER BY first_seen DESC, year DESC, source_ref DESC LIMIT " . STOCK_FREE_PREVIEW_COUNT);
-    while ($res && ($r = $res->fetch_row())) $keys[strtoupper($r[0])] = true;
+    while ($res && ($r = $res->fetch_row())) $keys['SA-' . (int)$r[0]] = true;
     return $keys;
 }
 
-// Partner refs are 10 digits; cars_stock refs are short, so the two never collide.
-function catalog_is_ref(string $identifier): bool
+// Looked up by our SA number only - never by the partner's ref, so the
+// partner's numbers can't be used to probe which of their cars we list.
+function catalog_find(mysqli $conn, string $identifier): ?array
 {
-    return (bool)preg_match('/^\d{10}$/', $identifier);
-}
-
-function catalog_find(mysqli $conn, string $ref): ?array
-{
-    $stmt = $conn->prepare("SELECT * FROM `" . CATALOG_TABLE . "` WHERE source_ref = ? LIMIT 1");
+    $saNo = catalog_parse_sa($identifier);
+    if ($saNo === null) return null;
+    $stmt = $conn->prepare("SELECT * FROM `" . CATALOG_TABLE . "` WHERE sa_no = ? LIMIT 1");
     if (!$stmt) return null;
-    $stmt->bind_param('s', $ref);
+    $stmt->bind_param('i', $saNo);
     $stmt->execute();
     $row = $stmt->get_result()->fetch_assoc();
     $stmt->close();

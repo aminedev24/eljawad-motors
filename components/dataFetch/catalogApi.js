@@ -19,7 +19,11 @@ export async function fetchCatalogPage({ filters = {}, sort = "newest", page = 1
     credentials: "include",
     signal,
   });
-  if (!res.ok) throw new Error(`Catalog search failed (${res.status})`);
+  if (!res.ok) {
+    const err = new Error(`Catalog search failed (${res.status})`);
+    err.status = res.status;
+    throw err;
+  }
   return res.json();
 }
 

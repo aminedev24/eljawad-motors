@@ -26,6 +26,13 @@ if (!$isStaff) {
   }
   unset($row);
 }
+// Nothing sent to browsers may point back to the partner: not their ref
+// (it looks the car up on their site), nor the import tag naming them.
+foreach ($cars as &$row) {
+  unset($row['source_ref']);
+  if (($row['company'] ?? '') === 'ichinomiya_import') $row['company'] = 'partner';
+}
+unset($row);
 $cars = stock_apply_access($cars, $level, $previewKeys);
 
 // ------------------------------------------------------------

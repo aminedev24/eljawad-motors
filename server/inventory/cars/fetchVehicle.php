@@ -28,12 +28,14 @@ if (!$identifier) {
 // Full Ichinomiya catalog car (start-auction.com). Its photo gallery is
 // fetched from the partner the first time someone allowed to see it opens it.
 require_once __DIR__ . '/../catalog/catalog_lib.php';
+require_once __DIR__ . '/../../core/rate_limit.php';
+rate_limit($conn, 'vehicle_details', ['minute' => 60, 'hour' => 600]);
 $isCatalogCar = false;
 $car = null;
-if (catalog_is_ref($identifier) && ($row = catalog_find($conn, $identifier))) {
+if (catalog_parse_sa($identifier) !== null && ($row = catalog_find($conn, $identifier))) {
     $isCatalogCar = true;
     $catalogPreview = $accessLevel === 'free' ? catalog_preview_keys($conn) : [];
-    if ($accessLevel === 'full' || isset($catalogPreview[strtoupper($identifier)])) {
+    if ($accessLevel === 'full' || isset($catalogPreview[catalog_sa_ref($row)])) {
         $row = catalog_fill_full_record($conn, $row);
     }
     $car = catalog_to_stock_row($row);
@@ -143,6 +145,9 @@ if ($rawStatus === '') {
     }
 }
 
+// Nothing pointing back to the partner (see fetchStock.php).
+unset($car['source_ref']);
+if (($car['company'] ?? '') === 'ichinomiya_import') $car['company'] = 'partner';
 $isStaff = in_array(strtolower((string)($_SESSION['role'] ?? '')), ['admin', 'sales'], true);
 if (!$isStaff) {
     unset($car['buying_price'], $car['buyer_name'], $car['buyer_email'], $car['buyer_phone'], $car['buyer_country']);

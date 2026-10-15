@@ -13,6 +13,7 @@ require_once __DIR__ . '/../../core/headers.php';
 mysqli_report(MYSQLI_REPORT_OFF);
 require_once __DIR__ . '/../../core/db_connection.php';
 require_once __DIR__ . '/../../core/stock_access.php';
+require_once __DIR__ . '/../../core/rate_limit.php';
 require_once __DIR__ . '/catalog_lib.php';
 
 $table = CATALOG_TABLE;
@@ -38,10 +39,14 @@ if (is_numeric($q('yearFrom'))) $add('year >= ?', 'i', (int)$q('yearFrom'));
 if (is_numeric($q('yearTo'))) $add('year <= ?', 'i', (int)$q('yearTo'));
 // Every word must appear somewhere in the car's text (make, model, grade,
 // chassis, ref, year...), like the client-side search it replaces.
-// "SA-628413" (the ref shown on cards) normalizes to "sa 628413"; join it back.
-$search = preg_replace('/\bsa (\d+)\b/', 'sa$1', catalog_normalize($q('search')));
-foreach (array_slice(array_filter(explode(' ', $search)), 0, 6) as $token) {
-    $add('search_text LIKE ?', 's', '%' . $token . '%');
+// A car number ("SA-100123") finds that car; anything else is matched word
+// by word.
+if (($saNo = catalog_parse_sa($q('search'))) !== null) {
+    $add('sa_no = ?', 'i', $saNo);
+} else {
+    foreach (array_slice(array_filter(explode(' ', catalog_normalize($q('search')))), 0, 6) as $token) {
+        $add('search_text LIKE ?', 's', '%' . $token . '%');
+    }
 }
 $whereSql = $where ? 'WHERE ' . implode(' AND ', $where) : '';
 
@@ -81,6 +86,8 @@ $res = $run("SELECT * FROM `$table` $whereSql $orderSql LIMIT $perPage OFFSET $o
 while ($res && ($r = $res->fetch_assoc())) $rows[] = catalog_to_stock_row($r);
 
 $level = stock_access_level($conn);
+// One page per request: 60 a minute is far beyond browsing, far below copying.
+rate_limit($conn, 'catalog_search', ['minute' => 60, 'hour' => 600]);
 if ($level !== 'full') {
     $rows = stock_apply_access($rows, $level, $level === 'free' ? catalog_preview_keys($conn) : []);
 }

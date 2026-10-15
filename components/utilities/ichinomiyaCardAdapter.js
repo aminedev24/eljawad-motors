@@ -64,7 +64,7 @@ export const getCarChassis = (car) =>
 // API row mislabels currency as "JPY". Manual cars keep their own currency; a
 // missing value defaults to USD (the site lists export prices in USD).
 export const normalizeCurrency = (car) => {
-  if (String(car?.company || "").toLowerCase() === "ichinomiya_import") {
+  if (["partner", "ichinomiya_import"].includes(String(car?.company || "").toLowerCase())) {
     return "USD";
   }
   return (car?.currency || "USD").toUpperCase();
@@ -81,13 +81,9 @@ export const steeringTag = (steering) => {
 // Display stock ID: third-party (partner) cars get a sequential "TP-" id derived
 // from their already-sequential ref_no; Eljawad Motors-own cars keep their ref/id.
 export const displayStockId = (car) => {
-  // Full-catalog cars (start-auction.com) carry the partner's 10-digit ref,
-  // shown shorter as SA-<number> (e.g. 0000628413 -> SA-628413).
-  if (String(car?.company || "").toLowerCase() === "ichinomiya_catalog") {
-    const digits = String(car?.ref_no ?? "").replace(/^0+/, "");
-    return `SA-${digits || "0"}`;
-  }
-  const isPartner = String(car?.company || "").toLowerCase() === "ichinomiya_import";
+  // Full-catalog cars (start-auction.com) already carry our own SA-<number>.
+  if (String(car?.company || "").toLowerCase() === "catalog") return String(car?.ref_no ?? "");
+  const isPartner = ["partner", "ichinomiya_import"].includes(String(car?.company || "").toLowerCase());
   const ref = String(car?.ref_no ?? car?.id ?? "").trim();
   if (isPartner) {
     const digits = ref.replace(/\D/g, "");

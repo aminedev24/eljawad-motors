@@ -120,7 +120,9 @@ foreach ($makes as $make) {
             $fields['steering'], (string)($car['seats'] ?? ''), (string)($car['doors'] ?? ''), $fields['chassis'],
             (string)($car['score'] ?? ''), $priceUsd > 0 ? (int)round($priceUsd * CATALOG_MARKUP_RATE) : 0,
             mb_substr(trim((string)($car['img'] ?? '')), 0, 500), json_encode($options, JSON_UNESCAPED_UNICODE),
-            mb_substr(catalog_normalize(implode(' ', [$ref, 'sa' . ltrim($ref, '0'), $fields['make'], $fields['model'], $fields['grade'],
+            // No partner ref here: searching it would confirm which of the
+            // partner's cars we list.
+            mb_substr(catalog_normalize(implode(' ', [$fields['make'], $fields['model'], $fields['grade'],
                 $fields['model_code'], $fields['chassis'], $year, $fields['body'], $fields['trans'],
                 $fields['fuel'], $fields['color']])), 0, 600),
             $now,
@@ -146,8 +148,19 @@ if ($inserted === 0 || (!$force && $previous > 0 && $inserted < $previous * 0.6)
 // whose price changed keep their gallery too (photos don't change with price).
 $conn->query("UPDATE `{$table}_new` n JOIN `$table` o ON o.source_ref = n.source_ref
               SET n.first_seen = o.first_seen, n.images = o.images, n.full_fetched_at = o.full_fetched_at,
+                  n.sa_no = o.sa_no,
                   n.chassis = IF(n.chassis = '', o.chassis, n.chassis),
                   n.model_code = IF(n.model_code = '', o.model_code, n.model_code)");
+// New cars get the next SA numbers. The high-water mark lives in meta so a
+// number is never reused, even after its car leaves the catalog.
+$high = (int)(catalog_get_meta($conn, 'sa_high')['value'] ?? 0);
+$high = max($high, CATALOG_FIRST_SA_NO - 1,
+    (int)($conn->query("SELECT MAX(sa_no) FROM `$table`")->fetch_row()[0] ?? 0));
+$conn->query("SET @sa := $high");
+$conn->query("UPDATE `{$table}_new` SET sa_no = (@sa := @sa + 1) WHERE sa_no = 0 ORDER BY first_seen, source_ref");
+$newHigh = (int)($conn->query("SELECT MAX(sa_no) FROM `{$table}_new`")->fetch_row()[0] ?? 0);
+catalog_set_meta($conn, 'sa_high', ['value' => max($high, $newHigh)]);
+
 $conn->query("DROP TABLE IF EXISTS `{$table}_old`");
 if (!$conn->query("RENAME TABLE `$table` TO `{$table}_old`, `{$table}_new` TO `$table`")) {
     $log('ERROR', 'swap failed: ' . $conn->error);
@@ -188,5 +201,16 @@ catalog_set_meta($conn, 'facets', [
     'budgets'       => $budgets,
     'models'        => $models,
 ]);
+
+// Cached photos (img.php) older than 30 days are fetched again on demand.
+$cacheDir = __DIR__ . '/cache';
+if (is_dir($cacheDir)) {
+    $cutoff = time() - 30 * 86400;
+    $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($cacheDir, FilesystemIterator::SKIP_DOTS), RecursiveIteratorIterator::CHILD_FIRST);
+    foreach ($it as $f) {
+        if ($f->isFile() && $f->getMTime() < $cutoff) @unlink($f->getPathname());
+        elseif ($f->isDir()) @rmdir($f->getPathname()); // only succeeds when empty
+    }
+}
 
 $log('OK', "catalog: $inserted cars (previous $previous), skipped $skipped, " . count($unavailable) . ' sold/reserved at partner');

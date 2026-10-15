@@ -73,7 +73,7 @@ const UnlockedListRow = ({ car, onViewDetails }) => {
   const comparing = isComparing(car);
   const priceAmount = getCarPriceUsd(car);
   const currency = normalizeCurrency(car);
-  const stockRef = car.company === "ichinomiya_catalog" ? displayStockId(car) : car.ref_no || car.stock_no || "";
+  const stockRef = car.company === "catalog" ? displayStockId(car) : car.ref_no || car.stock_no || "";
   const thumb = Array.isArray(car.images) ? car.images[0] : "";
 
   return (
@@ -159,7 +159,7 @@ const StockTableRow = ({ car, onViewDetails }) => {
   }
   const priceAmount = getCarPriceUsd(car);
   const currency = normalizeCurrency(car);
-  const stockRef = car.company === "ichinomiya_catalog" ? displayStockId(car) : car.ref_no || car.stock_no || "";
+  const stockRef = car.company === "catalog" ? displayStockId(car) : car.ref_no || car.stock_no || "";
   const chassis = getCarChassis(car);
   const thumb = Array.isArray(car.images) ? car.images[0] : "";
 
@@ -279,6 +279,7 @@ const StocklistV2 = () => {
   const [initialized, setInitialized] = useState(false);
   const [unifiedMakesLoaded, setUnifiedMakesLoaded] = useState(false);
   const [serverTotal, setServerTotal] = useState(0);
+  const [serverError, setServerError] = useState("");
   const [facets, setFacets] = useState(null);
   const numberFormatter = useMemo(() => new Intl.NumberFormat("en-US"), []);
 
@@ -461,12 +462,18 @@ const StocklistV2 = () => {
           })
         );
         setServerTotal(Number(data?.total) || 0);
+        setServerError("");
         setLoading(false);
         setTimeout(() => setViewLoading(false), 80);
       })
       .catch((err) => {
         if (err.name === "AbortError") return;
         console.error("Error fetching catalog:", err);
+        setServerError(
+          err.status === 429
+            ? "You're browsing very quickly. Please wait a minute, then try again."
+            : "We couldn't load vehicles right now. Please try again in a moment."
+        );
         setCars([]);
         setServerTotal(0);
         setLoading(false);
@@ -1015,6 +1022,12 @@ const StocklistV2 = () => {
                 {sortOptionButtons}
               </div>
             </div>
+
+            {serverError && (
+              <div role="alert" className="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
+                {serverError}
+              </div>
+            )}
 
             {tier === "free" && !loading && (
               <FreeTierBanner lockedCount={lockedCount} />
