@@ -9,6 +9,7 @@ import CustomerManagement from './CustomerManagement';
 import Pagination from './Pagination';
 import Reservations from './Reservations';
 import SoldCars from './SoldCars';
+import { fetchCatalogPage, fetchCatalogFacets } from '../dataFetch/catalogApi';
 
 // Prefix for own-stock reference numbers (ELJ-0001, ...). Must match
 // STOCK_REF_PREFIX in server/inventory/cars/vehicle-action.php.
@@ -177,21 +178,47 @@ export default function CarManagement({ showMessage, users: propUsers = [], user
   const [mmLoading, setMmLoading] = useState(false);
   const [mmEditing, setMmEditing] = useState(null);
   const [mmEditMake, setMmEditMake] = useState('');
+  // Catalog tab: ~80k cars, searched and paged on the server (the other tabs
+  // load their whole list here), so only the total is kept locally.
+  const [catalogTotal, setCatalogTotal] = useState(0);
+  const isCatalog = subView === 'catalog';
+  // Catalog cars are partner cars too: same row layout and actions as 3rd Party.
+  const isPartnerView = subView === '3rdParty' || isCatalog;
 
-  const totalPages = Math.ceil(vehicles.length / itemsPerPage);
+  const totalPages = Math.ceil((isCatalog ? catalogTotal : vehicles.length) / itemsPerPage);
   const pagedVehicles = useMemo(() => {
+    if (isCatalog) return vehicles; // already one server page
     const start = (page - 1) * itemsPerPage;
     return vehicles.slice(start, start + itemsPerPage);
-  }, [vehicles, page, itemsPerPage]);
+  }, [vehicles, page, itemsPerPage, isCatalog]);
 
   useEffect(() => { setPage(1); }, [search]);
   useEffect(() => {
+    if (isCatalog) return; // the server clamps the page itself
     const max = Math.max(1, Math.ceil(vehicles.length / itemsPerPage));
     if (page > max) setPage(max);
-  }, [vehicles.length, itemsPerPage, page]);
+  }, [vehicles.length, itemsPerPage, page, isCatalog]);
 
-  const fetchVehicles = useCallback(async (q, sf, mf, yf, abf, view) => {
+  const fetchVehicles = useCallback(async (q, sf, mf, yf, abf, view, pg = 1, perPage = 20) => {
     setLoading(true);
+    if (view === 'catalog') {
+      try {
+        const [data, facets] = await Promise.all([
+          fetchCatalogPage({ filters: { search: q || '', make: mf || '', yearFrom: yf || '', yearTo: yf || '' }, page: pg, perPage, tier: 'full' }),
+          fetchCatalogFacets(),
+        ]);
+        setVehicles(Array.isArray(data?.cars) ? data.cars : []);
+        setCatalogTotal(Number(data?.total) || 0);
+        setFilterMakeOptions((facets?.makes || []).map((m) => m.name).sort());
+        setFilterYearOptions((facets?.years || []).map(String));
+        setStaffUsers([]);
+      } catch (err) {
+        setVehicles([]);
+        setCatalogTotal(0);
+      }
+      setLoading(false);
+      return;
+    }
     const isThirdParty = view === '3rdParty';
     const result = await adminApiFetch(isThirdParty ? 'inventory/cars/fetchStock.php' : 'inventory/cars/fetchAdminStock.php');
     let list = Array.isArray(result) ? result : [];
@@ -284,7 +311,18 @@ export default function CarManagement({ showMessage, users: propUsers = [], user
   };
 
   useEffect(() => { fetchVehicles(); }, [fetchVehicles]);
-  useEffect(() => { fetchVehicles(search, statusFilter, makeFilter, yearFilter, addedByFilter, subView); }, [subView, statusFilter, makeFilter, yearFilter, addedByFilter, fetchVehicles]);
+  useEffect(() => { setPage(1); fetchVehicles(search, statusFilter, makeFilter, yearFilter, addedByFilter, subView, 1, itemsPerPage); }, [subView, statusFilter, makeFilter, yearFilter, addedByFilter, fetchVehicles]);
+  // Catalog pages come from the server, so changing page or page size refetches.
+  const catalogPageKey = useRef('');
+  useEffect(() => {
+    if (!isCatalog) { catalogPageKey.current = ''; return; }
+    const key = `${page}|${itemsPerPage}`;
+    if (catalogPageKey.current === '' ) { catalogPageKey.current = key; return; }
+    if (catalogPageKey.current === key) return;
+    catalogPageKey.current = key;
+    fetchVehicles(search, statusFilter, makeFilter, yearFilter, addedByFilter, 'catalog', page, itemsPerPage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, itemsPerPage, isCatalog]);
 
   useEffect(() => { setSelectedIds(new Set()); }, [subView]);
   useEffect(() => { if (propUsers.length === 0) fetchUsers(); }, [propUsers, fetchUsers]);
@@ -324,7 +362,7 @@ export default function CarManagement({ showMessage, users: propUsers = [], user
   useEffect(() => { photoFilesRef.current = photoFiles; }, [photoFiles]);
   useEffect(() => () => photoFilesRef.current.forEach(pf => URL.revokeObjectURL(pf.preview)), []);
 
-  const handleSearch = (e) => { e.preventDefault(); fetchVehicles(search, statusFilter, makeFilter, yearFilter, addedByFilter, subView); };
+  const handleSearch = (e) => { e.preventDefault(); setPage(1); fetchVehicles(search, statusFilter, makeFilter, yearFilter, addedByFilter, subView, 1, itemsPerPage); };
 
   const openCreate = async () => {
     setEditItem(null);
@@ -458,7 +496,7 @@ export default function CarManagement({ showMessage, users: propUsers = [], user
       });
       if (result?.status === 'success' || result?.message) {
         showMessage(`Imported ${data.make || ''} ${data.model || ''} to inventory (${newRef})`, 'success');
-        fetchVehicles(search, statusFilter, makeFilter, yearFilter, addedByFilter, subView);
+        fetchVehicles(search, statusFilter, makeFilter, yearFilter, addedByFilter, subView, page, itemsPerPage);
       } else {
         showMessage(result?.message || result?.error || 'Import failed', 'error');
       }
@@ -600,7 +638,7 @@ export default function CarManagement({ showMessage, users: propUsers = [], user
     if (result?.status === 'success' || result?.message) {
       showMessage(result.message || (editItem ? 'Vehicle updated' : 'Vehicle created'), 'success');
       setShowForm(false);
-      fetchVehicles(search, statusFilter, makeFilter, yearFilter, addedByFilter, subView);
+      fetchVehicles(search, statusFilter, makeFilter, yearFilter, addedByFilter, subView, page, itemsPerPage);
       publishStock();
     } else {
       showMessage(result?.message || 'Failed to save', 'error');
@@ -613,7 +651,7 @@ export default function CarManagement({ showMessage, users: propUsers = [], user
     const result = await adminApiFetch('inventory/cars/submit_car.php', {
       method: 'POST', body: { action: 'delete', id }
     });
-    if (result?.status === 'success') { showMessage('Vehicle deleted', 'success'); setSelectedIds(new Set()); fetchVehicles(search, statusFilter, makeFilter, yearFilter, addedByFilter, subView); publishStock(); }
+    if (result?.status === 'success') { showMessage('Vehicle deleted', 'success'); setSelectedIds(new Set()); fetchVehicles(search, statusFilter, makeFilter, yearFilter, addedByFilter, subView, page, itemsPerPage); publishStock(); }
     else showMessage(result?.message || 'Delete failed', 'error');
   };
 
@@ -650,7 +688,7 @@ export default function CarManagement({ showMessage, users: propUsers = [], user
     if (result?.status === 'success') {
       showMessage(result.message || 'Vehicles deleted', 'success');
       setSelectedIds(new Set());
-      fetchVehicles(search, statusFilter, makeFilter, yearFilter, addedByFilter, subView);
+      fetchVehicles(search, statusFilter, makeFilter, yearFilter, addedByFilter, subView, page, itemsPerPage);
       publishStock();
     } else {
       showMessage(result?.message || 'Delete failed', 'error');
@@ -673,7 +711,7 @@ export default function CarManagement({ showMessage, users: propUsers = [], user
       const result = await adminApiFetch('inventory/cars/vehicle-action.php', { method: 'POST', body });
       if (result?.status === 'success' || result?.success) {
         showMessage(result.message || 'Action completed', 'success');
-        fetchVehicles(search, statusFilter, makeFilter, yearFilter, addedByFilter, subView);
+        fetchVehicles(search, statusFilter, makeFilter, yearFilter, addedByFilter, subView, page, itemsPerPage);
         publishStock();
       } else {
         showMessage(result?.message || result?.error || 'Action failed', 'error');
@@ -757,7 +795,7 @@ export default function CarManagement({ showMessage, users: propUsers = [], user
     <div className="space-y-0">
 {/* Sub-view toggle */}
       <div className="flex gap-1 mb-4 bg-gray-100 p-1 rounded-xl overflow-x-auto max-w-full">
-        {[isSales ? null : ['inventory','Inventory','fa-warehouse'], ['3rdParty','3rd Party','fa-handshake'], ['reservations','Reservations','fa-calendar-check'], ['sold','Sold','fa-check-circle']].filter(Boolean).map(([key,label,icon]) => (
+        {[isSales ? null : ['inventory','Inventory','fa-warehouse'], ['3rdParty','3rd Party','fa-handshake'], ['catalog','Catalog','fa-globe'], ['reservations','Reservations','fa-calendar-check'], ['sold','Sold','fa-check-circle']].filter(Boolean).map(([key,label,icon]) => (
           <button key={key} onClick={() => setSubView(key)}
             className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-bold transition whitespace-nowrap shrink-0 ${
               subView === key
@@ -773,16 +811,16 @@ export default function CarManagement({ showMessage, users: propUsers = [], user
       {subView === 'reservations' && <Reservations showMessage={showMessage} users={users} />}
       {subView === 'sold' && <SoldCars showMessage={showMessage} users={users} />}
 
-{(subView === 'inventory' || subView === '3rdParty') && <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+{(subView === 'inventory' || isPartnerView) && <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
       <div className="p-4 md:p-6 border-b border-gray-100">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 md:gap-4">
-          <h3 className="font-bebas text-xl md:text-2xl tracking-wide" style={{ color: NAVY }}>{subView === '3rdParty' ? '3rd Party Vehicles' : 'Vehicle Management'}</h3>
+          <h3 className="font-bebas text-xl md:text-2xl tracking-wide" style={{ color: NAVY }}>{subView === 'catalog' ? 'Ichinomiya Catalog (start-auction.com)' : isPartnerView ? '3rd Party Vehicles' : 'Vehicle Management'}</h3>
           <div className="flex gap-2 flex-wrap">
             <form onSubmit={handleSearch} className="flex gap-2">
               <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search..." className="border-2 border-gray-200 rounded-lg px-3 md:px-4 py-2 text-sm focus:outline-none w-32 md:w-48" style={{ focusBorderColor: NAVY }} />
               <button type="submit" className="text-white px-3 md:px-4 rounded-lg hover:opacity-90 transition" style={{ backgroundColor: NAVY }}><i className="fas fa-search text-base" /></button>
             </form>
-            {!isSales && subView !== '3rdParty' && <button onClick={openCreate} style={{ backgroundColor: ORANGE }} className="text-white px-3 md:px-4 py-2 rounded-lg text-xs font-bold uppercase hover:opacity-90 transition flex items-center gap-1"><i className="fas fa-plus text-sm" /> Add</button>}
+            {!isSales && !isPartnerView && <button onClick={openCreate} style={{ backgroundColor: ORANGE }} className="text-white px-3 md:px-4 py-2 rounded-lg text-xs font-bold uppercase hover:opacity-90 transition flex items-center gap-1"><i className="fas fa-plus text-sm" /> Add</button>}
             <select
               value={itemsPerPage}
               onChange={(e) => { setItemsPerPage(Number(e.target.value)); setPage(1); }}
@@ -862,7 +900,7 @@ export default function CarManagement({ showMessage, users: propUsers = [], user
               <i className="fas fa-trash-alt text-[10px]" /> Delete Selected ({selectedIds.size})
             </button>
           )}
-          <span className="text-[10px] text-gray-400 ml-auto">{vehicles.length} vehicle{vehicles.length !== 1 ? 's' : ''}</span>
+          <span className="text-[10px] text-gray-400 ml-auto">{(isCatalog ? catalogTotal : vehicles.length).toLocaleString()} vehicle{(isCatalog ? catalogTotal : vehicles.length) !== 1 ? 's' : ''}</span>
         </div>
       </div>
 
@@ -1081,7 +1119,7 @@ export default function CarManagement({ showMessage, users: propUsers = [], user
                     <p className="text-[10px] text-gray-500 font-mono">Ref {v.ref_no || '-'}</p>
                     {v.buyer_name && <p className="text-[10px] text-gray-500 truncate"><i className="fas fa-user mr-1" />{v.buyer_name}{v.buyer_country ? ` · ${v.buyer_country}` : ''}</p>}
                   </div>
-                  {subView !== '3rdParty' && <span className={`text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded shrink-0 ${statusBadgeClass(v.status)}`}>{statusLabel(v.status)}</span>}
+                  {!isPartnerView && <span className={`text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded shrink-0 ${statusBadgeClass(v.status)}`}>{statusLabel(v.status)}</span>}
                   {subView === 'inventory' && (
                     <input
                       type="checkbox"
@@ -1095,7 +1133,7 @@ export default function CarManagement({ showMessage, users: propUsers = [], user
                   <span className="text-gray-500">{v.year} · {v.mileage ? `${Number(v.mileage).toLocaleString()} km` : '-'}</span>
                   <span className="font-semibold text-gray-900">{displayCurrency(v)} {Number(v.price).toLocaleString()}</span>
                 </div>
-                {subView !== '3rdParty' && v.created_by_name && <p className="text-[10px] text-gray-400">Added by {v.created_by_name}</p>}
+                {!isPartnerView && v.created_by_name && <p className="text-[10px] text-gray-400">Added by {v.created_by_name}</p>}
                 {v.status === 'reserved' && v.expires_at && (
                   <p className={`text-[10px] ${new Date(v.expires_at) < new Date() ? 'text-red-500' : 'text-amber-500'}`}>
                     <i className="fas fa-clock mr-1" />Expires {new Date(v.expires_at).toLocaleDateString()}
@@ -1103,7 +1141,7 @@ export default function CarManagement({ showMessage, users: propUsers = [], user
                 )}
                 <div className="flex items-center gap-2 pt-1">
                   <button onClick={() => setDetailItem(v)} className="text-gray-400 hover:text-gray-600 transition text-sm p-1"><i className="fas fa-eye" /></button>
-                  {subView === '3rdParty' ? (
+                  {isPartnerView ? (
                     <>
                     <a href={`/vehicle/${encodeURIComponent(v.ref_no || v.id)}`} target="_blank" rel="noopener noreferrer"
                       className="text-gray-500 hover:text-gray-700 transition text-sm p-1" title="View on site">
@@ -1192,8 +1230,8 @@ export default function CarManagement({ showMessage, users: propUsers = [], user
                   <th className="px-3 md:px-6 py-3 md:py-4 text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">Year</th>
                   <th className="px-3 md:px-6 py-3 md:py-4 text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">Price</th>
                   <th className="hidden lg:table-cell px-3 md:px-6 py-3 md:py-4 text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">Mileage</th>
-                  {subView !== '3rdParty' && <th className="px-3 md:px-6 py-3 md:py-4 text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">Status</th>}
-                  {subView !== '3rdParty' && <th className="hidden lg:table-cell px-3 md:px-6 py-3 md:py-4 text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">Added By</th>}
+                  {!isPartnerView && <th className="px-3 md:px-6 py-3 md:py-4 text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">Status</th>}
+                  {!isPartnerView && <th className="hidden lg:table-cell px-3 md:px-6 py-3 md:py-4 text-[10px] font-extrabold text-gray-400 uppercase tracking-widest">Added By</th>}
                   <th className="px-3 md:px-6 py-3 md:py-4 text-[10px] font-extrabold text-gray-400 uppercase tracking-widest whitespace-nowrap w-px">Actions</th>
                 </tr>
               </thead>
@@ -1222,7 +1260,7 @@ export default function CarManagement({ showMessage, users: propUsers = [], user
                     <td className="px-3 md:px-6 py-3 md:py-4 text-gray-600">{v.year}</td>
                     <td className="px-3 md:px-6 py-3 md:py-4 text-gray-900 font-semibold text-xs sm:text-sm">{displayCurrency(v)} {Number(v.price).toLocaleString()}</td>
                     <td className="hidden lg:table-cell px-3 md:px-6 py-3 md:py-4 text-gray-500">{v.mileage ? formatNumberWithUnit(v.mileage) : '-'}</td>
-                    {subView !== '3rdParty' && (
+                    {!isPartnerView && (
                     <td className="px-3 md:px-6 py-3 md:py-4">
                       <span className={`text-[9px] md:text-[10px] font-bold uppercase tracking-widest px-1.5 md:px-2 py-0.5 md:py-1 rounded ${statusBadgeClass(v.status)}`}>{statusLabel(v.status)}</span>
                       {v.status === 'reserved' && v.expires_at && (
@@ -1232,11 +1270,11 @@ export default function CarManagement({ showMessage, users: propUsers = [], user
                       )}
                     </td>
                     )}
-                    {subView !== '3rdParty' && <td className="hidden lg:table-cell px-3 md:px-6 py-3 md:py-4 text-gray-400 text-[10px]">{v.created_by_name || '—'}</td>}
+                    {!isPartnerView && <td className="hidden lg:table-cell px-3 md:px-6 py-3 md:py-4 text-gray-400 text-[10px]">{v.created_by_name || '—'}</td>}
                     <td className="px-3 md:px-6 py-3 md:py-4 whitespace-nowrap w-px">
                       <div className="flex gap-2 items-center">
                         <button onClick={() => setDetailItem(v)} className="text-gray-400 hover:text-gray-600 transition text-sm" title="View details"><i className="fas fa-eye" /></button>
-                        {subView === '3rdParty' ? (
+                        {isPartnerView ? (
                           <>
                             <a href={`/vehicle/${encodeURIComponent(v.ref_no || v.id)}`} target="_blank" rel="noopener noreferrer"
                               className="text-gray-500 hover:text-gray-700 transition text-sm" title="View on site">
@@ -1306,7 +1344,7 @@ export default function CarManagement({ showMessage, users: propUsers = [], user
                   </tr>
                 ))}
                 {pagedVehicles.length === 0 && (
-                  <tr><td colSpan={subView === '3rdParty' ? 5 : 7} className="px-3 md:px-6 py-8 md:py-12 text-center text-gray-400"><i className="fas fa-car text-xl md:text-2xl mb-2 block" />No vehicles found</td></tr>
+                  <tr><td colSpan={isPartnerView ? 5 : 7} className="px-3 md:px-6 py-8 md:py-12 text-center text-gray-400"><i className="fas fa-car text-xl md:text-2xl mb-2 block" />No vehicles found</td></tr>
                 )}
               </tbody>
             </table>
