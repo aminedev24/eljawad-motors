@@ -20,8 +20,11 @@ export const UserProvider = ({ children }) => {
   // The token is normally populated by checkSession() on mount, but the
   // login form can be submitted before that request finishes, so fetch it
   // on demand rather than sending an empty X-CSRF-Token header.
-  const ensureCsrfToken = async () => {
-    if (getCsrfToken()) return getCsrfToken();
+  // force: fetch a fresh token even if one is held - the server forgets it
+  // when an idle session expires (~24 min on the host), e.g. while the
+  // visitor is off resetting their password.
+  const ensureCsrfToken = async (force = false) => {
+    if (!force && getCsrfToken()) return getCsrfToken();
     try {
       const response = await fetch(`${apiUrl}/check_session.php`, {
         method: 'GET',
@@ -51,16 +54,25 @@ export const UserProvider = ({ children }) => {
       formData.append("email", email);
       formData.append("password", password);
   
-      const response = await fetch(`${apiUrl}/login2.php`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-          "X-CSRF-Token": csrfToken,
-        },
-        body: formData.toString(),
-        credentials: "include",
-      });
-  
+      const postLogin = (token) =>
+        fetch(`${apiUrl}/login2.php`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "X-CSRF-Token": token,
+          },
+          body: formData.toString(),
+          credentials: "include",
+        });
+
+      let response = await postLogin(csrfToken);
+      // 403 = the held token belongs to an expired session: get a new one
+      // and try once more instead of failing until the page is reloaded.
+      if (response.status === 403) {
+        const freshToken = await ensureCsrfToken(true);
+        if (freshToken) response = await postLogin(freshToken);
+      }
+
       const data = await response.json();
       //console.log(data)
       if (data.status === "success") {
