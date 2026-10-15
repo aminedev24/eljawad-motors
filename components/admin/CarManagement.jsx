@@ -182,8 +182,9 @@ export default function CarManagement({ showMessage, users: propUsers = [], user
   // load their whole list here), so only the total is kept locally.
   const [catalogTotal, setCatalogTotal] = useState(0);
   const isCatalog = subView === 'catalog';
-  // Catalog cars are partner cars too: same row layout and actions as 3rd Party.
-  const isPartnerView = subView === '3rdParty' || isCatalog;
+  // Catalog rows are partner cars: no own status/owner columns, and the
+  // partner actions (import, invoice, reserve, mark sold) instead of edit.
+  const isPartnerView = isCatalog;
 
   const totalPages = Math.ceil((isCatalog ? catalogTotal : vehicles.length) / itemsPerPage);
   const pagedVehicles = useMemo(() => {
@@ -219,8 +220,7 @@ export default function CarManagement({ showMessage, users: propUsers = [], user
       setLoading(false);
       return;
     }
-    const isThirdParty = view === '3rdParty';
-    const result = await adminApiFetch(isThirdParty ? 'inventory/cars/fetchStock.php' : 'inventory/cars/fetchAdminStock.php');
+    const result = await adminApiFetch('inventory/cars/fetchAdminStock.php');
     let list = Array.isArray(result) ? result : [];
     if (q) { const s = q.toLowerCase(); list = list.filter(v => (v.ref_no||'').toLowerCase().includes(s) || (v.make||'').toLowerCase().includes(s) || (v.model||'').toLowerCase().includes(s) || (v.chassis_no||'').toLowerCase().includes(s)); }
     if (sf) list = list.filter(v => v.status === sf);
@@ -338,18 +338,19 @@ export default function CarManagement({ showMessage, users: propUsers = [], user
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
-      const [stock, unified] = await Promise.all([
-        adminApiFetch('inventory/cars/fetchStock.php').then(r => (Array.isArray(r) ? r : [])).catch(() => []),
+      // Makes/models in stock come from the catalog's precomputed counts
+      // (~50KB) rather than downloading the whole stock list.
+      const [facets, unified] = await Promise.all([
+        fetchCatalogFacets().catch(() => ({})),
         fetchAllMakesModels().catch(() => ({})),
       ]);
       if (cancelled) return;
       const mm = {};
       Object.keys(unified).forEach(m => { mm[m] = [...(unified[m] || [])]; });
-      stock.forEach(v => {
-        if (v.make) {
-          if (!mm[v.make]) mm[v.make] = [];
-          if (v.model && !mm[v.make].includes(v.model)) mm[v.make].push(v.model);
-        }
+      Object.entries(facets?.models || {}).forEach(([make, models]) => {
+        if (!mm[make]) mm[make] = [];
+        const known = new Set(mm[make]);
+        models.forEach(({ name }) => { if (name && !known.has(name)) { mm[make].push(name); known.add(name); } });
       });
       setMakesModels(mm);
       setFilterMakeOptions(prev => [...new Set([...prev, ...Object.keys(mm)].filter(Boolean))].sort());
@@ -795,7 +796,7 @@ export default function CarManagement({ showMessage, users: propUsers = [], user
     <div className="space-y-0">
 {/* Sub-view toggle */}
       <div className="flex gap-1 mb-4 bg-gray-100 p-1 rounded-xl overflow-x-auto max-w-full">
-        {[isSales ? null : ['inventory','Inventory','fa-warehouse'], ['3rdParty','3rd Party','fa-handshake'], ['catalog','Catalog','fa-globe'], ['reservations','Reservations','fa-calendar-check'], ['sold','Sold','fa-check-circle']].filter(Boolean).map(([key,label,icon]) => (
+        {[isSales ? null : ['inventory','Inventory','fa-warehouse'], ['catalog','Catalog','fa-globe'], ['reservations','Reservations','fa-calendar-check'], ['sold','Sold','fa-check-circle']].filter(Boolean).map(([key,label,icon]) => (
           <button key={key} onClick={() => setSubView(key)}
             className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-bold transition whitespace-nowrap shrink-0 ${
               subView === key
@@ -814,7 +815,7 @@ export default function CarManagement({ showMessage, users: propUsers = [], user
 {(subView === 'inventory' || isPartnerView) && <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
       <div className="p-4 md:p-6 border-b border-gray-100">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 md:gap-4">
-          <h3 className="font-bebas text-xl md:text-2xl tracking-wide" style={{ color: NAVY }}>{subView === 'catalog' ? 'Ichinomiya Catalog (start-auction.com)' : isPartnerView ? '3rd Party Vehicles' : 'Vehicle Management'}</h3>
+          <h3 className="font-bebas text-xl md:text-2xl tracking-wide" style={{ color: NAVY }}>{isCatalog ? 'Vehicle Catalog' : 'Vehicle Management'}</h3>
           <div className="flex gap-2 flex-wrap">
             <form onSubmit={handleSearch} className="flex gap-2">
               <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search..." className="border-2 border-gray-200 rounded-lg px-3 md:px-4 py-2 text-sm focus:outline-none w-32 md:w-48" style={{ focusBorderColor: NAVY }} />
