@@ -1,5 +1,15 @@
 RewriteEngine On
 
+# eljawad.com is switched off for now: every page answers 503 with the
+# maintenance notice (503 tells search engines the outage is temporary, so
+# the site keeps its ranking). The shared PHP backend and the notice's own
+# files stay reachable; start-auction.com is unaffected. Delete this block
+# (and the ErrorDocument line) to switch eljawad.com back on.
+RewriteCond %{HTTP_HOST} ^(www\.)?eljawad\.com$ [NC]
+RewriteCond %{REQUEST_URI} !^/(server/|eljawad-maintenance\.html$|images/logo-eljawad-dark\.svg$|icons/favicon\.ico$)
+RewriteRule ^ - [R=503,L]
+ErrorDocument 503 /eljawad-maintenance.html
+
 # start-auction.com shares this document root with eljawad.com but has its own
 # build of the site in /start-auction/ (deploy-eljawad.yml builds both). Serve
 # every start-auction.com request from there, except the shared PHP backend.
