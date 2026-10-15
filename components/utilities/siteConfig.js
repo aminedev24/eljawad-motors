@@ -29,7 +29,7 @@ const SITES = {
     vehiclePlaceholder: '/images/vehicles/start-auction-placeholder.svg',
     // Stock pages search the full Ichinomiya catalog on the server
     // (server/inventory/catalog) instead of loading the curated list.
-    fullCatalog: false, // switched on once the first server import has run
+    fullCatalog: true,
   },
 };
 
