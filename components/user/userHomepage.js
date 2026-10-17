@@ -1,4 +1,7 @@
 ﻿import React, { useState, useEffect, useMemo } from 'react';
+import { ProfilePager } from './profileUi';
+
+const PER_PAGE = 10;
 import { useRouter, useSearchParams } from 'next/navigation';
 import CreatableSelect from 'react-select/creatable';
 import VehicleInfo from '../vehicles/vehicleInformation';
@@ -25,6 +28,7 @@ const UserHomepage = ({ user = {} }) => {
   const [cars, setCars] = useState([]);
   const [selectedCar, setSelectedCar] = useState(null);
   const [filteredCars, setFilteredCars] = useState([]);
+  const [page, setPage] = useState(1);
   const [imageSrc, setImageSrc] = useState(apiBaseUrl);
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -93,6 +97,7 @@ const UserHomepage = ({ user = {} }) => {
       (filters.yearTo === "" || Number(car.year) <= Number(filters.yearTo))
     );
     setFilteredCars(filtered);
+    setPage(1);
   }, [filters, cars]);
 
   // Handle selecting a car.
@@ -283,7 +288,7 @@ const UserHomepage = ({ user = {} }) => {
         {/* Car Listings */}
         <div>
           {filteredCars.length > 0 ? (
-            filteredCars.map((car, index) => (
+            filteredCars.slice((page - 1) * PER_PAGE, page * PER_PAGE).map((car, index) => (
               <div className="car-listings mb-4" key={car.car_id}>
                 
                 <img
@@ -324,6 +329,11 @@ const UserHomepage = ({ user = {} }) => {
           ) : (
             <p>No cars found.</p>
           )}
+          <ProfilePager
+            page={Math.min(page, Math.max(1, Math.ceil(filteredCars.length / PER_PAGE)))}
+            totalPages={Math.ceil(filteredCars.length / PER_PAGE)}
+            onPage={setPage}
+          />
         </div>
     </div>
   );

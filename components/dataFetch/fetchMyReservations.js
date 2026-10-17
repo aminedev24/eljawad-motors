@@ -1,127 +1,87 @@
 // fetchMyReservations.js — "My Reservations" tab on the customer profile.
-// Shows active holds (reserved / under negotiation) on vehicles the user has
-// started a purchase for.
+// Active holds (reserved / under negotiation) on vehicles the user has
+// started a purchase for, as cards with what has been paid so far.
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
 import { apiBaseUrl } from "../utilities/apiBase";
-
-const STATUS_COLORS = {
-  reserved:        "bg-amber-100 text-amber-700 border-amber-200",
-  pending_payment: "bg-blue-100 text-blue-700 border-blue-200",
-};
-
-const STATUS_LABELS = {
-  reserved:        "Reserved",
-  pending_payment: "Under Negotiation",
-};
-
-function StatusBadge({ status }) {
-  return (
-    <span className={`inline-flex items-center whitespace-nowrap rounded-full border px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-widest ${STATUS_COLORS[status] || STATUS_COLORS.reserved}`}>
-      {STATUS_LABELS[status] || status}
-    </span>
-  );
-}
+import { PaymentBreakdown } from "../user/payments";
+import {
+  StatusBadge, VehicleCard, ViewVehicleButton, EmptyState, LoadingState, ProfilePager,
+  pageOf, firstImage, formatCountdown, vehicleHref,
+} from "../user/profileUi";
 
 const MyReservations = () => {
-  const router = useRouter();
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
-    fetch(`${apiBaseUrl}/inventory/cars/fetchMyReservations.php`, {
-      method: "GET",
-      credentials: "include",
-    })
+    fetch(`${apiBaseUrl}/inventory/cars/fetchMyReservations.php`, { method: "GET", credentials: "include" })
       .then((response) => {
         if (!response.ok) throw new Error("Failed to fetch reservations");
         return response.json();
       })
-      .then((data) => {
-        setReservations(Array.isArray(data.reservations) ? data.reservations : []);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
-      });
+      .then((data) => setReservations(Array.isArray(data.reservations) ? data.reservations : []))
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
   }, []);
 
-  if (loading) {
+  if (loading) return <LoadingState />;
+  if (error) return <p className="py-8 text-sm text-red-600">Error: {error}</p>;
+  if (reservations.length === 0) {
     return (
-      <div className="flex justify-center py-16">
-        <i className="fas fa-circle-notch animate-spin text-2xl text-[var(--primary-color)]" />
-      </div>
+      <EmptyState
+        icon="fa-calendar-times"
+        title="No reservations yet"
+        hint="Reservations appear here once our team holds a vehicle for you."
+        action={
+          <a href="/stock-list" className="mt-6 inline-block rounded-lg bg-primary px-6 py-3 text-xs font-bold uppercase tracking-widest text-white shadow-md transition hover:bg-primary/90">
+            <i className="fas fa-search mr-2" />Browse stock
+          </a>
+        }
+      />
     );
   }
 
-  if (error) {
-    return <p className="py-8 text-sm text-red-600">Error: {error}</p>;
-  }
-
+  const { visible, page: current, totalPages } = pageOf(reservations, page);
   return (
-    <div>
-      <p className="mb-6 text-sm text-[var(--grey-text)]">Vehicles currently held for you.</p>
-
-      {reservations.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-[var(--border-color)] bg-white py-16 text-center">
-          <i className="fas fa-calendar-check mb-3 block text-4xl text-gray-300" />
-          <p className="font-bold text-[var(--text-color)]">No active reservations</p>
-          <p className="mt-1 text-sm text-[var(--grey-text)]">
-            Reservations appear here once our team holds a vehicle for you.
-          </p>
-          <button
-            onClick={() => router.push("/stock-list")}
-            className="mt-4 rounded-md bg-[var(--accent-color)] px-5 py-2 text-xs font-bold uppercase tracking-wider text-white transition hover:bg-[var(--accent-color-hover)]"
-          >
-            Browse stock
-          </button>
-        </div>
-      ) : (
-        <div className="overflow-x-auto rounded-xl border border-[var(--border-color)] bg-white">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-[var(--border-color)] text-[10px] uppercase tracking-widest text-[var(--grey-text)]">
-                <th className="py-3 pl-4 text-left">Vehicle</th>
-                <th className="py-3 text-left">Ref</th>
-                <th className="py-3 text-right">Agreed</th>
-                <th className="py-3 text-left">Status</th>
-                <th className="py-3 pr-4 text-left">Held until</th>
-              </tr>
-            </thead>
-            <tbody>
-              {reservations.map((r) => (
-                <tr key={r.id} className="border-b border-gray-100 hover:bg-gray-50 transition">
-                  <td className="py-3 pl-4">
-                    <button
-                      onClick={() => router.push(`/vehicle?id=${encodeURIComponent(String(r.vehicle_ref || ""))}`)}
-                      className="font-bold text-[var(--primary-color)] hover:underline"
-                    >
-                      {[r.year, r.make, r.model].filter(Boolean).join(" ") || r.vehicle_ref || "-"}
-                    </button>
-                    {r.destination_country && (
-                      <p className="text-[10px] text-[var(--grey-text)]">Dest: {r.destination_country}</p>
-                    )}
-                  </td>
-                  <td className="py-3 font-mono text-xs text-[var(--grey-text)]">{r.vehicle_ref}</td>
-                  <td className="py-3 text-right font-extrabold text-[var(--text-color)]">
-                    {r.currency || "USD"} {Number(r.price || 0).toLocaleString("en-US")}
-                  </td>
-                  <td className="py-3">
-                    <StatusBadge status={r.status} />
-                  </td>
-                  <td className="py-3 pr-4 text-xs text-[var(--grey-text)]">
-                    {r.expires_at ? new Date(r.expires_at).toLocaleDateString("en-US") : "-"}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
+    <>
+      <div className="space-y-3">
+        {visible.map((r) => {
+          const name = [r.year, r.make, r.model].filter(Boolean).join(" ") || r.vehicle_ref || "Vehicle";
+          const href = vehicleHref(r.vehicle_ref);
+          const countdown = r.expires_at ? formatCountdown(r.expires_at) : "";
+          const urgent = r.expires_at && new Date(String(r.expires_at).replace(" ", "T")).getTime() - Date.now() < 86400000;
+          return (
+            <VehicleCard key={r.id} image={firstImage(r.image)} title={name} href={href}>
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div>
+                  <a href={href} className="text-xs font-extrabold uppercase leading-tight text-primary hover:underline">{name}</a>
+                  <p className="mt-0.5 text-[9px] font-bold uppercase text-gray-400">
+                    Ref: {r.vehicle_ref}{r.destination_country ? ` · To ${r.destination_country}` : ""}
+                  </p>
+                </div>
+                <StatusBadge status={r.status} />
+              </div>
+              <p className="text-[10px] font-extrabold text-gray-800">
+                Total <b className="text-[var(--accent-color)]">{r.currency || "USD"} {Number(r.price || 0).toLocaleString("en-US")}</b>
+              </p>
+              {(Number(r.amount_paid) > 0 || (r.payments || []).length > 0) && <PaymentBreakdown r={r} />}
+              <div className="mt-auto flex flex-wrap items-center justify-between gap-2 text-[10px]">
+                {countdown && (
+                  <span className={`font-bold ${urgent ? "text-red-600" : "text-gray-600"}`}>
+                    <i className="fas fa-clock mr-1" />Held: {countdown}
+                  </span>
+                )}
+                <span className="ml-auto"><ViewVehicleButton href={href} /></span>
+              </div>
+            </VehicleCard>
+          );
+        })}
+      </div>
+      <ProfilePager page={current} totalPages={totalPages} onPage={setPage} />
+    </>
   );
 };
 

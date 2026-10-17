@@ -1,9 +1,11 @@
 import React from 'react';
+import { pageItems } from '../misc/Pagination';
 
 const DataPagination = ({ currentPage, totalPages, onPageChange }) => {
   if (!totalPages || totalPages <= 1) return null;
 
-  const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+  // First, last and the pages around the current one (1 … 5 6 [7] 8 9 … 20).
+  const pages = pageItems(currentPage, totalPages);
 
   return (
     <div className="data-pagination">
@@ -14,7 +16,10 @@ const DataPagination = ({ currentPage, totalPages, onPageChange }) => {
       >
         &lsaquo; Prev
       </button>
-      {pages.map((page) => (
+      {pages.map((page) =>
+        typeof page === 'string' ? (
+          <span key={page} className="page-gap" aria-hidden="true">…</span>
+        ) : (
         <button
           key={page}
           className={page === currentPage ? 'active' : ''}
@@ -22,7 +27,8 @@ const DataPagination = ({ currentPage, totalPages, onPageChange }) => {
         >
           {page}
         </button>
-      ))}
+        )
+      )}
       <button
         disabled={currentPage === totalPages}
         onClick={() => onPageChange(currentPage + 1)}

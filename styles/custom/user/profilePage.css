@@ -435,3 +435,9 @@
     justify-content: flex-end;
   }
 }
+
+/* Gap between page numbers (dataPagination.js). */
+.data-pagination .page-gap {
+  padding: 0 4px;
+  color: #9ca3af;
+}
