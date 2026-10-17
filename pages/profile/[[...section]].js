@@ -12,7 +12,7 @@ import InvoiceList from '../../components/dataFetch/fetchInvoices';
 import SavedVehicles from '../../components/dataFetch/fetchSavedVehicles';
 import MyReservations from '../../components/dataFetch/fetchMyReservations';
 import MyOrders from '../../components/dataFetch/fetchMyOrders';
-import DepositsTable from '../../components/dataFetch/fetchDeposits';
+import MyPayments from '../../components/user/payments';
 import { useUser } from "../../components/user/userContext";
 import Link from 'next/link';
 import UserHomepage from '../../components/user/userHomepage';
@@ -21,7 +21,7 @@ import { apiBaseUrl } from '../../components/utilities/apiBase';
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faUser, faGear, faHeart, faCalendarCheck, faTruck, faEnvelope,
-  faFileInvoice, faCoins, faUserShield, faFileLines,
+  faFileInvoice, faWallet, faUserShield, faFileLines,
   faGavel, faFileSignature, faShieldHalved,
 } from "@fortawesome/free-solid-svg-icons";
 // Admin-specific components are no longer directly imported here as they will be in AdminPanel.js
@@ -36,7 +36,7 @@ const menuIcons = {
   'my-orders': faTruck,
   'vehicle-inquiries': faEnvelope,
   'invoices-list': faFileInvoice,
-  accountancy: faCoins,
+  'my-payments': faWallet,
   privacy: faUserShield,
   terms: faFileLines,
   'anti-social-policy': faGavel,
@@ -89,7 +89,7 @@ const ProfilePage = ({ initialSection = '' }) => {
       { key: 'my-orders', label: 'My Orders', component: MyOrders },
       { key: 'vehicle-inquiries', label: 'Vehicle Inquiries', component: InquiryList },
       { key: 'invoices-list', label: 'Invoices List', component: InvoiceList },
-      { key: 'accountancy', label: 'Accountancy', component: DepositsTable },
+      { key: 'my-payments', label: 'My Payments', component: MyPayments },
       { key: 'privacy', label: 'Privacy', component: Privacy },
       { key: 'terms', label: 'Terms & Conditions', component: TermsConditions },
       { key: 'anti-social-policy', label: 'Anti-Social Forces Policy', component: AntiSocialPolicy },
@@ -104,9 +104,11 @@ const ProfilePage = ({ initialSection = '' }) => {
     return items;
   }, [user]); // Re-calculate if user changes
 
-  const sectionStr = Array.isArray(section)
+  const rawSection = Array.isArray(section)
   ? section[0]
   : section || "";
+  // "accountancy" was renamed to "my-payments"; old links still land there.
+  const sectionStr = String(rawSection).toLowerCase() === "accountancy" ? "my-payments" : rawSection;
 
  
 
@@ -209,7 +211,7 @@ const ProfilePage = ({ initialSection = '' }) => {
   // via pages/admin/index.js and pages/admin/[adminSection].js.
   // This ProfilePage component is now solely for user profile views.
 
-  const DASHBOARD_KEYS = ['my-account', 'settings', 'saved-vehicles', 'my-reservations', 'my-orders', 'vehicle-inquiries', 'invoices-list', 'accountancy'];
+  const DASHBOARD_KEYS = ['my-account', 'settings', 'saved-vehicles', 'my-reservations', 'my-orders', 'vehicle-inquiries', 'invoices-list', 'my-payments'];
   const LEGAL_KEYS = ['terms', 'privacy', 'anti-social-policy', 'sales-contract'];
   const dashboardTiles = menuItems.filter(item => DASHBOARD_KEYS.includes(item.key));
   const legalLinks = menuItems.filter(item => LEGAL_KEYS.includes(item.key));
@@ -349,7 +351,8 @@ export async function getStaticPaths() {
     'my-orders',
     'vehicle-inquiries',
     'invoices-list',
-    'accountancy',
+    'my-payments',
+    'accountancy', // old address of My Payments, kept so existing links still open it
     'privacy',
     'terms',
     'anti-social-policy',

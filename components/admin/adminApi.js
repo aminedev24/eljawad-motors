@@ -22,6 +22,9 @@ const ENDPOINT_MAP = {
   'inventory/cars/upload_car_images.php': () => `${apiInventory}/cars/upload_car_images.php`,
   'inventory/cars/fetchVehicle.php': () => `${apiInventory}/cars/fetchVehicle.php`,
 
+  'finance/income/getIncomes.php': () => `${apiBaseUrl}/finance/income/getIncomes.php`,
+  'finance/income/manageIncome.php': () => `${apiBaseUrl}/finance/income/manageIncome.php`,
+  'finance/income/searchCustomers.php': () => `${apiBaseUrl}/finance/income/searchCustomers.php`,
   'finance/deposits/adminFetchDeposits.php': () => `${apiBaseUrl}/finance/deposits/adminFetchDeposits.php`,
   'finance/deposits/insertDeposit.php': () => `${apiBaseUrl}/finance/deposits/insertDeposit.php`,
   'finance/deposits/editDeposit.php': () => `${apiBaseUrl}/finance/deposits/editDeposit.php`,

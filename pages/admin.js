@@ -283,7 +283,7 @@ export default function AdminPage() {
               )}
               {active === 'vehicles'     && <CarManagement showMessage={showMessage} users={[]} userRole={user?.role} />}
               {active === 'customers'    && <CustomerList showMessage={showMessage} />}
-              {active === 'income'       && <Deposits showMessage={showMessage} users={[]} />}
+              {active === 'income'       && <Deposits showMessage={showMessage} userRole={user?.role} userId={user?.id} userName={user?.name || user?.full_name} />}
               {active === 'invoicing'    && <Invoices showMessage={showMessage} />}
               {active === 'inquiries'    && <Inquiries showMessage={showMessage} />}
               {active === 'admins'       && <AdminManagement showMessage={showMessage} />}

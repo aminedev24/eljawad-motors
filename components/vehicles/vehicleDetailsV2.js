@@ -35,6 +35,7 @@ import { apiBaseUrl } from "../utilities/apiBase";
 import { formatNumberWithUnit } from "../utilities/numberFormat";
 import VehicleInquiryForm from "./vehicleInquiryForm";
 import { SITE } from "../utilities/siteConfig";
+import { VehiclePaymentCard } from "../user/payments";
 import { useStockAccess, LoginWall, UnlockButton, Censored } from "./stockAccess";
 import {
   normalizeCurrency,
@@ -277,6 +278,30 @@ const VehicleDetailsV2 = ({ initialVehicleId = "" }) => {
   const carRef = car ? String(car.ref_no || car.stock_no || "").trim() : "";
   const isFavorite = favorites.isFavorite(carRef);
   const [favoriteBusy, setFavoriteBusy] = useState(false);
+
+  // The customer's own reservation or order of this car, for the
+  // "Your Payments on This Vehicle" card.
+  const [myReservation, setMyReservation] = useState(null);
+  useEffect(() => {
+    if (!user || !carRef || ["admin", "sales"].includes(user.role)) {
+      setMyReservation(null);
+      return;
+    }
+    let cancelled = false;
+    fetch(`${apiUrl}/inventory/cars/fetchMyReservations.php`, { credentials: "include" })
+      .then((res) => res.json())
+      .then((d) => {
+        if (cancelled) return;
+        const mine = [...(d.reservations || []), ...(d.orders || [])].find(
+          (r) => String(r.vehicle_ref || "").toUpperCase() === carRef.toUpperCase() && !["cancelled", "expired"].includes(r.status)
+        );
+        setMyReservation(mine || null);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [user, carRef, apiUrl]);
   const { isComparing, toggleCompare, isFull: isCompareFull } = useCompare();
   const comparing = car ? isComparing(car) : false;
 
@@ -551,6 +576,11 @@ const VehicleDetailsV2 = ({ initialVehicleId = "" }) => {
               buyers scan first; sticks beside the gallery on desktop */}
           <aside className="mt-3 shrink-0 lg:sticky lg:top-[120px] lg:mt-0 lg:w-[400px]">
             <div className="border border-[var(--border-color)] bg-[var(--white)] p-4">
+              {myReservation && (
+                <div className="mb-3">
+                  <VehiclePaymentCard r={myReservation} />
+                </div>
+              )}
               {(isSold || isReserved) && (
                 <div
                   role="status"

@@ -78,7 +78,21 @@ if (!$stmt->execute()) {
     echo json_encode(['status' => 'error', 'error' => 'Error adding user: ' . $stmt->error]);
     exit;
 }
+$newUserId = (int)$conn->insert_id;
 $stmt->close();
+
+// The staff member who creates a customer is in charge of them (income
+// management lets only them, or an admin, apply that customer's payments).
+if (session_status() === PHP_SESSION_NONE) session_start();
+if (in_array($_SESSION['role'] ?? '', ['admin', 'sales'], true)) {
+    require_once __DIR__ . '/../finance/income/income_lib.php';
+    income_ensure_schema($conn);
+    $staffId = (int)$_SESSION['user_id'];
+    $own = $conn->prepare("UPDATE users SET created_by_admin = ? WHERE id = ?");
+    $own->bind_param('ii', $staffId, $newUserId);
+    $own->execute();
+    $own->close();
+}
 
 /*
 use PHPMailer\PHPMailer\PHPMailer;
