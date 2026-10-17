@@ -26,24 +26,24 @@ export function PaymentBreakdown({ r }) {
   const payments = r.payments || [];
   return (
     <div className="space-y-1.5">
-      <div className="grid grid-cols-3 gap-2 text-[10px]">
+      <div className="grid grid-cols-3 gap-2 text-xs">
         <div className="rounded-lg border border-gray-100 bg-gray-50 px-2 py-1.5">
-          <span className="block font-bold uppercase text-gray-400">Total</span>
-          <p className="mt-0.5 font-extrabold text-gray-800">{money(cur, r.agreed_price)}</p>
+          <span className="block text-[11px] font-bold uppercase text-gray-600">Total</span>
+          <p className="mt-0.5 text-sm font-extrabold text-gray-900">{money(cur, r.agreed_price)}</p>
         </div>
         <div className="rounded-lg border border-gray-100 bg-gray-50 px-2 py-1.5">
-          <span className="block font-bold uppercase text-gray-400">Paid</span>
-          <p className="mt-0.5 font-extrabold text-green-600">{money(cur, r.amount_paid)}</p>
+          <span className="block text-[11px] font-bold uppercase text-gray-600">Paid</span>
+          <p className="mt-0.5 text-sm font-extrabold text-green-700">{money(cur, r.amount_paid)}</p>
         </div>
         <div className="rounded-lg border border-gray-100 bg-gray-50 px-2 py-1.5">
-          <span className="block font-bold uppercase text-gray-400">Remaining</span>
-          <p className={`mt-0.5 font-extrabold ${remaining > 0 ? "text-amber-600" : "text-green-600"}`}>
+          <span className="block text-[11px] font-bold uppercase text-gray-600">Remaining</span>
+          <p className={`mt-0.5 text-sm font-extrabold ${remaining > 0 ? "text-amber-700" : "text-green-700"}`}>
             {remaining > 0 ? money(cur, remaining) : "Fully Paid"}
           </p>
         </div>
       </div>
       {payments.length > 0 && (
-        <ul className="space-y-0.5 text-[10px] text-gray-500">
+        <ul className="space-y-0.5 text-xs text-gray-700">
           {payments.map((p, i) => (
             <li key={i}>
               <i className="fas fa-check mr-1 text-green-500" />
@@ -126,65 +126,109 @@ export default function MyPayments() {
 
   return (
     <div>
-      <p className="mb-6 text-sm text-[var(--grey-text)]">Payments we have received from you, and the vehicles they were applied to.</p>
+      <p className="mb-6 text-sm text-gray-700">Payments we have received from you, and the vehicles they were applied to.</p>
       {totals.map((t) => (
-        <div key={t.currency} className="mb-4 grid grid-cols-3 gap-2 sm:gap-3">
+        <div key={t.currency} className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
           {[
-            ["Total Paid", t.received, "text-gray-900"],
-            ["Applied to Vehicles", t.consumed, "text-primary"],
-            ["Available Balance", t.leftover, "text-green-600"],
-          ].map(([label, val, cls]) => (
-            <div key={label} className="rounded-xl border border-gray-100 bg-white p-3">
-              <span className="block text-[10px] font-bold uppercase text-gray-400">{label}</span>
-              <p className={`mt-0.5 text-sm font-extrabold sm:text-lg ${cls}`}>{money(t.currency, val)}</p>
+            ["Total Paid", t.received, "fa-wallet", "border-t-gray-700", "text-gray-900"],
+            ["Applied to Vehicles", t.consumed, "fa-car", "border-t-primary", "text-primary"],
+            ["Available Balance", t.leftover, "fa-piggy-bank", "border-t-green-600", "text-green-700"],
+          ].map(([label, val, icon, edge, cls]) => (
+            <div key={label} className={`flex items-center gap-3 rounded-xl border border-gray-200 border-t-4 ${edge} bg-white p-4 shadow-sm`}>
+              <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-50 ${cls}`}>
+                <i className={`fas ${icon}`} />
+              </span>
+              <div className="min-w-0">
+                <span className="block text-xs font-bold uppercase tracking-wide text-gray-600">{label}</span>
+                <p className={`mt-0.5 text-lg font-extrabold sm:text-xl ${cls}`}>{money(t.currency, val)}</p>
+              </div>
             </div>
           ))}
         </div>
       ))}
-      <div className="space-y-3">
+
+      <div className="space-y-4">
         {visible.map((d) => {
           const used = Number(d.amount) > 0 ? Math.min(100, Math.round((Number(d.consumed) / Number(d.amount)) * 100)) : 0;
-          const unused = Number(d.consumed) <= 0;
+          // Fully used / partly used / still all credit.
+          const state = used >= 100
+            ? { label: "Fully used", chip: "bg-primary/10 text-primary border-primary/20", edge: "border-l-primary", icon: "fa-check-circle" }
+            : used > 0
+            ? { label: "Partly used", chip: "bg-amber-50 text-amber-800 border-amber-200", edge: "border-l-amber-500", icon: "fa-adjust" }
+            : { label: "Credit available", chip: "bg-green-50 text-green-800 border-green-200", edge: "border-l-green-600", icon: "fa-piggy-bank" };
           return (
-            <div key={d.id} className="rounded-xl border border-gray-200 bg-white p-3 sm:p-4">
-              <div className="flex flex-wrap items-start justify-between gap-2">
-                <div>
-                  <p className="text-sm font-extrabold text-gray-900">{money(d.currency, d.amount)}</p>
-                  <p className="mt-0.5 text-[10px] font-bold uppercase text-gray-400">Paid on {d.date}</p>
-                  {d.remitter && <p className="mt-0.5 text-[11px] text-gray-500">Sent by {d.remitter}</p>}
-                </div>
-                <div className="text-right text-[10px]">
-                  <p className="text-gray-500">Applied <b className="text-primary">{money(d.currency, d.consumed)}</b></p>
-                  <p className="text-gray-500">Available <b className="text-green-600">{money(d.currency, d.leftover)}</b></p>
-                </div>
-              </div>
-              {/* How much of this payment has gone to vehicles so far */}
-              {!unused && (
-                <div className="mt-2 flex items-center gap-2">
-                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-gray-100">
-                    <div className="h-full rounded-full bg-primary" style={{ width: `${used}%` }} />
+            <div key={d.id} className={`overflow-hidden rounded-xl border border-gray-200 border-l-[6px] ${state.edge} bg-white shadow-sm`}>
+              {/* Header: amount and state */}
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 bg-gray-50 px-4 py-3">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-primary shadow-sm">
+                    <i className="fas fa-money-check-alt" />
+                  </span>
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wide text-gray-600">Payment received</p>
+                    <p className="text-xl font-extrabold text-gray-900">{money(d.currency, d.amount)}</p>
                   </div>
-                  <span className="text-[10px] font-bold text-gray-500">{used}% used</span>
                 </div>
-              )}
-              {unused ? (
-                <p className="mt-2 rounded-lg bg-green-50 px-2.5 py-1.5 text-[11px] text-green-700">
-                  <i className="fas fa-piggy-bank mr-1.5" />
-                  Not used yet: this amount is credit on your account, ready to go towards a vehicle.
-                </p>
-              ) : (
-                <ul className="mt-2 space-y-1 border-t border-gray-100 pt-2 text-[11px] text-gray-600">
-                  {d.allocations.map((a, i) => (
-                    <li key={i} className="flex justify-between gap-2">
-                      <a href={vehicleHref(a.vehicle_ref)} className="truncate hover:text-primary hover:underline">
-                        <i className="fas fa-car mr-1 text-gray-300" />
-                        {a.vehicle_name || "Vehicle"} <span className="text-gray-400">· Ref {a.vehicle_ref}</span>
-                      </a>
-                      <b className="whitespace-nowrap">{money(d.currency, a.amount)}</b>
-                    </li>
+                <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-extrabold uppercase tracking-wide ${state.chip}`}>
+                  <i className={`fas ${state.icon}`} /> {state.label}
+                </span>
+              </div>
+
+              <div className="space-y-3 p-4">
+                {/* Details */}
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                  {[
+                    ["Paid on", d.date, "text-gray-900"],
+                    ["Sent by", d.remitter || "-", "text-gray-900"],
+                    ["Applied", money(d.currency, d.consumed), "text-primary"],
+                    ["Available", money(d.currency, d.leftover), "text-green-700"],
+                  ].map(([label, value, cls]) => (
+                    <div key={label} className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
+                      <span className="block text-[11px] font-bold uppercase tracking-wide text-gray-500">{label}</span>
+                      <p className={`mt-0.5 truncate text-sm font-bold ${cls}`} title={String(value)}>{value}</p>
+                    </div>
                   ))}
-                </ul>
-              )}
+                </div>
+
+                {used > 0 ? (
+                  <>
+                    <div>
+                      <div className="mb-1 flex justify-between text-xs font-bold text-gray-700">
+                        <span>Used for vehicles</span>
+                        <span>{used}%</span>
+                      </div>
+                      <div className="h-2.5 overflow-hidden rounded-full bg-gray-100">
+                        <div className="h-full rounded-full bg-primary" style={{ width: `${used}%` }} />
+                      </div>
+                    </div>
+                    <ul className="space-y-2">
+                      {d.allocations.map((a, i) => (
+                        <li key={i}>
+                          <a
+                            href={vehicleHref(a.vehicle_ref)}
+                            className="flex items-center justify-between gap-3 rounded-lg border border-gray-200 px-3 py-2.5 text-sm transition hover:border-primary hover:bg-primary/5"
+                          >
+                            <span className="flex min-w-0 items-center gap-2">
+                              <i className="fas fa-car text-primary" />
+                              <span className="truncate font-semibold text-gray-900">{a.vehicle_name || "Vehicle"}</span>
+                              <span className="shrink-0 text-gray-500">· Ref {a.vehicle_ref}</span>
+                            </span>
+                            <span className="flex shrink-0 items-center gap-2 font-extrabold text-gray-900">
+                              {money(d.currency, a.amount)}
+                              <i className="fas fa-chevron-right text-[10px] text-gray-400" />
+                            </span>
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                ) : (
+                  <p className="flex items-start gap-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2.5 text-sm font-semibold text-green-800">
+                    <i className="fas fa-info-circle mt-0.5" />
+                    Not used yet: this amount is credit on your account, ready to go towards a vehicle.
+                  </p>
+                )}
+              </div>
             </div>
           );
         })}
