@@ -9,6 +9,7 @@ require_once __DIR__ . '/../core/csrf.php';
 require_once __DIR__ . '/../core/stock_access.php';
 require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../core/mailer.php';
+require_once __DIR__ . '/../core/email_layout.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -75,10 +76,13 @@ function notifyActivated(string $fullName, string $email): bool
         $mail->addReplyTo(siteContactEmail(), SITE_NAME);
         $mail->isHTML(true);
         $mail->Subject = 'Your ' . SITE_NAME . ' account is activated';
-        $mail->Body = "<p>Hi {$name},</p>"
-            . "<p>Your account now has full access to our stock: every vehicle with photos, specifications and prices.</p>"
-            . "<p><a href=\"{$stockUrl}\">Browse the full stock</a></p>"
-            . "<p>Questions? Just reply to this email.</p><p>" . SITE_NAME . "</p>";
+        $mail->Body = emailLayout('Your account is activated', 'Account',
+            emailParagraph("Hi <strong>{$name}</strong>,")
+            . emailParagraph('Your account now has full access to our stock: every vehicle with photos, specifications and prices.')
+            . emailButton($stockUrl, 'Browse the full stock')
+            . emailNote('Questions? Just reply to this email.')
+            . emailSignoff()
+        );
         $mail->AltBody = "Hi " . ($fullName ?: 'there') . ",\n\nYour account now has full access to our stock.\n\nBrowse it here: {$stockUrl}\n\n" . SITE_NAME;
         $mail->send();
         return true;

@@ -4,6 +4,7 @@ require_once __DIR__ . '/../core/headers.php';
 
 require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../core/mailer.php';
+require_once __DIR__ . '/../core/email_layout.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -163,29 +164,17 @@ function sendNotifyEmail($toEmail, $customerName, $tempPassword) {
         $loginUrl = SITE_URL . '/login';
 
 
-        $mail->Body = "
-        <div style='font-family: Arial, sans-serif; max-width: 600px; margin: auto; border: 1px solid #ddd; padding: 20px;'>
-            <div style='text-align: center; padding-bottom: 20px;'>
-                        <img src='" . SITE_EMAIL_LOGO . "' alt='" . SITE_NAME . "' style='max-width: 220px; margin-bottom: 10px;' />
-                <h2 style='color: #333;'>Welcome to " . SITE_NAME . "</h2>
-            </div>
-            <p>Dear <strong>{$customerName}</strong>,</p>
-            <p>We’re pleased to inform you that an account has been created for you on our website. You can now log in to manage your transactions, track orders, and access our services.</p>
-            
-            <div style='background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;'>
-                <h4 style='margin-bottom: 10px;'>Here are your login details:</h4>
-                <ul style='list-style: none; padding-left: 0;'>
-                    <li><strong>Username:</strong> {$customerName}</li>
-                    <li><strong>Temporary Password:</strong> " . htmlspecialchars($tempPassword) . "</li>
-                    <li><strong>Login Link:</strong> <a href='{$loginUrl}' style='color: #007bff;'>{$loginUrl}</a></li>
-                </ul>
-            </div>
-
-            <p style='margin-top: 20px;'>For security reasons, we recommend changing your password upon first login. If you have any questions or need assistance, feel free to contact us.</p>
-
-            <p style='margin-top: 40px;'>Best regards,<br><strong>" . SITE_NAME . "</strong></p>
-        </div>
-        ";
+        $mail->Body = emailLayout('Welcome to ' . SITE_NAME, 'Welcome',
+            emailParagraph('Dear <strong>' . emailEsc($customerName) . '</strong>,')
+            . emailParagraph('An account has been created for you. You can now log in to follow your orders and transactions and use our services.')
+            . emailDetails([
+                'Username' => $customerName,
+                'Temporary password' => $tempPassword,
+            ])
+            . emailButton($loginUrl, 'Log in')
+            . emailNote('For your security, please change this password after your first login.')
+            . emailSignoff()
+        );
 
         $mail->AltBody = "Dear {$customerName},\n\n"
             . "An account has been created for you on " . SITE_NAME . ".\n\n"

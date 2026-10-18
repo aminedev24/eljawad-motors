@@ -6,6 +6,7 @@ require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../core/db_connection.php';
 require_once __DIR__ . '/../core/headers.php';
 require_once __DIR__ . '/../core/mailer.php';
+require_once __DIR__ . '/../core/email_layout.php';
 function generateToken() {
     return bin2hex(random_bytes(32));
 }
@@ -36,73 +37,14 @@ function sendVerificationEmail($userId, $email) {
         $mail->addAddress($email);
         $mail->isHTML(true);
         $mail->Subject = 'Verify Your Email Address';
-        $mail->Body = "
-            <!DOCTYPE html>
-            <html>
-            <head>
-            <title>Verify Your Email</title>
-            <style>
-                body {
-                font-family: Arial, sans-serif;
-                background-color: #f9f9f9;
-                margin: 0;
-                padding: 0;
-                }
-                .container {
-                background-color: #ffffff;
-                max-width: 600px;
-                margin: 40px auto;
-                padding: 20px;
-                border-radius: 10px;
-                box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-                }
-                h1 {
-                color: #333;
-                }
-                p {
-                color: #555;
-                line-height: 1.6;
-                }
-                .button {
-                display: inline-block;
-                background-color: #1da1f2;
-                color: white;
-                text-decoration: none;
-                font-weight: bold;
-                padding: 12px 24px;
-                border-radius: 25px;
-                margin-top: 20px;
-                }
-                .button:hover {
-                background-color: #0056b3;
-                }
-                .footer {
-                margin-top: 40px;
-                font-size: 12px;
-                color: #888;
-                }
-                a {
-                color: #007bff;
-                }
-            </style>
-            </head>
-            <body>
-            <div class='container'>
-                <h1>Email Verification Required</h1>
-                <p>Hi there,</p>
-                <p>Please confirm your email address by clicking the button below to complete your registration.</p>
-                <a href='$verification_link' class='button'>Verify Email</a>
-                <p>If the button doesn't work, you can copy and paste the following link into your browser:</p>
-                <p><a href='$verification_link'>$verification_link</a></p>
-                <p>If you did not request this, please ignore this email.</p>
-                <div class='footer'>
-                <p>Need help? Contact us at <a href='mailto:" . siteContactEmail() . "'>" . siteContactEmail() . "</a>.</p>
-                <p>Best regards,<br>" . SITE_NAME . "</p>
-                </div>
-            </div>
-            </body>
-            </html>
-            ";
+        $mail->Body = emailLayout('Confirm your email address', 'Account',
+            emailParagraph('Hi there,')
+            . emailParagraph('Please confirm your email address to finish setting up your account.')
+            . emailButton($verification_link, 'Verify email')
+            . emailFallbackLink($verification_link)
+            . emailNote('This link expires in 10 minutes. If you did not request it, you can ignore this email.')
+            . emailSignoff()
+        );
 
         $mail->send();
         echo json_encode(["status" => "success", "message" => "Verification email sent."]);

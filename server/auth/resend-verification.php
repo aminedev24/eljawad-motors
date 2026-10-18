@@ -5,6 +5,7 @@ require_once __DIR__ . '/../core/headers.php';
 
 require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../core/mailer.php';
+require_once __DIR__ . '/../core/email_layout.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -59,13 +60,15 @@ function sendVerificationEmail($email, $fullName, $token, $verificationCode) {
         $mail->Subject = 'Verify Your Email Address';
 
         $verificationLink = BASE_URL . '/verify_email?token=' . $token;
-        $mail->Body = "
-            <p>Hello {$fullName},</p>
-            <p>Please click the link below to verify your email address and complete your login:</p>
-            <p><a href='{$verificationLink}'>Verify Email</a></p>
-            <p>Or enter this verification code: <b>{$verificationCode}</b></p>
-            <p>If you did not attempt to log in, please ignore this email.</p>
-        ";
+        $mail->Body = emailLayout('Verify your email to sign in', 'Account security',
+            emailParagraph('Hello <strong>' . emailEsc($fullName) . '</strong>,')
+            . emailParagraph('Confirm your email address to complete your login:')
+            . emailButton($verificationLink, 'Verify email')
+            . emailParagraph('Or enter this code on the login page:')
+            . emailCode((string)$verificationCode)
+            . emailNote('If you did not try to log in, you can ignore this email.')
+            . emailSignoff()
+        );
         $mail->AltBody = "Hello {$fullName},\n\nPlease verify your email address by visiting: {$verificationLink}\nOr enter this code: {$verificationCode}";
 
         $mail->send();

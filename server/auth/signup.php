@@ -7,6 +7,7 @@ require_once __DIR__ . '/../core/headers.php';
 require_once __DIR__ . '/../core/stock_access.php';
 require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../core/mailer.php';
+require_once __DIR__ . '/../core/email_layout.php';
 
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -125,10 +126,12 @@ function notifySignup($fullName, $email, $country, $phone, $company, $address) {
         $mail->addReplyTo($email, $fullName);
         $mail->isHTML(true);
         $mail->Subject = 'New sign-up awaiting stock activation: ' . $fullName;
-        $mail->Body = "<p>A new customer has signed up. They can see the " . STOCK_FREE_PREVIEW_COUNT
-            . " newest vehicles; the rest of the stock stays locked until you activate their account.</p>"
-            . "<table style=\"font-size:14px\">{$rows}</table>"
-            . "<p><a href=\"{$activateUrl}\">Open Customer Management to activate</a></p>";
+        $mail->Body = emailLayout('New sign-up awaiting activation', 'Staff notice',
+            emailParagraph('A new customer has signed up. They can see the ' . STOCK_FREE_PREVIEW_COUNT
+                . ' newest vehicles; the rest of the stock stays locked until you activate their account.')
+            . emailDetails(['Name' => $fullName, 'Email' => $email, 'Country' => $country, 'Phone' => $phone, 'Company' => $company, 'Address' => $address])
+            . emailButton($activateUrl, 'Open Customer Management')
+        );
         $mail->AltBody = "New sign-up awaiting stock activation\n\nName: $fullName\nEmail: $email\nCountry: $country\nPhone: $phone\nCompany: $company\nAddress: $address\n\nActivate: $activateUrl";
         $mail->send();
     } catch (Exception $e) {
